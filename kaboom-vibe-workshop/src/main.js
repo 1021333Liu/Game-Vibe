@@ -91,7 +91,7 @@ const {
 });
 
 function isTouchingWall(body) {
-  return get("wall").some((wall) => body.isColliding(wall));
+  return get("wall").some((wall) => body.isOverlapping(wall));
 }
 
 function moveOnAxis(body, dx, dy, bodySize) {

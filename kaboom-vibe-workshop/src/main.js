@@ -13,6 +13,12 @@ const BULLET_LIFETIME = 4;
 
 const ROOMS = [
   {
+    name: "火焰山",
+    enemySprite: "flameDemon",
+    background: [48, 28, 24],
+    wallColor: [110, 56, 42],
+    wallOutline: [48, 24, 20],
+    statusColor: [255, 196, 126],
     player: { x: 40, y: 160 },
     door: { x: 430, y: 152 },
     walls: [
@@ -29,6 +35,12 @@ const ROOMS = [
     ],
   },
   {
+    name: "白骨洞",
+    enemySprite: "boneDemon",
+    background: [28, 28, 40],
+    wallColor: [92, 88, 104],
+    wallOutline: [44, 42, 54],
+    statusColor: [216, 214, 232],
     player: { x: 42, y: 42 },
     door: { x: 430, y: 272 },
     walls: [
@@ -45,6 +57,12 @@ const ROOMS = [
     ],
   },
   {
+    name: "流沙河",
+    enemySprite: "sandDemon",
+    background: [38, 34, 28],
+    wallColor: [122, 94, 54],
+    wallOutline: [58, 43, 24],
+    statusColor: [235, 204, 142],
     player: { x: 42, y: 272 },
     door: { x: 430, y: 42 },
     walls: [
@@ -98,6 +116,9 @@ const {
 
 loadSprite("wukong", "/sprites/wukong.svg");
 loadSprite("demon", "/sprites/demon.svg");
+loadSprite("flameDemon", "/sprites/flame-demon.svg");
+loadSprite("boneDemon", "/sprites/bone-demon.svg");
+loadSprite("sandDemon", "/sprites/sand-demon.svg");
 loadSprite("staff", "/sprites/staff.svg");
 loadSprite("portal", "/sprites/portal.svg");
 
@@ -145,9 +166,9 @@ function addMonkeyHero(x, y) {
   ]);
 }
 
-function addDemonEnemy(x, y) {
+function addDemonEnemy(x, y, spriteName) {
   return add([
-    sprite("demon", { width: ENEMY_SIZE, height: ENEMY_SIZE }),
+    sprite(spriteName, { width: ENEMY_SIZE, height: ENEMY_SIZE }),
     pos(x, y),
     area(),
     "enemy",
@@ -177,13 +198,19 @@ scene("game", (roomIndex = 0) => {
   const room = ROOMS[roomIndex];
   activeWalls = room.walls;
 
+  add([
+    rect(width(), height()),
+    pos(0, 0),
+    color(...room.background),
+  ]);
+
   room.walls.forEach((wall) => {
     add([
       rect(wall.w, wall.h),
       pos(wall.x, wall.y),
       area(),
-      color(76, 78, 96),
-      outline(2, [40, 42, 56]),
+      color(...room.wallColor),
+      outline(2, room.wallOutline),
       "wall",
     ]);
   });
@@ -191,7 +218,7 @@ scene("game", (roomIndex = 0) => {
   const player = addMonkeyHero(room.player.x, room.player.y);
 
   const enemies = room.enemies.map((enemyConfig) => ({
-    body: addDemonEnemy(enemyConfig.x, enemyConfig.y),
+    body: addDemonEnemy(enemyConfig.x, enemyConfig.y, room.enemySprite),
     velocity: {
       x: enemyConfig.vx,
       y: enemyConfig.vy,
@@ -199,7 +226,7 @@ scene("game", (roomIndex = 0) => {
   }));
 
   add([
-    text(`房间 ${roomIndex + 1} / ${ROOMS.length}：方向键射击，清敌开门`, { size: 13 }),
+    text(`${room.name} ${roomIndex + 1} / ${ROOMS.length}：方向键射击，清敌开门`, { size: 13 }),
     pos(10, 8),
     color(230, 230, 238),
   ]);
@@ -207,7 +234,7 @@ scene("game", (roomIndex = 0) => {
   const statusText = add([
     text(`敌人 ${enemies.length} / 门未开启`, { size: 12 }),
     pos(10, 26),
-    color(170, 220, 255),
+    color(...room.statusColor),
   ]);
 
   let ended = false;

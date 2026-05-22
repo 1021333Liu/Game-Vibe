@@ -2,6 +2,7 @@ import kaboom from "kaboom";
 
 // 课堂首调参数：玩家移动速度（像素/秒）。改大 = 跑得更快。
 const MOVE_SPEED = 140;
+const HAZARD_SPEED = 95;
 
 const {
   add,
@@ -55,17 +56,20 @@ scene("game", () => {
     "goal",
   ]);
 
-  // 可选失败：碰到红色障碍即输（保持极简）
-  add([
+  const hazard = add([
     rect(20, 20),
     pos(width() / 2 - 10, height() / 2 - 10),
     area(),
     color(255, 95, 95),
     "hazard",
   ]);
+  const hazardVelocity = {
+    x: HAZARD_SPEED,
+    y: HAZARD_SPEED * 0.72,
+  };
 
   add([
-    text("WASD / 方向键 → 绿块", { size: 12 }),
+    text("躲红块，去绿块", { size: 12 }),
     pos(8, 6),
     color(220, 220, 230),
   ]);
@@ -91,6 +95,14 @@ scene("game", () => {
     if (isKeyDown("right") || isKeyDown("d")) player.move(sp, 0);
     if (isKeyDown("up") || isKeyDown("w")) player.move(0, -sp);
     if (isKeyDown("down") || isKeyDown("s")) player.move(0, sp);
+
+    hazard.move(hazardVelocity.x, hazardVelocity.y);
+    if (hazard.pos.x <= 0 || hazard.pos.x + 20 >= width()) {
+      hazardVelocity.x *= -1;
+    }
+    if (hazard.pos.y <= 0 || hazard.pos.y + 20 >= height() - 12) {
+      hazardVelocity.y *= -1;
+    }
   });
 });
 

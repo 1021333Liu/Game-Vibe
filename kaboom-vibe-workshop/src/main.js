@@ -6,7 +6,7 @@ const PLAYER_SIZE = 16;
 const ENEMY_SIZE = 18;
 const DOOR_SIZE = 22;
 const BULLET_SIZE = 6;
-const BULLET_SPEED = 280;
+const BULLET_SPEED = 720;
 const SHOT_COOLDOWN = 0.22;
 
 const ROOMS = [
@@ -14,11 +14,11 @@ const ROOMS = [
     player: { x: 40, y: 160 },
     door: { x: 430, y: 152 },
     walls: [
-      { x: 96, y: 72, w: 24, h: 168 },
-      { x: 192, y: 0, w: 24, h: 144 },
-      { x: 192, y: 216, w: 24, h: 104 },
-      { x: 288, y: 72, w: 24, h: 168 },
-      { x: 360, y: 120, w: 24, h: 96 },
+      { x: 112, y: 0, w: 24, h: 132 },
+      { x: 112, y: 212, w: 24, h: 108 },
+      { x: 216, y: 64, w: 24, h: 180 },
+      { x: 320, y: 0, w: 24, h: 116 },
+      { x: 320, y: 196, w: 24, h: 124 },
     ],
     enemies: [
       { x: 140, y: 40, vx: ENEMY_SPEED, vy: ENEMY_SPEED * 0.6 },

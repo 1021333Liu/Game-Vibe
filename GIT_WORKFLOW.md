@@ -4,7 +4,7 @@
 
 1. 修改游戏代码或资源。
 2. 运行验证命令，例如 `npm run build`。
-3. 更新 `CHANGELOG.md`，写清楚本次改动。
+3. 更新 `README.md` 里的“更新日志”，写清楚本次改动。
 4. 执行 `git status --short` 检查变更。
 5. 提交更新，例如：
 
@@ -25,4 +25,3 @@ git push origin main
 git remote add origin <GitHub 仓库地址>
 git push -u origin main
 ```
-

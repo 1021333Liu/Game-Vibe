@@ -90,12 +90,16 @@ const {
   background: [30, 31, 42],
 });
 
-function moveWithWalls(body, dx, dy, bodySize) {
+function isTouchingWall(body) {
+  return get("wall").some((wall) => body.isColliding(wall));
+}
+
+function moveOnAxis(body, dx, dy, bodySize) {
   const previous = body.pos.clone();
   body.move(dx, dy);
   body.pos.x = Math.max(0, Math.min(body.pos.x, width() - bodySize));
   body.pos.y = Math.max(0, Math.min(body.pos.y, height() - bodySize));
-  if (get("wall").some((wall) => body.isColliding(wall))) {
+  if (isTouchingWall(body)) {
     body.pos = previous;
     return true;
   }
@@ -218,21 +222,17 @@ scene("game", (roomIndex = 0) => {
     if (isKeyDown("d")) dx += sp;
     if (isKeyDown("w")) dy -= sp;
     if (isKeyDown("s")) dy += sp;
-    if (dx !== 0 || dy !== 0) {
-      moveWithWalls(player, dx, dy, PLAYER_SIZE);
-    }
+    if (dx !== 0) moveOnAxis(player, dx, 0, PLAYER_SIZE);
+    if (dy !== 0) moveOnAxis(player, 0, dy, PLAYER_SIZE);
 
     enemies.forEach((enemy) => {
       if (!enemy.body.exists()) return;
-      const hitWall = moveWithWalls(enemy.body, enemy.velocity.x, enemy.velocity.y, ENEMY_SIZE);
-      if (enemy.body.pos.x <= 0 || enemy.body.pos.x + ENEMY_SIZE >= width()) {
+      const hitX = moveOnAxis(enemy.body, enemy.velocity.x, 0, ENEMY_SIZE);
+      const hitY = moveOnAxis(enemy.body, 0, enemy.velocity.y, ENEMY_SIZE);
+      if (hitX || enemy.body.pos.x <= 0 || enemy.body.pos.x + ENEMY_SIZE >= width()) {
         enemy.velocity.x *= -1;
       }
-      if (enemy.body.pos.y <= 0 || enemy.body.pos.y + ENEMY_SIZE >= height()) {
-        enemy.velocity.y *= -1;
-      }
-      if (hitWall) {
-        enemy.velocity.x *= -1;
+      if (hitY || enemy.body.pos.y <= 0 || enemy.body.pos.y + ENEMY_SIZE >= height()) {
         enemy.velocity.y *= -1;
       }
     });

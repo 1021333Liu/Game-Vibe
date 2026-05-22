@@ -3,6 +3,9 @@ import kaboom from "kaboom";
 // 课堂首调参数：玩家移动速度（像素/秒）。改大 = 跑得更快。
 const MOVE_SPEED = 140;
 const HAZARD_SPEED = 95;
+const PLAYER_SIZE = 16;
+const HAZARD_SIZE = 18;
+const FLOOR_HEIGHT = 12;
 
 const {
   add,
@@ -32,16 +35,16 @@ const {
 scene("game", () => {
   // 底边“墙”，仅占位视觉
   add([
-    rect(width(), 12),
-    pos(0, height() - 12),
+    rect(width(), FLOOR_HEIGHT),
+    pos(0, height() - FLOOR_HEIGHT),
     area(),
     color(55, 58, 72),
     "wall",
   ]);
 
   const player = add([
-    rect(16, 16),
-    pos(32, height() / 2 - 8),
+    rect(PLAYER_SIZE, PLAYER_SIZE),
+    pos(32, height() / 2 - PLAYER_SIZE / 2),
     area(),
     color(100, 210, 255),
     "player",
@@ -56,17 +59,23 @@ scene("game", () => {
     "goal",
   ]);
 
-  const hazard = add([
-    rect(20, 20),
-    pos(width() / 2 - 10, height() / 2 - 10),
-    area(),
-    color(255, 95, 95),
-    "hazard",
-  ]);
-  const hazardVelocity = {
-    x: HAZARD_SPEED,
-    y: HAZARD_SPEED * 0.72,
-  };
+  const hazards = [
+    { x: 148, y: 36, vx: HAZARD_SPEED, vy: HAZARD_SPEED * 0.72 },
+    { x: 126, y: 130, vx: -HAZARD_SPEED * 0.84, vy: HAZARD_SPEED * 0.92 },
+    { x: 214, y: 82, vx: -HAZARD_SPEED * 1.05, vy: -HAZARD_SPEED * 0.66 },
+  ].map((hazardConfig) => ({
+    body: add([
+      rect(HAZARD_SIZE, HAZARD_SIZE),
+      pos(hazardConfig.x, hazardConfig.y),
+      area(),
+      color(255, 95, 95),
+      "hazard",
+    ]),
+    velocity: {
+      x: hazardConfig.vx,
+      y: hazardConfig.vy,
+    },
+  }));
 
   add([
     text("躲红块，去绿块", { size: 12 }),
@@ -96,13 +105,18 @@ scene("game", () => {
     if (isKeyDown("up") || isKeyDown("w")) player.move(0, -sp);
     if (isKeyDown("down") || isKeyDown("s")) player.move(0, sp);
 
-    hazard.move(hazardVelocity.x, hazardVelocity.y);
-    if (hazard.pos.x <= 0 || hazard.pos.x + 20 >= width()) {
-      hazardVelocity.x *= -1;
-    }
-    if (hazard.pos.y <= 0 || hazard.pos.y + 20 >= height() - 12) {
-      hazardVelocity.y *= -1;
-    }
+    player.pos.x = Math.max(0, Math.min(player.pos.x, width() - PLAYER_SIZE));
+    player.pos.y = Math.max(0, Math.min(player.pos.y, height() - FLOOR_HEIGHT - PLAYER_SIZE));
+
+    hazards.forEach((hazard) => {
+      hazard.body.move(hazard.velocity.x, hazard.velocity.y);
+      if (hazard.body.pos.x <= 0 || hazard.body.pos.x + HAZARD_SIZE >= width()) {
+        hazard.velocity.x *= -1;
+      }
+      if (hazard.body.pos.y <= 0 || hazard.body.pos.y + HAZARD_SIZE >= height() - FLOOR_HEIGHT) {
+        hazard.velocity.y *= -1;
+      }
+    });
   });
 });
 

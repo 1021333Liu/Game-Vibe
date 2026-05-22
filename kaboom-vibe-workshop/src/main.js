@@ -6,6 +6,35 @@ const HAZARD_SPEED = 95;
 const PLAYER_SIZE = 16;
 const HAZARD_SIZE = 18;
 const FLOOR_HEIGHT = 12;
+const LEVELS = [
+  {
+    player: { x: 32, y: 92 },
+    goal: { x: 272, y: 89 },
+    hazards: [
+      { x: 148, y: 36, vx: HAZARD_SPEED, vy: HAZARD_SPEED * 0.72 },
+      { x: 126, y: 130, vx: -HAZARD_SPEED * 0.84, vy: HAZARD_SPEED * 0.92 },
+    ],
+  },
+  {
+    player: { x: 28, y: 152 },
+    goal: { x: 270, y: 34 },
+    hazards: [
+      { x: 86, y: 54, vx: HAZARD_SPEED * 1.1, vy: HAZARD_SPEED * 0.62 },
+      { x: 164, y: 132, vx: -HAZARD_SPEED * 0.92, vy: HAZARD_SPEED },
+      { x: 228, y: 84, vx: -HAZARD_SPEED * 1.18, vy: -HAZARD_SPEED * 0.76 },
+    ],
+  },
+  {
+    player: { x: 30, y: 34 },
+    goal: { x: 270, y: 148 },
+    hazards: [
+      { x: 82, y: 92, vx: HAZARD_SPEED * 1.18, vy: HAZARD_SPEED * 0.88 },
+      { x: 132, y: 32, vx: -HAZARD_SPEED, vy: HAZARD_SPEED * 1.05 },
+      { x: 210, y: 130, vx: HAZARD_SPEED * 0.92, vy: -HAZARD_SPEED * 1.16 },
+      { x: 246, y: 58, vx: -HAZARD_SPEED * 1.26, vy: -HAZARD_SPEED * 0.74 },
+    ],
+  },
+];
 
 const {
   add,
@@ -32,7 +61,9 @@ const {
   background: [34, 36, 48],
 });
 
-scene("game", () => {
+scene("game", (levelIndex = 0) => {
+  const level = LEVELS[levelIndex];
+
   // 底边“墙”，仅占位视觉
   add([
     rect(width(), FLOOR_HEIGHT),
@@ -44,7 +75,7 @@ scene("game", () => {
 
   const player = add([
     rect(PLAYER_SIZE, PLAYER_SIZE),
-    pos(32, height() / 2 - PLAYER_SIZE / 2),
+    pos(level.player.x, level.player.y),
     area(),
     color(100, 210, 255),
     "player",
@@ -52,18 +83,14 @@ scene("game", () => {
 
   add([
     rect(22, 22),
-    pos(width() - 48, height() / 2 - 11),
+    pos(level.goal.x, level.goal.y),
     area(),
     color(130, 255, 150),
     outline(2, [40, 120, 60]),
     "goal",
   ]);
 
-  const hazards = [
-    { x: 148, y: 36, vx: HAZARD_SPEED, vy: HAZARD_SPEED * 0.72 },
-    { x: 126, y: 130, vx: -HAZARD_SPEED * 0.84, vy: HAZARD_SPEED * 0.92 },
-    { x: 214, y: 82, vx: -HAZARD_SPEED * 1.05, vy: -HAZARD_SPEED * 0.66 },
-  ].map((hazardConfig) => ({
+  const hazards = level.hazards.map((hazardConfig) => ({
     body: add([
       rect(HAZARD_SIZE, HAZARD_SIZE),
       pos(hazardConfig.x, hazardConfig.y),
@@ -78,7 +105,7 @@ scene("game", () => {
   }));
 
   add([
-    text("躲红块，去绿块", { size: 12 }),
+    text(`第 ${levelIndex + 1} / ${LEVELS.length} 关：躲红块，去绿块`, { size: 12 }),
     pos(8, 6),
     color(220, 220, 230),
   ]);
@@ -88,13 +115,17 @@ scene("game", () => {
   player.onCollide("goal", () => {
     if (ended) return;
     ended = true;
-    go("win");
+    if (levelIndex + 1 >= LEVELS.length) {
+      go("complete");
+      return;
+    }
+    go("game", levelIndex + 1);
   });
 
   player.onCollide("hazard", () => {
     if (ended) return;
     ended = true;
-    go("lose");
+    go("lose", levelIndex);
   });
 
   onUpdate(() => {
@@ -120,24 +151,24 @@ scene("game", () => {
   });
 });
 
-scene("win", () => {
+scene("complete", () => {
   add([
-    text("胜利！按 R 重来", { size: 14 }),
+    text("全部通关！按 R 再玩", { size: 14 }),
     pos(width() / 2, height() / 2),
     anchor("center"),
     color(255, 255, 200),
   ]);
-  onKeyDown("r", () => go("game"));
+  onKeyDown("r", () => go("game", 0));
 });
 
-scene("lose", () => {
+scene("lose", (levelIndex = 0) => {
   add([
-    text("碰到红块了，按 R 重来", { size: 14 }),
+    text("碰到红块了，按 R 重试本关", { size: 14 }),
     pos(width() / 2, height() / 2),
     anchor("center"),
     color(255, 200, 200),
   ]);
-  onKeyDown("r", () => go("game"));
+  onKeyDown("r", () => go("game", levelIndex));
 });
 
-go("game");
+go("game", 0);

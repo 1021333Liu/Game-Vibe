@@ -69,6 +69,7 @@ let activeWalls = [];
 const {
   add,
   rect,
+  sprite,
   pos,
   area,
   color,
@@ -85,6 +86,7 @@ const {
   width,
   height,
   isKeyDown,
+  loadSprite,
 } = kaboom({
   width: 480,
   height: 320,
@@ -93,6 +95,11 @@ const {
   global: false,
   background: [30, 31, 42],
 });
+
+loadSprite("wukong", "/sprites/wukong.svg");
+loadSprite("demon", "/sprites/demon.svg");
+loadSprite("staff", "/sprites/staff.svg");
+loadSprite("portal", "/sprites/portal.svg");
 
 function rectsOverlap(a, b) {
   return (
@@ -105,14 +112,14 @@ function rectsOverlap(a, b) {
 
 function bulletOverlapsTarget(bullet, target, targetSize) {
   return rectsOverlap(
-    { x: bullet.pos.x, y: bullet.pos.y, w: BULLET_SIZE, h: BULLET_SIZE },
+    { x: bullet.pos.x, y: bullet.pos.y, w: bullet.hitSize.w, h: bullet.hitSize.h },
     { x: target.pos.x, y: target.pos.y, w: targetSize, h: targetSize },
   );
 }
 
 function wallContainsBullet(bullet) {
   return activeWalls.some((wall) => rectsOverlap(
-    { x: bullet.pos.x, y: bullet.pos.y, w: BULLET_SIZE, h: BULLET_SIZE },
+    { x: bullet.pos.x, y: bullet.pos.y, w: bullet.hitSize.w, h: bullet.hitSize.h },
     wall,
   ));
 }
@@ -127,6 +134,43 @@ function moveOnAxis(body, dx, dy, bodySize) {
   body.pos.x = nextX;
   body.pos.y = nextY;
   return false;
+}
+
+function addMonkeyHero(x, y) {
+  return add([
+    sprite("wukong", { width: PLAYER_SIZE, height: PLAYER_SIZE }),
+    pos(x, y),
+    area(),
+    "player",
+  ]);
+}
+
+function addDemonEnemy(x, y) {
+  return add([
+    sprite("demon", { width: ENEMY_SIZE, height: ENEMY_SIZE }),
+    pos(x, y),
+    area(),
+    "enemy",
+  ]);
+}
+
+function addStaffBullet(x, y, dirX, dirY) {
+  const horizontal = dirX !== 0;
+  const body = add([
+    sprite("staff", {
+      width: horizontal ? 16 : 6,
+      height: horizontal ? 6 : 16,
+      flipX: dirX < 0,
+      flipY: dirY < 0,
+    }),
+    pos(x, y),
+    area(),
+    "bullet",
+  ]);
+  body.velocity = { x: dirX * BULLET_SPEED, y: dirY * BULLET_SPEED };
+  body.life = 0;
+  body.hitSize = horizontal ? { w: 16, h: 6 } : { w: 6, h: 16 };
+  return body;
 }
 
 scene("game", (roomIndex = 0) => {
@@ -144,24 +188,10 @@ scene("game", (roomIndex = 0) => {
     ]);
   });
 
-  const player = add([
-    rect(PLAYER_SIZE, PLAYER_SIZE),
-    pos(room.player.x, room.player.y),
-    area(),
-    color(100, 210, 255),
-    outline(2, [25, 92, 135]),
-    "player",
-  ]);
+  const player = addMonkeyHero(room.player.x, room.player.y);
 
   const enemies = room.enemies.map((enemyConfig) => ({
-    body: add([
-      rect(ENEMY_SIZE, ENEMY_SIZE),
-      pos(enemyConfig.x, enemyConfig.y),
-      area(),
-      color(255, 95, 95),
-      outline(2, [125, 35, 50]),
-      "enemy",
-    ]),
+    body: addDemonEnemy(enemyConfig.x, enemyConfig.y),
     velocity: {
       x: enemyConfig.vx,
       y: enemyConfig.vy,
@@ -188,11 +218,9 @@ scene("game", (roomIndex = 0) => {
   function openDoorIfReady() {
     if (door || enemiesLeft > 0) return;
     door = add([
-      rect(DOOR_SIZE, DOOR_SIZE),
+      sprite("portal", { width: DOOR_SIZE, height: DOOR_SIZE }),
       pos(room.door.x, room.door.y),
       area(),
-      color(120, 255, 150),
-      outline(2, [30, 120, 55]),
       "door",
     ]);
     statusText.text = "敌人 0 / 门已开启";
@@ -201,16 +229,12 @@ scene("game", (roomIndex = 0) => {
   function shoot(dirX, dirY) {
     if (ended || shotTimer > 0) return;
     shotTimer = SHOT_COOLDOWN;
-    const bullet = add([
-      rect(BULLET_SIZE, BULLET_SIZE),
-      pos(player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2, player.pos.y + PLAYER_SIZE / 2 - BULLET_SIZE / 2),
-      area(),
-      color(120, 230, 255),
-      outline(1, [40, 120, 170]),
-      "bullet",
-    ]);
-    bullet.velocity = { x: dirX * BULLET_SPEED, y: dirY * BULLET_SPEED };
-    bullet.life = 0;
+    addStaffBullet(
+      player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2,
+      player.pos.y + PLAYER_SIZE / 2 - BULLET_SIZE / 2,
+      dirX,
+      dirY,
+    );
   }
 
   player.onCollide("enemy", () => {

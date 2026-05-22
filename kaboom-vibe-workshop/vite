@@ -1,0 +1,110 @@
+
+file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modu
+file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:507
+                if (loadErrors.length > 0) throw new Error("Cannot find na
+                if (loadErrors.length > 0) throw new Error("Cannot find native binding. npm has a bug related to optional dependencies (https://gith
+                if (loadErrors.length > 0) throw new Error("Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both 
+                if (loadErrors.length > 0) throw new Error("Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.", { cause: loadErrors.reduce               if (loadErrors.length > 0)             ror("Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.", { cause: loadErrors.reduce((err, cur) => {
+                                                 ^
+
+Error: Cannot find native binding. npm has a bug related to optional depen
+Error: Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again
+Error: Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.
+    at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/no
+    at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:507:36
+    at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/no
+    at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:9:49
+    at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/no
+    at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/parse-Ch28GO2f.mjs:3:46
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async node:internal/modules/esm/loader:639:26
+    at async CAC.<anonymous> (file:///Users/joestar/Desktop/Vibe%20Coding/
+    at async CAC.<anonymous> (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/vite/dist/node/cli.js:706:27) {
+  [cause]: Error: Cannot find module '@rolldown/binding-darwin-x64'
+  Require stack:
+  - /Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules/r
+  - /Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1476:15
+      at Module._resolveFilename (node:internal/modules/cjs/loader:1476:15)
+      ... 6 lines matching cause stack trace ...
+      at require (node:internal/modules/helpers:153:16)
+      at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom
+      at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:205:
+      at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:205:22)
+      at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/
+      at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:475:18 {
+    code: 'MODULE_NOT_FOUND',
+    requireStack: [
+      '/Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_module
+      '/Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs'
+    ],
+    cause: Error: Cannot find module './rolldown-binding.darwin-x64.node'
+    Require stack:
+    - /Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules
+    - /Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs
+        at Module._resolveFilename (node:internal/modules/cjs/loader:1476:
+        at Module._resolveFilename (node:internal/modules/cjs/loader:1476:15)
+        ... 6 lines matching cause stack trace ...
+        at require (node:internal/modules/helpers:153:16)
+        at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kabo
+        at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:20
+        at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:200:13)
+        at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-worksho
+        at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:475:18 {
+      code: 'MODULE_NOT_FOUND',
+      requireStack: [
+        '/Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modu
+        '/Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs'
+      ],
+      cause: Error: Cannot find module '@rolldown/binding-darwin-universal
+      cause: Error: Cannot find module '@rolldown/binding-darwin-universal'
+      Require stack:
+      - /Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modul
+      - /Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs
+          at Module._resolveFilename (node:internal/modules/cjs/loader:147
+          at Module._resolveFilename (node:internal/modules/cjs/loader:1476:15)
+          ... 6 lines matching cause stack trace ...
+          at require (node:internal/modules/helpers:153:16)
+          at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/ka
+          at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:
+          at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:191:21)
+          at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-works
+          at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:475:18 {
+        code: 'MODULE_NOT_FOUND',
+        requireStack: [
+          '/Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_mo
+          '/Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs'
+        ],
+        cause: Error: Cannot find module './rolldown-binding.darwin-univer
+        cause: Error: Cannot find module './rolldown-binding.darwin-universal.node'
+        Require stack:
+        - /Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_mod
+        - /Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs
+            at Module._resolveFilename (node:internal/modules/cjs/loader:1
+            at Module._resolveFilename (node:internal/modules/cjs/loader:1476:15)
+            at wrapResolveFilename (node:internal/modules/cjs/loader:1049:
+            at wrapResolveFilename (node:internal/modules/cjs/loader:1049:27)
+            at defaultResolveImplForCJSLoading (node:internal/modules/cjs/
+            at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1073:10)
+            at resolveForCJSWithHooks (node:internal/modules/cjs/loader:10
+            at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1094:12)
+            at Module._load (node:internal/modules/cjs/loader:1262:25)
+            at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+            at Module.require (node:internal/modules/cjs/loader:1576:12)
+            at require (node:internal/modules/helpers:153:16)
+            at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/
+            at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mj
+            at requireNative (file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:186:12)
+            at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-wor
+            at file:///Users/joestar/Desktop/Vibe%20Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs:475:18 {
+          code: 'MODULE_NOT_FOUND',
+          requireStack: [
+            '/Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_
+            '/Users/joestar/Desktop/Vibe Coding/kaboom-vibe-workshop/node_modules/rolldown/dist/shared/binding-C9S351wt.mjs'
+          ]
+        }
+      }
+    }
+  }
+}
+

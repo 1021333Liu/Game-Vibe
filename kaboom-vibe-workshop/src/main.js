@@ -9,6 +9,7 @@ const BULLET_SIZE = 6;
 const BULLET_SPEED = 9000;
 const SHOT_COOLDOWN = 0.035;
 const BULLET_STEP = 6;
+const BULLET_LIFETIME = 4;
 
 const ROOMS = [
   {
@@ -148,6 +149,7 @@ scene("game", (roomIndex = 0) => {
     pos(room.player.x, room.player.y),
     area(),
     color(100, 210, 255),
+    outline(2, [25, 92, 135]),
     "player",
   ]);
 
@@ -157,6 +159,7 @@ scene("game", (roomIndex = 0) => {
       pos(enemyConfig.x, enemyConfig.y),
       area(),
       color(255, 95, 95),
+      outline(2, [125, 35, 50]),
       "enemy",
     ]),
     velocity: {
@@ -169,6 +172,12 @@ scene("game", (roomIndex = 0) => {
     text(`房间 ${roomIndex + 1} / ${ROOMS.length}：方向键射击，清敌开门`, { size: 13 }),
     pos(10, 8),
     color(230, 230, 238),
+  ]);
+
+  const statusText = add([
+    text(`敌人 ${enemies.length} / 门未开启`, { size: 12 }),
+    pos(10, 26),
+    color(170, 220, 255),
   ]);
 
   let ended = false;
@@ -186,6 +195,7 @@ scene("game", (roomIndex = 0) => {
       outline(2, [30, 120, 55]),
       "door",
     ]);
+    statusText.text = "敌人 0 / 门已开启";
   }
 
   function shoot(dirX, dirY) {
@@ -196,9 +206,11 @@ scene("game", (roomIndex = 0) => {
       pos(player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2, player.pos.y + PLAYER_SIZE / 2 - BULLET_SIZE / 2),
       area(),
       color(120, 230, 255),
+      outline(1, [40, 120, 170]),
       "bullet",
     ]);
     bullet.velocity = { x: dirX * BULLET_SPEED, y: dirY * BULLET_SPEED };
+    bullet.life = 0;
   }
 
   player.onCollide("enemy", () => {
@@ -263,12 +275,15 @@ scene("game", (roomIndex = 0) => {
           enemiesLeft -= 1;
           destroy(enemy);
           destroy(bullet);
+          statusText.text = `敌人 ${enemiesLeft} / 门未开启`;
           openDoorIfReady();
           break;
         }
 
+        bullet.life += dt() / steps;
         if (
-          wallContainsBullet(bullet)
+          bullet.life >= BULLET_LIFETIME
+          || wallContainsBullet(bullet)
           || bullet.pos.x < -BULLET_SIZE
           || bullet.pos.x > width()
           || bullet.pos.y < -BULLET_SIZE

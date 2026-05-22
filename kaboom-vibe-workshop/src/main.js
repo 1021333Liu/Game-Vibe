@@ -5,10 +5,10 @@ const ENEMY_SPEED = 85;
 const PLAYER_SIZE = 16;
 const ENEMY_SIZE = 18;
 const DOOR_SIZE = 22;
-const BULLET_SIZE = 10;
-const BULLET_SPEED = 3200;
-const SHOT_COOLDOWN = 0.045;
-const BULLET_STEP = 12;
+const BULLET_SIZE = 6;
+const BULLET_SPEED = 9000;
+const SHOT_COOLDOWN = 0.035;
+const BULLET_STEP = 6;
 
 const ROOMS = [
   {

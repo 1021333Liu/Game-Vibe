@@ -6,8 +6,9 @@ const PLAYER_SIZE = 16;
 const ENEMY_SIZE = 18;
 const DOOR_SIZE = 22;
 const BULLET_SIZE = 10;
-const BULLET_SPEED = 4200;
+const BULLET_SPEED = 3200;
 const SHOT_COOLDOWN = 0.045;
+const BULLET_STEP = 12;
 
 const ROOMS = [
   {
@@ -101,6 +102,20 @@ function rectsOverlap(a, b) {
   );
 }
 
+function bulletOverlapsTarget(bullet, target, targetSize) {
+  return rectsOverlap(
+    { x: bullet.pos.x, y: bullet.pos.y, w: BULLET_SIZE, h: BULLET_SIZE },
+    { x: target.pos.x, y: target.pos.y, w: targetSize, h: targetSize },
+  );
+}
+
+function wallContainsBullet(bullet) {
+  return activeWalls.some((wall) => rectsOverlap(
+    { x: bullet.pos.x, y: bullet.pos.y, w: BULLET_SIZE, h: BULLET_SIZE },
+    wall,
+  ));
+}
+
 function moveOnAxis(body, dx, dy, bodySize) {
   const nextX = Math.max(0, Math.min(body.pos.x + dx * dt(), width() - bodySize));
   const nextY = Math.max(0, Math.min(body.pos.y + dy * dt(), height() - bodySize));
@@ -184,24 +199,7 @@ scene("game", (roomIndex = 0) => {
       "bullet",
     ]);
     bullet.velocity = { x: dirX * BULLET_SPEED, y: dirY * BULLET_SPEED };
-
-    bullet.onCollide("enemy", (enemyBody) => {
-      if (!enemyBody.exists()) return;
-      enemiesLeft -= 1;
-      destroy(enemyBody);
-      destroy(bullet);
-      openDoorIfReady();
-    });
-
-    bullet.onCollide("wall", () => {
-      destroy(bullet);
-    });
   }
-
-  onKeyDown("left", () => shoot(-1, 0));
-  onKeyDown("right", () => shoot(1, 0));
-  onKeyDown("up", () => shoot(0, -1));
-  onKeyDown("down", () => shoot(0, 1));
 
   player.onCollide("enemy", () => {
     if (ended) return;
@@ -222,6 +220,11 @@ scene("game", (roomIndex = 0) => {
   onUpdate(() => {
     if (ended) return;
     shotTimer = Math.max(0, shotTimer - dt());
+
+    if (isKeyDown("left")) shoot(-1, 0);
+    if (isKeyDown("right")) shoot(1, 0);
+    if (isKeyDown("up")) shoot(0, -1);
+    if (isKeyDown("down")) shoot(0, 1);
 
     const sp = MOVE_SPEED;
     let dx = 0;
@@ -246,9 +249,34 @@ scene("game", (roomIndex = 0) => {
     });
 
     get("bullet").forEach((bullet) => {
-      bullet.move(bullet.velocity.x * dt(), bullet.velocity.y * dt());
-      if (bullet.pos.x < -BULLET_SIZE || bullet.pos.x > width() || bullet.pos.y < -BULLET_SIZE || bullet.pos.y > height()) {
-        destroy(bullet);
+      const distance = Math.hypot(bullet.velocity.x, bullet.velocity.y) * dt();
+      const steps = Math.max(1, Math.ceil(distance / BULLET_STEP));
+      const stepX = bullet.velocity.x * dt() / steps;
+      const stepY = bullet.velocity.y * dt() / steps;
+
+      for (let i = 0; i < steps; i += 1) {
+        if (!bullet.exists()) break;
+        bullet.move(stepX, stepY);
+
+        const enemy = get("enemy").find((enemyBody) => bulletOverlapsTarget(bullet, enemyBody, ENEMY_SIZE));
+        if (enemy) {
+          enemiesLeft -= 1;
+          destroy(enemy);
+          destroy(bullet);
+          openDoorIfReady();
+          break;
+        }
+
+        if (
+          wallContainsBullet(bullet)
+          || bullet.pos.x < -BULLET_SIZE
+          || bullet.pos.x > width()
+          || bullet.pos.y < -BULLET_SIZE
+          || bullet.pos.y > height()
+        ) {
+          destroy(bullet);
+          break;
+        }
       }
     });
   });

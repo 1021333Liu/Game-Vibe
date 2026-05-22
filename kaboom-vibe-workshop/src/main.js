@@ -6,6 +6,8 @@ const HAZARD_SPEED = 95;
 const PLAYER_SIZE = 16;
 const HAZARD_SIZE = 18;
 const FLOOR_HEIGHT = 12;
+const BULLET_SPEED = 260;
+const SHOT_COOLDOWN = 0.28;
 const LEVELS = [
   {
     player: { x: 32, y: 92 },
@@ -47,8 +49,11 @@ const {
   outline,
   onUpdate,
   onKeyDown,
+  destroy,
   scene,
   go,
+  get,
+  dt,
   width,
   height,
   isKeyDown,
@@ -105,12 +110,13 @@ scene("game", (levelIndex = 0) => {
   }));
 
   add([
-    text(`第 ${levelIndex + 1} / ${LEVELS.length} 关：躲红块，去绿块`, { size: 12 }),
+    text(`第 ${levelIndex + 1} / ${LEVELS.length} 关：空格射击，去绿块`, { size: 12 }),
     pos(8, 6),
     color(220, 220, 230),
   ]);
 
   let ended = false;
+  let shotTimer = 0;
 
   player.onCollide("goal", () => {
     if (ended) return;
@@ -128,8 +134,26 @@ scene("game", (levelIndex = 0) => {
     go("lose", levelIndex);
   });
 
+  onKeyDown("space", () => {
+    if (ended || shotTimer > 0) return;
+    shotTimer = SHOT_COOLDOWN;
+    const bullet = add([
+      rect(8, 4),
+      pos(player.pos.x + PLAYER_SIZE, player.pos.y + PLAYER_SIZE / 2 - 2),
+      area(),
+      color(120, 230, 255),
+      "bullet",
+    ]);
+
+    bullet.onCollide("hazard", (hazardBody) => {
+      destroy(hazardBody);
+      destroy(bullet);
+    });
+  });
+
   onUpdate(() => {
     if (ended) return;
+    shotTimer = Math.max(0, shotTimer - dt());
     const sp = MOVE_SPEED;
     if (isKeyDown("left") || isKeyDown("a")) player.move(-sp, 0);
     if (isKeyDown("right") || isKeyDown("d")) player.move(sp, 0);
@@ -140,12 +164,20 @@ scene("game", (levelIndex = 0) => {
     player.pos.y = Math.max(0, Math.min(player.pos.y, height() - FLOOR_HEIGHT - PLAYER_SIZE));
 
     hazards.forEach((hazard) => {
+      if (!hazard.body.exists()) return;
       hazard.body.move(hazard.velocity.x, hazard.velocity.y);
       if (hazard.body.pos.x <= 0 || hazard.body.pos.x + HAZARD_SIZE >= width()) {
         hazard.velocity.x *= -1;
       }
       if (hazard.body.pos.y <= 0 || hazard.body.pos.y + HAZARD_SIZE >= height() - FLOOR_HEIGHT) {
         hazard.velocity.y *= -1;
+      }
+    });
+
+    get("bullet").forEach((bullet) => {
+      bullet.move(BULLET_SPEED, 0);
+      if (bullet.pos.x > width()) {
+        destroy(bullet);
       }
     });
   });

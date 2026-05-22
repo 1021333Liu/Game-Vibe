@@ -6,8 +6,8 @@ const PLAYER_SIZE = 16;
 const ENEMY_SIZE = 18;
 const DOOR_SIZE = 22;
 const BULLET_SIZE = 6;
-const BULLET_SPEED = 720;
-const SHOT_COOLDOWN = 0.22;
+const BULLET_SPEED = 1800;
+const SHOT_COOLDOWN = 0.08;
 
 const ROOMS = [
   {

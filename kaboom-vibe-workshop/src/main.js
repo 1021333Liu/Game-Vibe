@@ -62,6 +62,8 @@ const ROOMS = [
   },
 ];
 
+let activeWalls = [];
+
 const {
   add,
   rect,
@@ -90,24 +92,30 @@ const {
   background: [30, 31, 42],
 });
 
-function isTouchingWall(body) {
-  return get("wall").some((wall) => body.isOverlapping(wall));
+function rectsOverlap(a, b) {
+  return (
+    a.x < b.x + b.w
+    && a.x + a.w > b.x
+    && a.y < b.y + b.h
+    && a.y + a.h > b.y
+  );
 }
 
 function moveOnAxis(body, dx, dy, bodySize) {
-  const previous = body.pos.clone();
-  body.move(dx, dy);
-  body.pos.x = Math.max(0, Math.min(body.pos.x, width() - bodySize));
-  body.pos.y = Math.max(0, Math.min(body.pos.y, height() - bodySize));
-  if (isTouchingWall(body)) {
-    body.pos = previous;
+  const nextX = Math.max(0, Math.min(body.pos.x + dx * dt(), width() - bodySize));
+  const nextY = Math.max(0, Math.min(body.pos.y + dy * dt(), height() - bodySize));
+  const nextRect = { x: nextX, y: nextY, w: bodySize, h: bodySize };
+  if (activeWalls.some((wall) => rectsOverlap(nextRect, wall))) {
     return true;
   }
+  body.pos.x = nextX;
+  body.pos.y = nextY;
   return false;
 }
 
 scene("game", (roomIndex = 0) => {
   const room = ROOMS[roomIndex];
+  activeWalls = room.walls;
 
   room.walls.forEach((wall) => {
     add([
@@ -238,7 +246,7 @@ scene("game", (roomIndex = 0) => {
     });
 
     get("bullet").forEach((bullet) => {
-      bullet.move(bullet.velocity.x, bullet.velocity.y);
+      bullet.move(bullet.velocity.x * dt(), bullet.velocity.y * dt());
       if (bullet.pos.x < -BULLET_SIZE || bullet.pos.x > width() || bullet.pos.y < -BULLET_SIZE || bullet.pos.y > height()) {
         destroy(bullet);
       }

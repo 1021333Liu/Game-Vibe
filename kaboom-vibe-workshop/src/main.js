@@ -1144,7 +1144,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   ]);
 
   const pauseHelp = add([
-    text("WASD 移动 / 方向键射击\nP 继续 / R 重开本局 / M 静音\n地图：宝=奖励 精=精英 终=终点\n评级：少受伤 + 更快通关", { size: 12 }),
+    text("WASD 移动 / 方向键或 IJKL 射击\nP 继续 / R 重开本局 / M 静音\n地图：宝=奖励 精=精英 终=终点\n评级：少受伤 + 更快通关", { size: 12 }),
     pos(width() / 2, 150),
     anchor("center"),
     color(230, 230, 238),
@@ -1497,10 +1497,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       item.opacity = 0.76 + Math.sin(runStats.time * 7) * 0.16;
     });
 
-    if (isKeyDown("left")) shoot(-1, 0);
-    if (isKeyDown("right")) shoot(1, 0);
-    if (isKeyDown("up")) shoot(0, -1);
-    if (isKeyDown("down")) shoot(0, 1);
+    if (isKeyDown("left") || isKeyDown("j")) shoot(-1, 0);
+    if (isKeyDown("right") || isKeyDown("l")) shoot(1, 0);
+    if (isKeyDown("up") || isKeyDown("i")) shoot(0, -1);
+    if (isKeyDown("down") || isKeyDown("k")) shoot(0, 1);
 
     const playerRect = { x: player.pos.x, y: player.pos.y, w: PLAYER_SIZE, h: PLAYER_SIZE };
     if (!doorsOpened && sealedDoorHintTimer <= 0) {

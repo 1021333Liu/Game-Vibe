@@ -882,6 +882,10 @@ function getHealthLabel(health) {
   return `${"心".repeat(health)}${"空".repeat(PLAYER_MAX_HEALTH - health)}`;
 }
 
+function getClearedProgressLabel() {
+  return `${clearedRoomIds.size}/${ROOMS.length}`;
+}
+
 function resetRunStats() {
   runStats = {
     defeats: 0,
@@ -1053,7 +1057,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   ]);
 
   const statusText = add([
-    text(`生命 ${getHealthLabel(runHealth)} / 敌人 ${enemies.length} / 门未开启`, { size: 12 }),
+    text(`生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()} / 敌人 ${enemies.length} / 门未开启`, { size: 12 }),
     pos(10, 26),
     color(...room.statusColor),
   ]);
@@ -1182,7 +1186,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   function updateStatusText() {
     const doorStatus = doorsOpened ? "门已开启" : "门未开启";
-    statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌人 ${enemiesLeft} / ${doorStatus}`;
+    statusText.text = `生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()} / 敌人 ${enemiesLeft} / ${doorStatus}`;
   }
 
   function updateMuteText() {

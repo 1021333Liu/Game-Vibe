@@ -32,10 +32,37 @@ const FLAME_ACTIVE_TIME = 0.72;
 const FLAME_REST_TIME = 2.15;
 const BONE_AFTERIMAGE_LIFETIME = 0.9;
 const BEST_TIME_KEY = "game-vibe-best-time";
+const SCREEN_WIDTH = 480;
+const SCREEN_HEIGHT = 320;
+const START_ROOM_ID = "flame-mountain";
+
+const DOOR_POSITIONS = {
+  up: { x: SCREEN_WIDTH / 2 - DOOR_SIZE / 2, y: 8 },
+  down: { x: SCREEN_WIDTH / 2 - DOOR_SIZE / 2, y: SCREEN_HEIGHT - DOOR_SIZE - 8 },
+  left: { x: 8, y: SCREEN_HEIGHT / 2 - DOOR_SIZE / 2 },
+  right: { x: SCREEN_WIDTH - DOOR_SIZE - 8, y: SCREEN_HEIGHT / 2 - DOOR_SIZE / 2 },
+};
+
+const ENTRY_SPAWNS = {
+  up: { x: SCREEN_WIDTH / 2 - PLAYER_SIZE / 2, y: 34 },
+  down: { x: SCREEN_WIDTH / 2 - PLAYER_SIZE / 2, y: SCREEN_HEIGHT - PLAYER_SIZE - 34 },
+  left: { x: 34, y: SCREEN_HEIGHT / 2 - PLAYER_SIZE / 2 },
+  right: { x: SCREEN_WIDTH - PLAYER_SIZE - 34, y: SCREEN_HEIGHT / 2 - PLAYER_SIZE / 2 },
+};
+
+const OPPOSITE_DIRECTIONS = {
+  up: "down",
+  down: "up",
+  left: "right",
+  right: "left",
+};
 
 const ROOMS = [
   {
+    id: "flame-mountain",
+    type: "combat",
     name: "火焰山",
+    lore: "烈焰翻涌，妖影逼近",
     enemySprite: "flameDemon",
     background: [48, 28, 24],
     wallColor: [110, 56, 42],
@@ -47,7 +74,7 @@ const ROOMS = [
     enemyBehavior: "flameRush",
     enemySpeedScale: 1.12,
     player: { x: 40, y: 160 },
-    door: { x: 430, y: 152 },
+    exits: { right: "bone-cave", down: "daughter-kingdom" },
     flameZones: [
       { x: 150, y: 142, w: 42, h: 36, phase: 0 },
       { x: 248, y: 26, w: 42, h: 38, phase: 1.25 },
@@ -68,7 +95,10 @@ const ROOMS = [
     ],
   },
   {
+    id: "bone-cave",
+    type: "combat",
     name: "白骨洞",
+    lore: "阴风入骨，白影游移",
     enemySprite: "boneDemon",
     background: [28, 28, 40],
     wallColor: [92, 88, 104],
@@ -80,7 +110,7 @@ const ROOMS = [
     enemyBehavior: "boneTrack",
     enemyAfterimage: "bone",
     player: { x: 42, y: 42 },
-    door: { x: 430, y: 272 },
+    exits: { left: "flame-mountain", right: "sand-river", down: "spider-cave" },
     walls: [
       { x: 72, y: 96, w: 264, h: 24 },
       { x: 144, y: 168, w: 264, h: 24 },
@@ -95,7 +125,10 @@ const ROOMS = [
     ],
   },
   {
+    id: "sand-river",
+    type: "combat",
     name: "流沙河",
+    lore: "黄沙压境，水路难行",
     enemySprite: "sandDemon",
     background: [38, 34, 28],
     wallColor: [122, 94, 54],
@@ -106,7 +139,9 @@ const ROOMS = [
     mechanicHint: "机制：流沙会减速 / P 暂停",
     enemyBehavior: "sandDrift",
     player: { x: 42, y: 272 },
-    door: { x: 430, y: 42 },
+    exits: { left: "bone-cave", down: "lesser-thunder" },
+    exitPositions: { down: { x: 258, y: 290 } },
+    entrySpawns: { down: { x: 258, y: 270 } },
     slowZones: [
       { x: 96, y: 18, w: 42, h: 44 },
       { x: 170, y: 222, w: 40, h: 58 },
@@ -128,7 +163,97 @@ const ROOMS = [
       { x: 406, y: 154, vx: -ENEMY_SPEED, vy: ENEMY_SPEED },
     ],
   },
+  {
+    id: "daughter-kingdom",
+    type: "combat",
+    name: "女儿国",
+    lore: "花影迷阵，香风绕路",
+    enemySprite: "taoistDemon",
+    background: [42, 32, 48],
+    wallColor: [112, 70, 104],
+    wallOutline: [54, 32, 62],
+    statusColor: [245, 188, 224],
+    introColor: [255, 172, 220],
+    introSubtitle: "花影迷阵，香风绕路",
+    mechanicHint: "机制：短墙分割路线 / P 暂停",
+    enemyBehavior: "sandDrift",
+    player: { x: 240, y: 250 },
+    exits: { up: "flame-mountain", right: "spider-cave" },
+    walls: [
+      { x: 96, y: 58, w: 24, h: 128 },
+      { x: 176, y: 134, w: 132, h: 24 },
+      { x: 360, y: 58, w: 24, h: 128 },
+      { x: 130, y: 238, w: 220, h: 24 },
+    ],
+    enemies: [
+      { x: 70, y: 72, vx: ENEMY_SPEED * 0.92, vy: ENEMY_SPEED * 0.76 },
+      { x: 240, y: 82, vx: -ENEMY_SPEED * 0.86, vy: ENEMY_SPEED },
+      { x: 392, y: 230, vx: -ENEMY_SPEED, vy: -ENEMY_SPEED * 0.78 },
+    ],
+  },
+  {
+    id: "spider-cave",
+    type: "combat",
+    name: "盘丝洞",
+    lore: "蛛丝横结，洞路缠绕",
+    enemySprite: "spiderDemon",
+    background: [30, 28, 44],
+    wallColor: [74, 82, 104],
+    wallOutline: [34, 36, 52],
+    statusColor: [188, 218, 235],
+    introColor: [178, 236, 255],
+    introSubtitle: "蛛丝横结，洞路缠绕",
+    mechanicHint: "机制：蛛妖会轻追踪 / P 暂停",
+    enemyBehavior: "boneTrack",
+    player: { x: 40, y: 250 },
+    exits: { left: "daughter-kingdom", up: "bone-cave", right: "lesser-thunder" },
+    walls: [
+      { x: 76, y: 76, w: 120, h: 20 },
+      { x: 284, y: 76, w: 120, h: 20 },
+      { x: 150, y: 164, w: 180, h: 20 },
+      { x: 76, y: 242, w: 120, h: 20 },
+      { x: 284, y: 242, w: 120, h: 20 },
+    ],
+    enemies: [
+      { x: 104, y: 120, vx: ENEMY_SPEED * 0.9, vy: ENEMY_SPEED },
+      { x: 234, y: 52, vx: -ENEMY_SPEED, vy: ENEMY_SPEED * 0.72 },
+      { x: 358, y: 194, vx: -ENEMY_SPEED * 0.92, vy: -ENEMY_SPEED },
+      { x: 230, y: 268, vx: ENEMY_SPEED * 0.8, vy: -ENEMY_SPEED * 0.9 },
+    ],
+  },
+  {
+    id: "lesser-thunder",
+    type: "final",
+    name: "小雷音寺前庭",
+    lore: "金光压云，终点在前",
+    enemySprite: "taoistDemon",
+    background: [36, 34, 48],
+    wallColor: [118, 102, 62],
+    wallOutline: [58, 48, 30],
+    statusColor: [255, 226, 150],
+    introColor: [255, 232, 150],
+    introSubtitle: "金光压云，终点在前",
+    mechanicHint: "机制：清空前庭即可通关 / P 暂停",
+    enemyBehavior: "flameRush",
+    enemySpeedScale: 1.04,
+    player: { x: 42, y: 160 },
+    exits: { left: "spider-cave", up: "sand-river" },
+    walls: [
+      { x: 96, y: 58, w: 24, h: 204 },
+      { x: 176, y: 112, w: 128, h: 24 },
+      { x: 176, y: 208, w: 128, h: 24 },
+      { x: 360, y: 58, w: 24, h: 204 },
+    ],
+    enemies: [
+      { x: 150, y: 56, vx: ENEMY_SPEED, vy: ENEMY_SPEED * 0.84 },
+      { x: 252, y: 250, vx: -ENEMY_SPEED, vy: -ENEMY_SPEED * 0.86 },
+      { x: 404, y: 82, vx: -ENEMY_SPEED * 0.9, vy: ENEMY_SPEED },
+      { x: 404, y: 236, vx: -ENEMY_SPEED * 0.92, vy: -ENEMY_SPEED },
+    ],
+  },
 ];
+
+const ROOM_BY_ID = Object.fromEntries(ROOMS.map((room) => [room.id, room]));
 
 let activeWalls = [];
 let runHealth = PLAYER_MAX_HEALTH;
@@ -137,6 +262,7 @@ let runStats = {
   hitsTaken: 0,
   time: 0,
 };
+let clearedRoomIds = new Set();
 let audioContext = null;
 let isMuted = false;
 
@@ -178,6 +304,8 @@ loadSprite("demon", "/sprites/demon.svg");
 loadSprite("flameDemon", "/sprites/flame-demon.svg");
 loadSprite("boneDemon", "/sprites/bone-demon.svg");
 loadSprite("sandDemon", "/sprites/sand-demon.svg");
+loadSprite("spiderDemon", "/sprites/spider-demon.svg");
+loadSprite("taoistDemon", "/sprites/taoist-demon.svg");
 loadSprite("staff", "/sprites/staff.svg");
 loadSprite("portal", "/sprites/portal.svg");
 
@@ -249,6 +377,28 @@ function wallContainsBullet(bullet) {
     { x: bullet.pos.x, y: bullet.pos.y, w: bullet.hitSize.w, h: bullet.hitSize.h },
     wall,
   ));
+}
+
+function getRoomById(roomId) {
+  return ROOM_BY_ID[roomId] ?? ROOMS[0];
+}
+
+function getRoomIndex(roomId) {
+  return Math.max(0, ROOMS.findIndex((room) => room.id === roomId));
+}
+
+function getRoomProgressLabel(room) {
+  return `${getRoomIndex(room.id) + 1}/${ROOMS.length}`;
+}
+
+function getEntrySpawn(room, fromDirection) {
+  if (fromDirection && room.entrySpawns?.[fromDirection]) {
+    return room.entrySpawns[fromDirection];
+  }
+  if (fromDirection && ENTRY_SPAWNS[fromDirection]) {
+    return ENTRY_SPAWNS[fromDirection];
+  }
+  return room.player;
 }
 
 function limitVelocity(velocity, maxSpeed) {
@@ -409,6 +559,7 @@ function resetRunStats() {
     hitsTaken: 0,
     time: 0,
   };
+  clearedRoomIds = new Set();
 }
 
 function formatRunTime(seconds) {
@@ -455,8 +606,23 @@ function updateBestTime(seconds) {
   return { bestTime, isNewBest: false };
 }
 
-scene("game", (roomIndex = 0, shouldResetRun = false) => {
-  const room = ROOMS[roomIndex];
+scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = null) => {
+  if (typeof roomId === "number") {
+    roomId = ROOMS[roomId]?.id ?? START_ROOM_ID;
+  }
+  const room = getRoomById(roomId);
+  const roomIndex = getRoomIndex(room.id);
+  const roomProgress = getRoomProgressLabel(room);
+  const entrySpawn = getEntrySpawn(room, fromDirection);
+  const roomExits = Object.entries(room.exits ?? {})
+    .filter(([, targetId]) => ROOM_BY_ID[targetId])
+    .map(([direction, targetId]) => ({
+      direction,
+      targetId,
+      ...DOOR_POSITIONS[direction],
+      ...(room.exitPositions?.[direction] ?? {}),
+    }))
+    .filter((exit) => typeof exit.x === "number" && typeof exit.y === "number");
   activeWalls = room.walls;
   if (shouldResetRun) {
     resetRunStats();
@@ -517,10 +683,11 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     };
   });
 
-  const player = addMonkeyHero(room.player.x, room.player.y);
+  const player = addMonkeyHero(entrySpawn.x, entrySpawn.y);
 
+  const roomAlreadyCleared = clearedRoomIds.has(room.id);
   const speedScale = room.enemySpeedScale ?? 1;
-  const enemies = room.enemies.map((enemyConfig) => ({
+  const enemies = (roomAlreadyCleared ? [] : room.enemies).map((enemyConfig) => ({
     body: addDemonEnemy(enemyConfig.x, enemyConfig.y, room.enemySprite),
     velocity: {
       x: enemyConfig.vx * speedScale,
@@ -531,7 +698,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   }));
 
   add([
-    text(`${room.name} 房间 ${roomIndex + 1}/${ROOMS.length}：方向键射击，清敌开门`, { size: 13 }),
+    text(`${room.name} ${roomProgress}：方向键射击，清敌开门`, { size: 13 }),
     pos(10, 8),
     color(230, 230, 238),
   ]);
@@ -561,16 +728,20 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     color(255, 220, 160),
   ]);
 
-  const sealedDoorMarker = add([
-    rect(DOOR_SIZE, DOOR_SIZE),
-    pos(room.door.x, room.door.y),
-    color(72, 98, 72),
-    opacity(0.34),
-    outline(1, [120, 170, 120]),
-  ]);
+  const sealedDoorMarkers = roomExits.map((exit) => {
+    const marker = add([
+      rect(DOOR_SIZE, DOOR_SIZE),
+      pos(exit.x, exit.y),
+      color(72, 98, 72),
+      opacity(0.34),
+      outline(1, [120, 170, 120]),
+    ]);
+    marker.exit = exit;
+    return marker;
+  });
 
-  if (roomIndex === 0 && shouldResetRun) {
-    addRoomCue("清掉妖怪，进绿色门 / P 暂停 / M 静音", width() / 2, height() - 36, [255, 235, 190], 2);
+  if (room.id === START_ROOM_ID && shouldResetRun) {
+    addRoomCue("清掉妖怪，探索四周门 / P 暂停 / M 静音", width() / 2, height() - 36, [255, 235, 190], 2);
   }
 
   const lowHealthOverlay = add([
@@ -640,11 +811,12 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   let sealedDoorFadeTimer = 0;
   let lowHealthPulseTimer = 0;
   let roomIntroTimer = ROOM_INTRO_DURATION;
-  let door = null;
+  let doorsOpened = false;
+  let doors = [];
   let enemiesLeft = enemies.length;
 
   function updateStatusText() {
-    const doorStatus = door ? "门已开启" : "门未开启";
+    const doorStatus = doorsOpened ? "门已开启" : "门未开启";
     statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌人 ${enemiesLeft} / ${doorStatus}`;
   }
 
@@ -661,25 +833,48 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   updateMuteText();
 
   function openDoorIfReady() {
-    if (door || enemiesLeft > 0) return;
-    const isFinalRoom = roomIndex + 1 >= ROOMS.length;
-    const doorMessage = isFinalRoom ? "最终传送门已开启" : "传送门已开启";
-    const doorCue = isFinalRoom ? "最后一道门已开" : "门已开启，去传送门";
-    door = add([
-      sprite("portal", { width: DOOR_SIZE, height: DOOR_SIZE }),
-      pos(room.door.x, room.door.y),
-      area(),
-      "door",
-    ]);
-    sealedDoorMarker.color = [92, 220, 112];
-    sealedDoorMarker.opacity = 0.58;
+    if (doorsOpened || enemiesLeft > 0) return;
+    doorsOpened = true;
+    clearedRoomIds.add(room.id);
+    const isFinalRoom = room.type === "final";
+    const doorMessage = isFinalRoom ? "终点已净化" : "四周传送门已开启";
+    const doorCue = isFinalRoom ? "小雷音寺前庭已净，通关" : "门已开启，选路探索";
+    if (isFinalRoom) {
+      feedbackText.text = doorMessage;
+      feedbackTimer = 1.2;
+      playTone(660, 0.12, 0.022, "triangle");
+      ended = true;
+      go("complete");
+      return;
+    }
+    doors = roomExits.map((exit) => {
+      const openedDoor = add([
+        sprite("portal", { width: DOOR_SIZE, height: DOOR_SIZE }),
+        pos(exit.x, exit.y),
+        area(),
+        "door",
+      ]);
+      openedDoor.targetId = exit.targetId;
+      openedDoor.direction = exit.direction;
+      return openedDoor;
+    });
+    sealedDoorMarkers.forEach((marker) => {
+      marker.color = [92, 220, 112];
+      marker.opacity = 0.58;
+    });
     sealedDoorFadeTimer = SEALED_DOOR_FADE_TIME;
     feedbackText.text = doorMessage;
     feedbackTimer = 1.2;
-    addRoomCue(doorCue, room.door.x + DOOR_SIZE / 2, Math.max(58, room.door.y - 14), [120, 255, 150]);
-    addHitBurst(room.door.x + DOOR_SIZE / 2, room.door.y + DOOR_SIZE / 2, [118, 255, 142]);
+    roomExits.forEach((exit) => {
+      addRoomCue(doorCue, exit.x + DOOR_SIZE / 2, Math.max(58, exit.y - 14), [120, 255, 150]);
+      addHitBurst(exit.x + DOOR_SIZE / 2, exit.y + DOOR_SIZE / 2, [118, 255, 142]);
+    });
     playTone(660, 0.12, 0.022, "triangle");
     updateStatusText();
+  }
+
+  if (roomAlreadyCleared) {
+    openDoorIfReady();
   }
 
   function shoot(dirX, dirY) {
@@ -716,7 +911,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
 
     if (runHealth <= 0) {
       ended = true;
-      go("lose", roomIndex);
+      go("lose", room.id);
       return true;
     }
 
@@ -735,14 +930,10 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     hurtPlayer(enemyCenter.x, enemyCenter.y);
   });
 
-  player.onCollide("door", () => {
-    if (ended || paused) return;
+  player.onCollide("door", (doorBody) => {
+    if (ended || paused || !doorBody.targetId) return;
     ended = true;
-    if (roomIndex + 1 >= ROOMS.length) {
-      go("complete");
-      return;
-    }
-    go("game", roomIndex + 1, false);
+    go("game", doorBody.targetId, false, OPPOSITE_DIRECTIONS[doorBody.direction] ?? null);
   });
 
   onKeyPress("p", () => {
@@ -758,7 +949,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
 
   onKeyPress("r", () => {
     if (ended) return;
-    go("game", 0, true);
+    go("game", START_ROOM_ID, true);
   });
 
   onUpdate(() => {
@@ -798,8 +989,10 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
       lowHealthText.opacity = 0;
     }
 
-    if (door) {
-      sealedDoorMarker.opacity = Math.max(0, 0.58 * (sealedDoorFadeTimer / SEALED_DOOR_FADE_TIME));
+    if (doorsOpened) {
+      sealedDoorMarkers.forEach((marker) => {
+        marker.opacity = Math.max(0, 0.58 * (sealedDoorFadeTimer / SEALED_DOOR_FADE_TIME));
+      });
     }
 
     get("hitSpark").forEach((spark) => {
@@ -826,12 +1019,15 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     if (isKeyDown("down")) shoot(0, 1);
 
     const playerRect = { x: player.pos.x, y: player.pos.y, w: PLAYER_SIZE, h: PLAYER_SIZE };
-    if (!door && sealedDoorHintTimer <= 0) {
-      const doorCenterX = room.door.x + DOOR_SIZE / 2;
-      const doorCenterY = room.door.y + DOOR_SIZE / 2;
+    if (!doorsOpened && sealedDoorHintTimer <= 0) {
       const playerCenterX = player.pos.x + PLAYER_SIZE / 2;
       const playerCenterY = player.pos.y + PLAYER_SIZE / 2;
-      if (Math.hypot(playerCenterX - doorCenterX, playerCenterY - doorCenterY) <= SEALED_DOOR_HINT_DISTANCE) {
+      const nearSealedDoor = roomExits.some((exit) => {
+        const doorCenterX = exit.x + DOOR_SIZE / 2;
+        const doorCenterY = exit.y + DOOR_SIZE / 2;
+        return Math.hypot(playerCenterX - doorCenterX, playerCenterY - doorCenterY) <= SEALED_DOOR_HINT_DISTANCE;
+      });
+      if (nearSealedDoor) {
         feedbackText.text = "先清掉妖怪";
         feedbackTimer = 0.75;
         sealedDoorHintTimer = SEALED_DOOR_HINT_COOLDOWN;
@@ -995,8 +1191,8 @@ scene("complete", () => {
     { frequency: 880, duration: 0.12, volume: 0.024, type: "triangle" },
   ]);
   addResultScreen({
-    title: "三关已净",
-    subtitle: "火焰山、白骨洞、流沙河都被清理完成",
+    title: "取经路已通",
+    subtitle: "多房间妖气已被清理，终点前庭归于平静",
     hint: "按 R 开始新一轮取经",
     accentColor: [255, 232, 150],
     backgroundColor: [32, 38, 30],
@@ -1025,11 +1221,16 @@ scene("complete", () => {
     anchor("center"),
     color(255, 232, 150),
   ]);
-  onKeyDown("r", () => go("game", 0, true));
+  onKeyDown("r", () => go("game", START_ROOM_ID, true));
 });
 
-scene("lose", (roomIndex = 0) => {
-  const roomName = ROOMS[roomIndex]?.name ?? "当前房间";
+scene("lose", (roomId = START_ROOM_ID) => {
+  if (typeof roomId === "number") {
+    roomId = ROOMS[roomId]?.id ?? START_ROOM_ID;
+  }
+  const room = getRoomById(roomId);
+  const roomIndex = getRoomIndex(room.id);
+  const roomName = room.name ?? "当前房间";
   addResultScreen({
     title: "取经受阻",
     subtitle: `${roomName} 的妖气仍未散尽`,
@@ -1038,7 +1239,7 @@ scene("lose", (roomIndex = 0) => {
     backgroundColor: [44, 30, 34],
   });
   add([
-    text(`当前进度：第 ${roomIndex + 1} / ${ROOMS.length} 间`, { size: 11 }),
+    text(`当前房间：${roomName} / 节点 ${roomIndex + 1}/${ROOMS.length}`, { size: 11 }),
     pos(width() / 2, 210),
     anchor("center"),
     color(236, 204, 198),
@@ -1049,7 +1250,7 @@ scene("lose", (roomIndex = 0) => {
     anchor("center"),
     color(228, 214, 206),
   ]);
-  onKeyDown("r", () => go("game", roomIndex, true));
+  onKeyDown("r", () => go("game", room.id, true));
 });
 
-go("game", 0, true);
+go("game", START_ROOM_ID, true);

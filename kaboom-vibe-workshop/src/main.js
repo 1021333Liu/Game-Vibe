@@ -57,12 +57,26 @@ const OPPOSITE_DIRECTIONS = {
   right: "left",
 };
 
+const MAP_DIRECTION_OFFSET = {
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+};
+
+const DIRECTION_LABELS = {
+  up: "上",
+  down: "下",
+  left: "左",
+  right: "右",
+};
+
 const ROOMS = [
   {
     id: "flame-mountain",
     type: "combat",
     name: "火焰山",
-    lore: "烈焰翻涌，妖影逼近",
+    lore: "芭蕉难借，烈焰拦路",
     enemySprite: "flameDemon",
     background: [48, 28, 24],
     wallColor: [110, 56, 42],
@@ -98,7 +112,7 @@ const ROOMS = [
     id: "bone-cave",
     type: "combat",
     name: "白骨洞",
-    lore: "阴风入骨，白影游移",
+    lore: "三打白骨，阴风入骨",
     enemySprite: "boneDemon",
     background: [28, 28, 40],
     wallColor: [92, 88, 104],
@@ -128,7 +142,7 @@ const ROOMS = [
     id: "sand-river",
     type: "combat",
     name: "流沙河",
-    lore: "黄沙压境，水路难行",
+    lore: "八百流沙，水路难行",
     enemySprite: "sandDemon",
     background: [38, 34, 28],
     wallColor: [122, 94, 54],
@@ -167,7 +181,7 @@ const ROOMS = [
     id: "daughter-kingdom",
     type: "combat",
     name: "女儿国",
-    lore: "花影迷阵，香风绕路",
+    lore: "子母河畔，花影迷阵",
     enemySprite: "taoistDemon",
     background: [42, 32, 48],
     wallColor: [112, 70, 104],
@@ -195,7 +209,7 @@ const ROOMS = [
     id: "spider-cave",
     type: "combat",
     name: "盘丝洞",
-    lore: "蛛丝横结，洞路缠绕",
+    lore: "蛛丝结网，七情缠路",
     enemySprite: "spiderDemon",
     background: [30, 28, 44],
     wallColor: [74, 82, 104],
@@ -225,7 +239,7 @@ const ROOMS = [
     id: "lesser-thunder",
     type: "final",
     name: "小雷音寺前庭",
-    lore: "金光压云，终点在前",
+    lore: "假佛金光，终点在前",
     enemySprite: "taoistDemon",
     background: [36, 34, 48],
     wallColor: [118, 102, 62],
@@ -254,6 +268,7 @@ const ROOMS = [
 ];
 
 const ROOM_BY_ID = Object.fromEntries(ROOMS.map((room) => [room.id, room]));
+const ROOM_MAP_POSITIONS = buildRoomMapPositions();
 
 let activeWalls = [];
 let runHealth = PLAYER_MAX_HEALTH;
@@ -262,6 +277,7 @@ let runStats = {
   hitsTaken: 0,
   time: 0,
 };
+let exploredRoomIds = new Set();
 let clearedRoomIds = new Set();
 let audioContext = null;
 let isMuted = false;
@@ -379,6 +395,27 @@ function wallContainsBullet(bullet) {
   ));
 }
 
+function buildRoomMapPositions() {
+  const positions = { [START_ROOM_ID]: { x: 0, y: 0 } };
+  const queue = [START_ROOM_ID];
+  while (queue.length > 0) {
+    const roomId = queue.shift();
+    const room = ROOM_BY_ID[roomId];
+    if (!room) continue;
+    Object.entries(room.exits ?? {}).forEach(([direction, targetId]) => {
+      if (!ROOM_BY_ID[targetId] || positions[targetId]) return;
+      const offset = MAP_DIRECTION_OFFSET[direction];
+      if (!offset) return;
+      positions[targetId] = {
+        x: positions[roomId].x + offset.x,
+        y: positions[roomId].y + offset.y,
+      };
+      queue.push(targetId);
+    });
+  }
+  return positions;
+}
+
 function getRoomById(roomId) {
   return ROOM_BY_ID[roomId] ?? ROOMS[0];
 }
@@ -399,6 +436,66 @@ function getEntrySpawn(room, fromDirection) {
     return ENTRY_SPAWNS[fromDirection];
   }
   return room.player;
+}
+
+function getExitLabel(room) {
+  const labels = Object.keys(room.exits ?? {})
+    .map((direction) => DIRECTION_LABELS[direction] ?? direction);
+  return labels.length > 0 ? labels.join(" ") : "无";
+}
+
+function addMiniMap(currentRoom) {
+  const mapEntries = ROOMS
+    .map((room) => ({ room, mapPos: ROOM_MAP_POSITIONS[room.id] }))
+    .filter((entry) => entry.mapPos);
+  if (mapEntries.length === 0) return;
+
+  const originX = width() - 72;
+  const originY = 72;
+  const tileSize = 9;
+  const gap = 4;
+  const minX = Math.min(...mapEntries.map((entry) => entry.mapPos.x));
+  const maxX = Math.max(...mapEntries.map((entry) => entry.mapPos.x));
+  const minY = Math.min(...mapEntries.map((entry) => entry.mapPos.y));
+  const maxY = Math.max(...mapEntries.map((entry) => entry.mapPos.y));
+  const centerOffsetX = ((maxX - minX) * (tileSize + gap)) / 2;
+
+  add([
+    text(`地图 ${currentRoom.name}`, { size: 9 }),
+    pos(width() - 10, 58),
+    anchor("topright"),
+    color(220, 222, 216),
+  ]);
+
+  mapEntries.forEach(({ room, mapPos }) => {
+    const isCurrent = room.id === currentRoom.id;
+    const isCleared = clearedRoomIds.has(room.id);
+    const isExplored = exploredRoomIds.has(room.id);
+    const fill = isCurrent
+      ? [255, 232, 150]
+      : isCleared
+        ? [104, 216, 128]
+        : isExplored
+          ? [150, 176, 210]
+          : [60, 64, 74];
+    add([
+      rect(tileSize, tileSize),
+      pos(
+        originX + (mapPos.x - minX) * (tileSize + gap) - centerOffsetX,
+        originY + (mapPos.y - minY) * (tileSize + gap),
+      ),
+      color(...fill),
+      opacity(isExplored || isCurrent || isCleared ? 0.92 : 0.42),
+      outline(1, isCurrent ? [255, 250, 210] : [90, 94, 104]),
+    ]);
+  });
+
+  add([
+    text(`出口 ${getExitLabel(currentRoom)}`, { size: 9 }),
+    pos(width() - 10, originY + (maxY - minY + 1) * (tileSize + gap) + 6),
+    anchor("topright"),
+    color(204, 206, 198),
+  ]);
 }
 
 function limitVelocity(velocity, maxSpeed) {
@@ -559,6 +656,7 @@ function resetRunStats() {
     hitsTaken: 0,
     time: 0,
   };
+  exploredRoomIds = new Set();
   clearedRoomIds = new Set();
 }
 
@@ -628,6 +726,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     resetRunStats();
     runHealth = PLAYER_MAX_HEALTH;
   }
+  exploredRoomIds.add(room.id);
 
   add([
     rect(width(), height()),
@@ -722,6 +821,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     color(214, 210, 198),
   ]);
 
+  addMiniMap(room);
+
   const feedbackText = add([
     text("入场安全", { size: 12 }),
     pos(10, 58),
@@ -768,7 +869,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   ]);
 
   const roomIntroSubtitle = add([
-    text(room.introSubtitle, { size: 12 }),
+    text(room.lore ?? room.introSubtitle, { size: 12 }),
     pos(width() / 2, 106),
     anchor("center"),
     color(238, 232, 218),

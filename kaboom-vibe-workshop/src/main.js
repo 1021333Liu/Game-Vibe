@@ -18,6 +18,7 @@ const ROOM_INTRO_FADE_TIME = 0.55;
 const HIT_SPARK_LIFETIME = 0.28;
 const BONE_TRACKING_STRENGTH = 18;
 const SAND_DRIFT_STRENGTH = 24;
+const ENEMY_TRAIL_INTERVAL = 0.16;
 
 const ROOMS = [
   {
@@ -252,6 +253,23 @@ function addHitBurst(x, y, sparkColor) {
   ].forEach((velocity) => addHitSpark(x, y, velocity, sparkColor));
 }
 
+function addEnemyMotionCue(enemy, room) {
+  const centerX = enemy.body.pos.x + ENEMY_SIZE / 2;
+  const centerY = enemy.body.pos.y + ENEMY_SIZE / 2;
+  if (room.enemyBehavior === "flameRush") {
+    addHitSpark(centerX - enemy.velocity.x * 0.035, centerY - enemy.velocity.y * 0.035, { x: 0, y: -8 }, [255, 116, 58], 5);
+    return;
+  }
+  if (room.enemyBehavior === "boneTrack") {
+    addHitSpark(centerX, centerY - 11, { x: 0, y: -16 }, [166, 218, 255], 3);
+    return;
+  }
+  if (room.enemyBehavior === "sandDrift") {
+    addHitSpark(centerX - 9, centerY + Math.sin(enemy.phase) * 4, { x: -18, y: 4 }, [210, 176, 104], 4);
+    addHitSpark(centerX + 9, centerY - Math.sin(enemy.phase) * 4, { x: 18, y: -4 }, [236, 204, 130], 3);
+  }
+}
+
 function getHealthLabel(health) {
   return `${"心".repeat(health)}${"空".repeat(PLAYER_MAX_HEALTH - health)}`;
 }
@@ -290,6 +308,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
       y: enemyConfig.vy * speedScale,
     },
     phase: (enemyConfig.x + enemyConfig.y) * 0.03,
+    trailTimer: (enemyConfig.x % 3) * 0.04,
   }));
 
   add([
@@ -448,6 +467,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
 
     enemies.forEach((enemy) => {
       if (!enemy.body.exists()) return;
+      enemy.trailTimer = Math.max(0, enemy.trailTimer - dt());
       let moveX = enemy.velocity.x;
       let moveY = enemy.velocity.y;
 
@@ -475,6 +495,10 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
       }
       if (hitY || enemy.body.pos.y <= 0 || enemy.body.pos.y + ENEMY_SIZE >= height()) {
         enemy.velocity.y *= -1;
+      }
+      if (enemy.trailTimer <= 0) {
+        addEnemyMotionCue(enemy, room);
+        enemy.trailTimer = ENEMY_TRAIL_INTERVAL;
       }
     });
 

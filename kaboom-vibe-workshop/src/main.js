@@ -1174,6 +1174,15 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     z(1001),
   ]);
 
+  const pauseStatus = add([
+    text("", { size: 11 }),
+    pos(width() / 2, 220),
+    anchor("center"),
+    color(255, 235, 190),
+    opacity(0),
+    z(1001),
+  ]);
+
   let ended = false;
   let paused = false;
   let shotTimer = 0;
@@ -1208,6 +1217,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     pauseOverlay.opacity = paused ? 0.62 : 0;
     pauseTitle.opacity = paused ? 1 : 0;
     pauseHelp.opacity = paused ? 1 : 0;
+    pauseStatus.opacity = paused ? 1 : 0;
+    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / ${runItem === "cloneHair" ? "分身毫毛" : "无道具"}`;
   }
 
   updateMuteText();

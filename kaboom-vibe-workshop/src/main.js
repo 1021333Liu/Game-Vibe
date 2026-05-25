@@ -88,6 +88,12 @@ const ROOMS = [
     introColor: [255, 174, 92],
     introSubtitle: "烈焰翻涌，妖影逼近",
     mechanicHint: "机制：注意火焰预警 / P 暂停",
+    decor: [
+      { x: 32, y: 62, w: 76, h: 5, color: [255, 94, 42], opacity: 0.2 },
+      { x: 168, y: 278, w: 98, h: 5, color: [255, 142, 50], opacity: 0.18 },
+      { x: 268, y: 154, w: 72, h: 4, color: [255, 78, 46], opacity: 0.18 },
+      { x: 390, y: 76, w: 38, h: 4, color: [255, 184, 74], opacity: 0.16 },
+    ],
     enemyBehavior: "flameRush",
     enemySpeedScale: 1.12,
     player: { x: 40, y: 160 },
@@ -124,6 +130,12 @@ const ROOMS = [
     introColor: [190, 218, 255],
     introSubtitle: "阴风入骨，白影游移",
     mechanicHint: "机制：击破后有骨影 / P 暂停",
+    decor: [
+      { x: 34, y: 58, w: 38, h: 4, color: [210, 220, 230], opacity: 0.16 },
+      { x: 236, y: 38, w: 46, h: 4, color: [190, 204, 222], opacity: 0.15 },
+      { x: 108, y: 286, w: 42, h: 4, color: [218, 220, 228], opacity: 0.14 },
+      { x: 382, y: 214, w: 36, h: 4, color: [190, 204, 222], opacity: 0.14 },
+    ],
     enemyBehavior: "boneTrack",
     enemyAfterimage: "bone",
     player: { x: 42, y: 42 },
@@ -154,6 +166,12 @@ const ROOMS = [
     introColor: [245, 210, 132],
     introSubtitle: "黄沙压境，水路难行",
     mechanicHint: "机制：流沙会减速 / P 暂停",
+    decor: [
+      { x: 36, y: 34, w: 96, h: 3, color: [210, 176, 104], opacity: 0.2 },
+      { x: 186, y: 76, w: 74, h: 3, color: [236, 204, 130], opacity: 0.16 },
+      { x: 262, y: 264, w: 96, h: 3, color: [210, 176, 104], opacity: 0.18 },
+      { x: 366, y: 118, w: 62, h: 3, color: [236, 204, 130], opacity: 0.14 },
+    ],
     enemyBehavior: "sandDrift",
     player: { x: 42, y: 272 },
     exits: { left: "bone-cave", down: "lion-outpost" },
@@ -193,6 +211,12 @@ const ROOMS = [
     introColor: [255, 172, 220],
     introSubtitle: "花影迷阵，香风绕路",
     mechanicHint: "机制：短墙分割路线 / P 暂停",
+    decor: [
+      { x: 44, y: 214, w: 10, h: 10, color: [255, 142, 210], opacity: 0.18 },
+      { x: 252, y: 58, w: 10, h: 10, color: [255, 194, 226], opacity: 0.16 },
+      { x: 410, y: 174, w: 10, h: 10, color: [255, 142, 210], opacity: 0.16 },
+      { x: 320, y: 276, w: 10, h: 10, color: [255, 194, 226], opacity: 0.14 },
+    ],
     enemyBehavior: "sandDrift",
     player: { x: 240, y: 250 },
     exits: { up: "flame-mountain", right: "spider-cave", down: "dragon-treasure" },
@@ -221,6 +245,12 @@ const ROOMS = [
     introColor: [156, 232, 255],
     introSubtitle: "海藏微光，宝物待取",
     mechanicHint: "机制：奖励房无战斗 / P 暂停",
+    decor: [
+      { x: 40, y: 48, w: 92, h: 3, color: [118, 214, 240], opacity: 0.18 },
+      { x: 178, y: 166, w: 124, h: 3, color: [166, 230, 255], opacity: 0.16 },
+      { x: 334, y: 262, w: 88, h: 3, color: [118, 214, 240], opacity: 0.18 },
+      { x: 210, y: 246, w: 58, h: 3, color: [166, 230, 255], opacity: 0.14 },
+    ],
     player: { x: 230, y: 48 },
     exits: { up: "daughter-kingdom" },
     walls: [
@@ -244,6 +274,12 @@ const ROOMS = [
     introColor: [178, 236, 255],
     introSubtitle: "蛛丝横结，洞路缠绕",
     mechanicHint: "机制：蛛妖会轻追踪 / P 暂停",
+    decor: [
+      { x: 32, y: 42, w: 72, h: 2, color: [160, 196, 220], opacity: 0.18 },
+      { x: 48, y: 58, w: 2, h: 72, color: [160, 196, 220], opacity: 0.14 },
+      { x: 352, y: 210, w: 78, h: 2, color: [190, 220, 238], opacity: 0.16 },
+      { x: 388, y: 174, w: 2, h: 72, color: [190, 220, 238], opacity: 0.14 },
+    ],
     enemyBehavior: "boneTrack",
     player: { x: 40, y: 250 },
     exits: { left: "daughter-kingdom", up: "bone-cave", right: "lion-outpost" },
@@ -274,6 +310,12 @@ const ROOMS = [
     introColor: [255, 188, 112],
     introSubtitle: "狮吼压岭，妖军列阵",
     mechanicHint: "机制：精英妖怪需多次命中 / P 暂停",
+    decor: [
+      { x: 42, y: 38, w: 22, h: 8, color: [180, 110, 62], opacity: 0.18 },
+      { x: 304, y: 48, w: 24, h: 8, color: [180, 110, 62], opacity: 0.16 },
+      { x: 136, y: 264, w: 26, h: 8, color: [156, 86, 54], opacity: 0.18 },
+      { x: 386, y: 236, w: 22, h: 8, color: [180, 110, 62], opacity: 0.14 },
+    ],
     enemyBehavior: "flameRush",
     enemySpeedScale: 0.72,
     player: { x: 42, y: 160 },
@@ -303,6 +345,12 @@ const ROOMS = [
     introColor: [255, 232, 150],
     introSubtitle: "金光压云，终点在前",
     mechanicHint: "机制：清空前庭即可通关 / P 暂停",
+    decor: [
+      { x: 224, y: 22, w: 32, h: 88, color: [255, 232, 150], opacity: 0.12 },
+      { x: 188, y: 120, w: 104, h: 4, color: [255, 232, 150], opacity: 0.16 },
+      { x: 146, y: 278, w: 188, h: 4, color: [255, 210, 112], opacity: 0.14 },
+      { x: 404, y: 42, w: 28, h: 74, color: [255, 232, 150], opacity: 0.1 },
+    ],
     enemyBehavior: "flameRush",
     enemySpeedScale: 1.04,
     player: { x: 42, y: 160 },
@@ -557,6 +605,18 @@ function addMiniMap(currentRoom) {
     anchor("topright"),
     color(204, 206, 198),
   ]);
+}
+
+function drawRoomDecor(room) {
+  (room.decor ?? []).forEach((mark) => {
+    add([
+      rect(mark.w, mark.h),
+      pos(mark.x, mark.y),
+      color(...mark.color),
+      opacity(mark.opacity ?? 0.16),
+      z(-1),
+    ]);
+  });
 }
 
 function limitVelocity(velocity, maxSpeed) {
@@ -818,6 +878,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     pos(0, 0),
     color(...room.background),
   ]);
+
+  drawRoomDecor(room);
 
   room.walls.forEach((wall) => {
     add([

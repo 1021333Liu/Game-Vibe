@@ -7,6 +7,7 @@ const ENEMY_SIZE = 18;
 const ELITE_SIZE = 28;
 const DOOR_SIZE = 22;
 const HEAL_PEACH_SIZE = 16;
+const ATTACK_ITEM_SIZE = 16;
 const BULLET_SIZE = 6;
 const BULLET_SPEED = 9000;
 const SHOT_COOLDOWN = 0.035;
@@ -311,6 +312,8 @@ let runStats = {
 let exploredRoomIds = new Set();
 let clearedRoomIds = new Set();
 let rewardedRoomIds = new Set();
+let itemRewardedRoomIds = new Set();
+let runItem = null;
 let audioContext = null;
 let isMuted = false;
 
@@ -358,6 +361,7 @@ loadSprite("lionElite", "/sprites/lion-elite.svg");
 loadSprite("staff", "/sprites/staff.svg");
 loadSprite("portal", "/sprites/portal.svg");
 loadSprite("healPeach", "/sprites/heal-peach.svg");
+loadSprite("cloneHair", "/sprites/clone-hair.svg");
 
 function getAudioContext() {
   if (audioContext) return audioContext;
@@ -584,6 +588,16 @@ function addHealPeach(x, y) {
   ]);
 }
 
+function addCloneHairItem(x, y) {
+  return add([
+    sprite("cloneHair", { width: ATTACK_ITEM_SIZE, height: ATTACK_ITEM_SIZE }),
+    pos(x, y),
+    area(),
+    opacity(1),
+    "attackItem",
+  ]);
+}
+
 function addStaffBullet(x, y, dirX, dirY) {
   const horizontal = dirX !== 0;
   const body = add([
@@ -704,6 +718,8 @@ function resetRunStats() {
   exploredRoomIds = new Set();
   clearedRoomIds = new Set();
   rewardedRoomIds = new Set();
+  itemRewardedRoomIds = new Set();
+  runItem = null;
 }
 
 function formatRunTime(seconds) {
@@ -883,6 +899,12 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     color(255, 220, 160),
   ]);
 
+  const itemText = add([
+    text("", { size: 10 }),
+    pos(10, 74),
+    color(214, 210, 198),
+  ]);
+
   const sealedDoorMarkers = roomExits.map((exit) => {
     const marker = add([
       rect(DOOR_SIZE, DOOR_SIZE),
@@ -969,6 +991,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   let doorsOpened = false;
   let doors = [];
   let healPeach = null;
+  let attackItem = null;
   let enemiesLeft = enemies.length;
 
   function updateStatusText() {
@@ -980,6 +1003,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     muteText.text = isMuted ? "M 音效开" : "M 静音";
   }
 
+  function updateItemText() {
+    itemText.text = runItem === "cloneHair" ? "道具：分身毫毛 / 双发" : "道具：无";
+  }
+
   function updatePauseOverlay() {
     pauseOverlay.opacity = paused ? 0.62 : 0;
     pauseTitle.opacity = paused ? 1 : 0;
@@ -987,6 +1014,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
 
   updateMuteText();
+  updateItemText();
 
   function dropHealRewardIfNeeded() {
     if (room.type === "final") return;
@@ -1004,6 +1032,22 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     playTone(720, 0.08, 0.02, "triangle");
   }
 
+  function dropAttackItemIfNeeded() {
+    if (room.id !== "lion-outpost") return;
+    if (roomAlreadyCleared) return;
+    if (runItem) return;
+    if (itemRewardedRoomIds.has(room.id)) return;
+
+    itemRewardedRoomIds.add(room.id);
+    const rewardX = Math.max(28, Math.min(width() - ATTACK_ITEM_SIZE - 28, width() / 2 - ATTACK_ITEM_SIZE / 2));
+    const rewardY = Math.max(68, Math.min(height() - ATTACK_ITEM_SIZE - 30, height() / 2 + 34));
+    attackItem = addCloneHairItem(rewardX, rewardY);
+    feedbackText.text = "精英奖励：分身毫毛出现";
+    feedbackTimer = 1.25;
+    addRoomCue("分身毫毛", rewardX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), [230, 235, 255], 1.2);
+    playTone(880, 0.08, 0.02, "triangle");
+  }
+
   function openDoorIfReady() {
     if (doorsOpened || enemiesLeft > 0) return;
     doorsOpened = true;
@@ -1019,6 +1063,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       go("complete");
       return;
     }
+    dropAttackItemIfNeeded();
     dropHealRewardIfNeeded();
     doors = roomExits.map((exit) => {
       const openedDoor = add([
@@ -1054,12 +1099,18 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     if (ended || shotTimer > 0) return;
     shotTimer = SHOT_COOLDOWN;
     playTone(520, 0.035, 0.018, "square");
+    const bulletX = player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2;
+    const bulletY = player.pos.y + PLAYER_SIZE / 2 - BULLET_SIZE / 2;
     addStaffBullet(
-      player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2,
-      player.pos.y + PLAYER_SIZE / 2 - BULLET_SIZE / 2,
+      bulletX,
+      bulletY,
       dirX,
       dirY,
     );
+    if (runItem === "cloneHair") {
+      const spreadOffset = dirX !== 0 ? { x: 0, y: 8 } : { x: 8, y: 0 };
+      addStaffBullet(bulletX + spreadOffset.x, bulletY + spreadOffset.y, dirX, dirY);
+    }
   }
 
   function hurtPlayer(sourceX, sourceY, message = "-1 生命") {
@@ -1122,6 +1173,21 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     playToneSequence([
       { frequency: 640, duration: 0.055, volume: 0.02, type: "triangle" },
       { frequency: 820, duration: 0.07, volume: 0.022, type: "triangle" },
+    ]);
+  });
+
+  player.onCollide("attackItem", (item) => {
+    if (ended || paused) return;
+    runItem = "cloneHair";
+    destroy(item);
+    attackItem = null;
+    updateItemText();
+    feedbackText.text = "拾取分身毫毛：双发";
+    feedbackTimer = 1.35;
+    addRoomCue("双发开启", player.pos.x + PLAYER_SIZE / 2, Math.max(58, player.pos.y - 12), [230, 235, 255], 1.1);
+    playToneSequence([
+      { frequency: 720, duration: 0.055, volume: 0.02, type: "triangle" },
+      { frequency: 960, duration: 0.07, volume: 0.022, type: "triangle" },
     ]);
   });
 
@@ -1204,6 +1270,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
     get("healPeach").forEach((peach) => {
       peach.opacity = 0.74 + Math.sin(runStats.time * 8) * 0.18;
+    });
+
+    get("attackItem").forEach((item) => {
+      item.opacity = 0.76 + Math.sin(runStats.time * 7) * 0.16;
     });
 
     if (isKeyDown("left")) shoot(-1, 0);

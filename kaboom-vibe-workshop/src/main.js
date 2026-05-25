@@ -195,7 +195,7 @@ const ROOMS = [
     mechanicHint: "机制：短墙分割路线 / P 暂停",
     enemyBehavior: "sandDrift",
     player: { x: 240, y: 250 },
-    exits: { up: "flame-mountain", right: "spider-cave" },
+    exits: { up: "flame-mountain", right: "spider-cave", down: "dragon-treasure" },
     walls: [
       { x: 96, y: 58, w: 24, h: 128 },
       { x: 176, y: 134, w: 132, h: 24 },
@@ -207,6 +207,29 @@ const ROOMS = [
       { x: 240, y: 82, vx: -ENEMY_SPEED * 0.86, vy: ENEMY_SPEED },
       { x: 392, y: 230, vx: -ENEMY_SPEED, vy: -ENEMY_SPEED * 0.78 },
     ],
+  },
+  {
+    id: "dragon-treasure",
+    type: "treasure",
+    name: "龙宫宝库",
+    lore: "海藏微光，宝物待取",
+    enemySprite: "taoistDemon",
+    background: [24, 42, 54],
+    wallColor: [52, 94, 112],
+    wallOutline: [24, 48, 62],
+    statusColor: [166, 230, 255],
+    introColor: [156, 232, 255],
+    introSubtitle: "海藏微光，宝物待取",
+    mechanicHint: "机制：奖励房无战斗 / P 暂停",
+    player: { x: 230, y: 48 },
+    exits: { up: "daughter-kingdom" },
+    walls: [
+      { x: 88, y: 72, w: 24, h: 176 },
+      { x: 368, y: 72, w: 24, h: 176 },
+      { x: 150, y: 112, w: 180, h: 20 },
+      { x: 150, y: 204, w: 180, h: 20 },
+    ],
+    enemies: [],
   },
   {
     id: "spider-cave",
@@ -1018,6 +1041,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   function dropHealRewardIfNeeded() {
     if (room.type === "final") return;
+    if (room.type === "treasure") return;
     if (roomAlreadyCleared) return;
     if (rewardedRoomIds.has(room.id)) return;
     if (runHealth >= PLAYER_MAX_HEALTH) return;
@@ -1044,6 +1068,37 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     attackItem = addCloneHairItem(rewardX, rewardY);
     feedbackText.text = "精英奖励：分身毫毛出现";
     feedbackTimer = 1.25;
+    addRoomCue("分身毫毛", rewardX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), [230, 235, 255], 1.2);
+    playTone(880, 0.08, 0.02, "triangle");
+  }
+
+  function dropTreasureRoomRewardIfNeeded() {
+    if (room.type !== "treasure") return;
+    if (itemRewardedRoomIds.has(room.id)) {
+      feedbackText.text = "宝库已取";
+      feedbackTimer = 1.1;
+      return;
+    }
+
+    itemRewardedRoomIds.add(room.id);
+    const rewardX = width() / 2 - ATTACK_ITEM_SIZE / 2;
+    const rewardY = height() / 2 - ATTACK_ITEM_SIZE / 2;
+    if (runItem === "cloneHair") {
+      if (runHealth >= PLAYER_MAX_HEALTH) {
+        feedbackText.text = "宝库已取";
+        feedbackTimer = 1.1;
+        addRoomCue("宝库已取", width() / 2, height() / 2 - 18, [166, 230, 255], 1.2);
+        return;
+      }
+      healPeach = addHealPeach(rewardX, rewardY);
+      feedbackText.text = "宝库奖励：回血桃";
+      addRoomCue("+1 生命", rewardX + HEAL_PEACH_SIZE / 2, Math.max(58, rewardY - 12), [255, 198, 144], 1.2);
+      playTone(720, 0.08, 0.02, "triangle");
+      return;
+    }
+
+    attackItem = addCloneHairItem(rewardX, rewardY);
+    feedbackText.text = "宝库奖励：分身毫毛";
     addRoomCue("分身毫毛", rewardX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), [230, 235, 255], 1.2);
     playTone(880, 0.08, 0.02, "triangle");
   }
@@ -1093,6 +1148,11 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   if (roomAlreadyCleared) {
     openDoorIfReady();
+  }
+
+  if (room.type === "treasure") {
+    openDoorIfReady();
+    dropTreasureRoomRewardIfNeeded();
   }
 
   function shoot(dirX, dirY) {

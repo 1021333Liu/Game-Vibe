@@ -26,6 +26,7 @@ const ROOM_CUE_LIFETIME = 1.25;
 const QUICKSAND_SPEED_SCALE = 0.58;
 const SEALED_DOOR_HINT_DISTANCE = 42;
 const SEALED_DOOR_HINT_COOLDOWN = 0.9;
+const SEALED_DOOR_FADE_TIME = 0.55;
 const FLAME_WARNING_TIME = 1.05;
 const FLAME_ACTIVE_TIME = 0.72;
 const FLAME_REST_TIME = 2.15;
@@ -636,6 +637,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   let invincibleTimer = 0;
   let feedbackTimer = 0;
   let sealedDoorHintTimer = 0;
+  let sealedDoorFadeTimer = 0;
   let lowHealthPulseTimer = 0;
   let roomIntroTimer = ROOM_INTRO_DURATION;
   let door = null;
@@ -669,7 +671,9 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
       area(),
       "door",
     ]);
-    sealedDoorMarker.opacity = 0;
+    sealedDoorMarker.color = [92, 220, 112];
+    sealedDoorMarker.opacity = 0.58;
+    sealedDoorFadeTimer = SEALED_DOOR_FADE_TIME;
     feedbackText.text = doorMessage;
     feedbackTimer = 1.2;
     addRoomCue(doorCue, room.door.x + DOOR_SIZE / 2, Math.max(58, room.door.y - 14), [120, 255, 150]);
@@ -765,6 +769,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     invincibleTimer = Math.max(0, invincibleTimer - dt());
     feedbackTimer = Math.max(0, feedbackTimer - dt());
     sealedDoorHintTimer = Math.max(0, sealedDoorHintTimer - dt());
+    sealedDoorFadeTimer = Math.max(0, sealedDoorFadeTimer - dt());
     lowHealthPulseTimer += dt();
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
     runStats.time += dt();
@@ -791,6 +796,10 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     } else {
       lowHealthOverlay.opacity = 0;
       lowHealthText.opacity = 0;
+    }
+
+    if (door) {
+      sealedDoorMarker.opacity = Math.max(0, 0.58 * (sealedDoorFadeTimer / SEALED_DOOR_FADE_TIME));
     }
 
     get("hitSpark").forEach((spark) => {

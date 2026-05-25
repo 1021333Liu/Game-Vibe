@@ -563,6 +563,22 @@ function getExitLabel(room) {
   return labels.length > 0 ? labels.join(" ") : "无";
 }
 
+function getDoorLabelPosition(exit) {
+  const centerX = exit.x + DOOR_SIZE / 2;
+  const centerY = exit.y + DOOR_SIZE / 2;
+  if (exit.direction === "up") return { x: centerX, y: exit.y + DOOR_SIZE + 10 };
+  if (exit.direction === "down") return { x: centerX, y: exit.y - 8 };
+  if (exit.direction === "left") return { x: exit.x + DOOR_SIZE + 30, y: centerY };
+  if (exit.direction === "right") return { x: exit.x - 30, y: centerY };
+  return { x: centerX, y: Math.max(58, exit.y - 10) };
+}
+
+function getDoorLabelAnchor(exit) {
+  if (exit.direction === "left") return "left";
+  if (exit.direction === "right") return "right";
+  return "center";
+}
+
 function addMiniMap(currentRoom) {
   const mapEntries = ROOMS
     .map((room) => ({ room, mapPos: ROOM_MAP_POSITIONS[room.id] }))
@@ -1270,6 +1286,16 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     roomExits.forEach((exit) => {
       addRoomCue(doorCue, exit.x + DOOR_SIZE / 2, Math.max(58, exit.y - 14), [120, 255, 150]);
       addHitBurst(exit.x + DOOR_SIZE / 2, exit.y + DOOR_SIZE / 2, [118, 255, 142]);
+      const targetRoom = getRoomById(exit.targetId);
+      const labelPos = getDoorLabelPosition(exit);
+      add([
+        text(targetRoom.name, { size: 9 }),
+        pos(labelPos.x, labelPos.y),
+        anchor(getDoorLabelAnchor(exit)),
+        color(204, 255, 210),
+        opacity(0.9),
+        "doorLabel",
+      ]);
     });
     playTone(660, 0.12, 0.022, "triangle");
     updateStatusText();

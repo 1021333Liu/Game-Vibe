@@ -360,9 +360,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   activeWalls = room.walls;
   if (shouldResetRun) {
     resetRunStats();
-    if (roomIndex === 0) {
-      runHealth = PLAYER_MAX_HEALTH;
-    }
+    runHealth = PLAYER_MAX_HEALTH;
   }
 
   add([

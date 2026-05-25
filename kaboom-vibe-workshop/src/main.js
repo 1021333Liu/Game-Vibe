@@ -558,6 +558,10 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     color(255, 220, 160),
   ]);
 
+  if (roomIndex === 0 && shouldResetRun) {
+    addRoomCue("清掉妖怪，进绿色门 / P 暂停 / M 静音", width() / 2, height() - 36, [255, 235, 190], 2);
+  }
+
   const lowHealthOverlay = add([
     rect(width(), height()),
     pos(0, 0),

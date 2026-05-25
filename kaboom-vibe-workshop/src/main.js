@@ -135,6 +135,7 @@ let runStats = {
   time: 0,
 };
 let audioContext = null;
+let isMuted = false;
 
 const {
   add,
@@ -190,6 +191,7 @@ function getAudioContext() {
 }
 
 function playTone(frequency, duration = 0.06, volume = 0.025, type = "square") {
+  if (isMuted) return;
   try {
     const context = getAudioContext();
     if (!context) return;
@@ -213,6 +215,7 @@ function playTone(frequency, duration = 0.06, volume = 0.025, type = "square") {
 }
 
 function playToneSequence(notes) {
+  if (isMuted) return;
   try {
     notes.forEach((note, index) => {
       window.setTimeout(() => playTone(note.frequency, note.duration, note.volume, note.type), index * 70);
@@ -529,6 +532,13 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     color(214, 210, 198),
   ]);
 
+  const muteText = add([
+    text("", { size: 10 }),
+    pos(width() - 10, 44),
+    anchor("topright"),
+    color(214, 210, 198),
+  ]);
+
   const feedbackText = add([
     text("入场安全", { size: 12 }),
     pos(10, 58),
@@ -584,7 +594,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   ]);
 
   const pauseHelp = add([
-    text("WASD 移动 / 方向键射击\nP 继续 / R 重开本局", { size: 12 }),
+    text("WASD 移动 / 方向键射击\nP 继续 / R 重开本局 / M 静音", { size: 12 }),
     pos(width() / 2, 150),
     anchor("center"),
     color(230, 230, 238),
@@ -608,11 +618,17 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌人 ${enemiesLeft} / ${doorStatus}`;
   }
 
+  function updateMuteText() {
+    muteText.text = isMuted ? "M 音效开" : "M 静音";
+  }
+
   function updatePauseOverlay() {
     pauseOverlay.opacity = paused ? 0.62 : 0;
     pauseTitle.opacity = paused ? 1 : 0;
     pauseHelp.opacity = paused ? 1 : 0;
   }
+
+  updateMuteText();
 
   function openDoorIfReady() {
     if (door || enemiesLeft > 0) return;
@@ -697,6 +713,11 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     if (ended) return;
     paused = !paused;
     updatePauseOverlay();
+  });
+
+  onKeyPress("m", () => {
+    isMuted = !isMuted;
+    updateMuteText();
   });
 
   onKeyPress("r", () => {

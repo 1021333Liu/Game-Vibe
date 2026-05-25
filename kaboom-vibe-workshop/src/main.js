@@ -27,6 +27,10 @@ const HIT_SPARK_LIFETIME = 0.28;
 const BONE_TRACKING_STRENGTH = 18;
 const SAND_DRIFT_STRENGTH = 24;
 const ENEMY_TRAIL_INTERVAL = 0.16;
+const ELITE_ROAR_INTERVAL = 3.4;
+const ELITE_ROAR_WARN_TIME = 0.55;
+const ELITE_ROAR_RUSH_TIME = 0.95;
+const ELITE_ROAR_SPEED_SCALE = 1.28;
 const PLAYER_HIT_FLASH_LIFETIME = 0.32;
 const ROOM_CUE_LIFETIME = 1.25;
 const QUICKSAND_SPEED_SCALE = 0.58;
@@ -1035,6 +1039,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       },
       phase: (enemyConfig.x + enemyConfig.y) * 0.03,
       trailTimer: (enemyConfig.x % 3) * 0.04,
+      eliteTimer: enemyConfig.hp > 1 ? ELITE_ROAR_INTERVAL * 0.72 : 0,
+      eliteState: "idle",
     };
     enemy.healthBar = addEliteHealthBar(body, enemySize);
     return enemy;
@@ -1556,6 +1562,23 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       }
       const enemySize = enemy.size ?? ENEMY_SIZE;
       enemy.trailTimer = Math.max(0, enemy.trailTimer - dt());
+      if ((enemy.body.maxHp ?? 1) > 1) {
+        enemy.eliteTimer -= dt();
+        if (enemy.eliteState === "idle" && enemy.eliteTimer <= 0) {
+          enemy.eliteState = "warning";
+          enemy.eliteTimer = ELITE_ROAR_WARN_TIME;
+          feedbackText.text = "精英怒吼蓄力";
+          feedbackTimer = ELITE_ROAR_WARN_TIME;
+          addRoomCue("怒吼蓄力", enemy.body.pos.x + enemySize / 2, Math.max(58, enemy.body.pos.y - 14), [255, 180, 120], 0.8);
+          addHitBurst(enemy.body.pos.x + enemySize / 2, enemy.body.pos.y + enemySize / 2, [255, 132, 84]);
+        } else if (enemy.eliteState === "warning" && enemy.eliteTimer <= 0) {
+          enemy.eliteState = "rushing";
+          enemy.eliteTimer = ELITE_ROAR_RUSH_TIME;
+        } else if (enemy.eliteState === "rushing" && enemy.eliteTimer <= 0) {
+          enemy.eliteState = "idle";
+          enemy.eliteTimer = ELITE_ROAR_INTERVAL;
+        }
+      }
       let moveX = enemy.velocity.x;
       let moveY = enemy.velocity.y;
 
@@ -1574,6 +1597,14 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         enemy.phase += dt() * 2.1;
         moveX += Math.sin(enemy.phase) * SAND_DRIFT_STRENGTH;
         moveY += Math.cos(enemy.phase * 0.8) * SAND_DRIFT_STRENGTH;
+      }
+
+      if (enemy.eliteState === "warning") {
+        moveX = 0;
+        moveY = 0;
+      } else if (enemy.eliteState === "rushing") {
+        moveX *= ELITE_ROAR_SPEED_SCALE;
+        moveY *= ELITE_ROAR_SPEED_SCALE;
       }
 
       const hitX = moveOnAxis(enemy.body, moveX, 0, enemySize);

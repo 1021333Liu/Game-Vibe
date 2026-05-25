@@ -14,6 +14,7 @@ const PLAYER_MAX_HEALTH = 3;
 const ENTRY_SAFE_TIME = 1;
 const PLAYER_INVINCIBLE_TIME = 1.1;
 const PLAYER_KNOCKBACK = 26;
+const LOW_HEALTH_PULSE_SPEED = 5;
 const ROOM_INTRO_DURATION = 1.6;
 const ROOM_INTRO_FADE_TIME = 0.55;
 const HIT_SPARK_LIFETIME = 0.28;
@@ -488,6 +489,21 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     color(255, 220, 160),
   ]);
 
+  const lowHealthOverlay = add([
+    rect(width(), height()),
+    pos(0, 0),
+    color(88, 8, 16),
+    opacity(0),
+  ]);
+
+  const lowHealthText = add([
+    text("危险：生命仅剩 1", { size: 11 }),
+    pos(width() - 10, 26),
+    anchor("topright"),
+    color(255, 150, 140),
+    opacity(0),
+  ]);
+
   const roomIntroTitle = add([
     text(room.name, { size: 24 }),
     pos(width() / 2, 78),
@@ -536,6 +552,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   let entrySafeTimer = ENTRY_SAFE_TIME;
   let invincibleTimer = 0;
   let feedbackTimer = 0;
+  let lowHealthPulseTimer = 0;
   let roomIntroTimer = ROOM_INTRO_DURATION;
   let door = null;
   let enemiesLeft = enemies.length;
@@ -645,6 +662,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     entrySafeTimer = Math.max(0, entrySafeTimer - dt());
     invincibleTimer = Math.max(0, invincibleTimer - dt());
     feedbackTimer = Math.max(0, feedbackTimer - dt());
+    lowHealthPulseTimer += dt();
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
     runStats.time += dt();
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);
@@ -661,6 +679,15 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
       player.opacity = Math.floor(invincibleTimer * 12) % 2 === 0 ? 0.45 : 1;
     } else {
       player.opacity = 1;
+    }
+
+    if (runHealth === 1) {
+      const pulse = (Math.sin(lowHealthPulseTimer * LOW_HEALTH_PULSE_SPEED) + 1) / 2;
+      lowHealthOverlay.opacity = 0.04 + pulse * 0.035;
+      lowHealthText.opacity = 0.62 + pulse * 0.38;
+    } else {
+      lowHealthOverlay.opacity = 0;
+      lowHealthText.opacity = 0;
     }
 
     get("hitSpark").forEach((spark) => {

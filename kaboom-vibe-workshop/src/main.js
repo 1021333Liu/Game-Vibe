@@ -11,6 +11,7 @@ const SHOT_COOLDOWN = 0.035;
 const BULLET_STEP = 6;
 const BULLET_LIFETIME = 4;
 const PLAYER_MAX_HEALTH = 3;
+const ENTRY_SAFE_TIME = 1;
 const PLAYER_INVINCIBLE_TIME = 1.1;
 const PLAYER_KNOCKBACK = 26;
 const ROOM_INTRO_DURATION = 1.6;
@@ -482,7 +483,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   ]);
 
   const feedbackText = add([
-    text("", { size: 12 }),
+    text("入场安全", { size: 12 }),
     pos(10, 58),
     color(255, 220, 160),
   ]);
@@ -532,6 +533,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   let ended = false;
   let paused = false;
   let shotTimer = 0;
+  let entrySafeTimer = ENTRY_SAFE_TIME;
   let invincibleTimer = 0;
   let feedbackTimer = 0;
   let roomIntroTimer = ROOM_INTRO_DURATION;
@@ -576,7 +578,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   }
 
   function hurtPlayer(sourceX, sourceY, message = "-1 生命") {
-    if (ended || paused || invincibleTimer > 0) return false;
+    if (ended || paused || entrySafeTimer > 0 || invincibleTimer > 0) return false;
 
     runHealth -= 1;
     runStats.hitsTaken += 1;
@@ -640,6 +642,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     if (ended) return;
     if (paused) return;
     shotTimer = Math.max(0, shotTimer - dt());
+    entrySafeTimer = Math.max(0, entrySafeTimer - dt());
     invincibleTimer = Math.max(0, invincibleTimer - dt());
     feedbackTimer = Math.max(0, feedbackTimer - dt());
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
@@ -647,10 +650,14 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);
     roomIntroTitle.opacity = introAlpha;
     roomIntroSubtitle.opacity = introAlpha;
-    if (feedbackTimer <= 0) {
+    if (entrySafeTimer > 0) {
+      feedbackText.text = "入场安全";
+    } else if (feedbackTimer <= 0) {
       feedbackText.text = "";
     }
-    if (invincibleTimer > 0) {
+    if (entrySafeTimer > 0) {
+      player.opacity = Math.floor(entrySafeTimer * 12) % 2 === 0 ? 0.58 : 1;
+    } else if (invincibleTimer > 0) {
       player.opacity = Math.floor(invincibleTimer * 12) % 2 === 0 ? 0.45 : 1;
     } else {
       player.opacity = 1;

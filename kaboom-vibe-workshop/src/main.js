@@ -22,6 +22,9 @@ const ENEMY_TRAIL_INTERVAL = 0.16;
 const PLAYER_HIT_FLASH_LIFETIME = 0.32;
 const ROOM_CUE_LIFETIME = 1.25;
 const QUICKSAND_SPEED_SCALE = 0.58;
+const FLAME_WARNING_TIME = 1.05;
+const FLAME_ACTIVE_TIME = 0.72;
+const FLAME_REST_TIME = 2.15;
 
 const ROOMS = [
   {
@@ -37,6 +40,12 @@ const ROOMS = [
     enemySpeedScale: 1.12,
     player: { x: 40, y: 160 },
     door: { x: 430, y: 152 },
+    flameZones: [
+      { x: 150, y: 142, w: 42, h: 36, phase: 0 },
+      { x: 248, y: 26, w: 42, h: 38, phase: 1.25 },
+      { x: 248, y: 256, w: 42, h: 38, phase: 2.45 },
+      { x: 374, y: 112, w: 38, h: 42, phase: 3.1 },
+    ],
     walls: [
       { x: 112, y: 0, w: 24, h: 132 },
       { x: 112, y: 212, w: 24, h: 108 },
@@ -343,6 +352,32 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     ]);
   });
 
+  const flameHazards = (room.flameZones ?? []).map((zone) => {
+    const warningMarker = add([
+      rect(zone.w, zone.h),
+      pos(zone.x, zone.y),
+      color(255, 210, 92),
+      opacity(0),
+      outline(1, [255, 116, 58]),
+      "flameHazard",
+    ]);
+    const fireMarker = add([
+      rect(zone.w, zone.h),
+      pos(zone.x, zone.y),
+      color(255, 84, 40),
+      opacity(0),
+      outline(1, [255, 210, 92]),
+      "flameHazard",
+    ]);
+    return {
+      ...zone,
+      warningMarker,
+      fireMarker,
+      timer: zone.phase,
+      active: false,
+    };
+  });
+
   const player = addMonkeyHero(room.player.x, room.player.y);
 
   const speedScale = room.enemySpeedScale ?? 1;
@@ -429,24 +464,20 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     );
   }
 
-  player.onCollide("enemy", (enemy) => {
-    if (ended || invincibleTimer > 0) return;
+  function hurtPlayer(sourceX, sourceY, message = "-1 生命") {
+    if (ended || invincibleTimer > 0) return false;
 
     runHealth -= 1;
     updateStatusText();
     addScreenFlash([190, 32, 32], PLAYER_HIT_FLASH_LIFETIME);
-    addRoomCue("-1 生命", player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), [255, 168, 150], 0.75);
+    addRoomCue(message, player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), [255, 168, 150], 0.75);
 
     const playerCenter = {
       x: player.pos.x + PLAYER_SIZE / 2,
       y: player.pos.y + PLAYER_SIZE / 2,
     };
-    const enemyCenter = {
-      x: enemy.pos.x + ENEMY_SIZE / 2,
-      y: enemy.pos.y + ENEMY_SIZE / 2,
-    };
-    const awayX = playerCenter.x - enemyCenter.x;
-    const awayY = playerCenter.y - enemyCenter.y;
+    const awayX = playerCenter.x - sourceX;
+    const awayY = playerCenter.y - sourceY;
     const length = Math.max(1, Math.hypot(awayX, awayY));
     moveByAmount(player, (awayX / length) * PLAYER_KNOCKBACK, 0, PLAYER_SIZE);
     moveByAmount(player, 0, (awayY / length) * PLAYER_KNOCKBACK, PLAYER_SIZE);
@@ -454,12 +485,22 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     if (runHealth <= 0) {
       ended = true;
       go("lose", roomIndex);
-      return;
+      return true;
     }
 
     invincibleTimer = PLAYER_INVINCIBLE_TIME;
     feedbackText.text = "受击！短暂无敌";
     feedbackTimer = PLAYER_INVINCIBLE_TIME;
+    return true;
+  }
+
+  player.onCollide("enemy", (enemy) => {
+    if (ended || invincibleTimer > 0) return;
+    const enemyCenter = {
+      x: enemy.pos.x + ENEMY_SIZE / 2,
+      y: enemy.pos.y + ENEMY_SIZE / 2,
+    };
+    hurtPlayer(enemyCenter.x, enemyCenter.y);
   });
 
   player.onCollide("door", () => {
@@ -522,6 +563,26 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     if (isKeyDown("down")) shoot(0, 1);
 
     const playerRect = { x: player.pos.x, y: player.pos.y, w: PLAYER_SIZE, h: PLAYER_SIZE };
+    flameHazards.forEach((hazard) => {
+      const cycleLength = FLAME_WARNING_TIME + FLAME_ACTIVE_TIME + FLAME_REST_TIME;
+      hazard.timer = (hazard.timer + dt()) % cycleLength;
+      hazard.active = hazard.timer >= FLAME_WARNING_TIME && hazard.timer < FLAME_WARNING_TIME + FLAME_ACTIVE_TIME;
+      if (hazard.timer < FLAME_WARNING_TIME) {
+        hazard.warningMarker.opacity = 0.18 + Math.floor(hazard.timer * 8) % 2 * 0.18;
+        hazard.fireMarker.opacity = 0;
+      } else if (hazard.active) {
+        hazard.warningMarker.opacity = 0;
+        hazard.fireMarker.opacity = 0.64;
+        if (rectsOverlap(playerRect, hazard)) {
+          hurtPlayer(hazard.x + hazard.w / 2, hazard.y + hazard.h / 2, "灼伤 -1");
+        }
+      } else {
+        hazard.warningMarker.opacity = 0;
+        hazard.fireMarker.opacity = 0;
+      }
+    });
+    if (ended) return;
+
     const inSlowZone = (room.slowZones ?? []).some((zone) => rectsOverlap(playerRect, zone));
     const sp = inSlowZone ? MOVE_SPEED * QUICKSAND_SPEED_SCALE : MOVE_SPEED;
     let dx = 0;

@@ -140,8 +140,10 @@ const {
   anchor,
   outline,
   opacity,
+  z,
   onUpdate,
   onKeyDown,
+  onKeyPress,
   destroy,
   scene,
   go,
@@ -464,7 +466,34 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     opacity(1),
   ]);
 
+  const pauseOverlay = add([
+    rect(width(), height()),
+    pos(0, 0),
+    color(8, 9, 14),
+    opacity(0),
+    z(1000),
+  ]);
+
+  const pauseTitle = add([
+    text("暂停", { size: 22 }),
+    pos(width() / 2, 108),
+    anchor("center"),
+    color(255, 235, 190),
+    opacity(0),
+    z(1001),
+  ]);
+
+  const pauseHelp = add([
+    text("WASD 移动 / 方向键射击\nP 继续 / R 重开本局", { size: 12 }),
+    pos(width() / 2, 150),
+    anchor("center"),
+    color(230, 230, 238),
+    opacity(0),
+    z(1001),
+  ]);
+
   let ended = false;
+  let paused = false;
   let shotTimer = 0;
   let invincibleTimer = 0;
   let feedbackTimer = 0;
@@ -475,6 +504,12 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   function updateStatusText() {
     const doorStatus = door ? "门已开启" : "门未开启";
     statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌人 ${enemiesLeft} / ${doorStatus}`;
+  }
+
+  function updatePauseOverlay() {
+    pauseOverlay.opacity = paused ? 0.62 : 0;
+    pauseTitle.opacity = paused ? 1 : 0;
+    pauseHelp.opacity = paused ? 1 : 0;
   }
 
   function openDoorIfReady() {
@@ -504,7 +539,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   }
 
   function hurtPlayer(sourceX, sourceY, message = "-1 生命") {
-    if (ended || invincibleTimer > 0) return false;
+    if (ended || paused || invincibleTimer > 0) return false;
 
     runHealth -= 1;
     runStats.hitsTaken += 1;
@@ -535,7 +570,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   }
 
   player.onCollide("enemy", (enemy) => {
-    if (ended || invincibleTimer > 0) return;
+    if (ended || paused || invincibleTimer > 0) return;
     const enemyCenter = {
       x: enemy.pos.x + ENEMY_SIZE / 2,
       y: enemy.pos.y + ENEMY_SIZE / 2,
@@ -544,7 +579,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   });
 
   player.onCollide("door", () => {
-    if (ended) return;
+    if (ended || paused) return;
     ended = true;
     if (roomIndex + 1 >= ROOMS.length) {
       go("complete");
@@ -553,8 +588,20 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     go("game", roomIndex + 1, false);
   });
 
+  onKeyPress("p", () => {
+    if (ended) return;
+    paused = !paused;
+    updatePauseOverlay();
+  });
+
+  onKeyPress("r", () => {
+    if (ended) return;
+    go("game", roomIndex, true);
+  });
+
   onUpdate(() => {
     if (ended) return;
+    if (paused) return;
     shotTimer = Math.max(0, shotTimer - dt());
     invincibleTimer = Math.max(0, invincibleTimer - dt());
     feedbackTimer = Math.max(0, feedbackTimer - dt());

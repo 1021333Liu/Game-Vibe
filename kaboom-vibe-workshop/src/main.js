@@ -412,6 +412,19 @@ function formatRunTime(seconds) {
   return `${Math.floor(seconds)} 秒`;
 }
 
+function getClearRank(stats) {
+  if (stats.time <= 55 && stats.hitsTaken === 0) {
+    return { grade: "S", comment: "毫发无伤" };
+  }
+  if (stats.time <= 75 && stats.hitsTaken <= 1) {
+    return { grade: "A", comment: "身法不错" };
+  }
+  if (stats.time <= 105 && stats.hitsTaken <= 3) {
+    return { grade: "B", comment: "稳住阵脚" };
+  }
+  return { grade: "C", comment: "再战会更顺" };
+}
+
 function readBestTime() {
   try {
     const saved = window.localStorage?.getItem(BEST_TIME_KEY);
@@ -934,6 +947,7 @@ scene("complete", () => {
   const bestResult = updateBestTime(runStats.time);
   const bestLabel = bestResult.bestTime === null ? "暂无记录" : formatRunTime(bestResult.bestTime);
   const bestPrefix = bestResult.isNewBest ? "新最快" : "最快";
+  const clearRank = getClearRank(runStats);
   playToneSequence([
     { frequency: 520, duration: 0.08, volume: 0.022, type: "triangle" },
     { frequency: 660, duration: 0.08, volume: 0.022, type: "triangle" },
@@ -948,19 +962,25 @@ scene("complete", () => {
   });
   add([
     text("传送门光芒稳定，妖气暂退。", { size: 11 }),
-    pos(width() / 2, 216),
+    pos(width() / 2, 210),
     anchor("center"),
     color(190, 216, 190),
   ]);
   add([
+    text(`评级 ${clearRank.grade} / ${clearRank.comment}`, { size: 11 }),
+    pos(width() / 2, 228),
+    anchor("center"),
+    color(255, 232, 150),
+  ]);
+  add([
     text(`用时 ${formatRunTime(runStats.time)} / 击败 ${runStats.defeats} / 受伤 ${runStats.hitsTaken}`, { size: 11 }),
-    pos(width() / 2, 232),
+    pos(width() / 2, 246),
     anchor("center"),
     color(230, 226, 194),
   ]);
   add([
     text(`${bestPrefix} ${bestLabel}`, { size: 11 }),
-    pos(width() / 2, 250),
+    pos(width() / 2, 264),
     anchor("center"),
     color(255, 232, 150),
   ]);

@@ -90,6 +90,7 @@ const ROOMS = [
     type: "combat",
     name: "火焰山",
     lore: "芭蕉难借，烈焰拦路",
+    clearLore: "火势稍退，借扇之路仍远",
     enemySprite: "flameDemon",
     background: [48, 28, 24],
     wallColor: [110, 56, 42],
@@ -132,6 +133,7 @@ const ROOMS = [
     type: "combat",
     name: "白骨洞",
     lore: "三打白骨，阴风入骨",
+    clearLore: "三变皆破，阴风散去",
     enemySprite: "boneDemon",
     background: [28, 28, 40],
     wallColor: [92, 88, 104],
@@ -168,6 +170,7 @@ const ROOMS = [
     type: "combat",
     name: "流沙河",
     lore: "八百流沙，水路难行",
+    clearLore: "沙浪暂平，彼岸仍远",
     enemySprite: "sandDemon",
     background: [38, 34, 28],
     wallColor: [122, 94, 54],
@@ -213,6 +216,7 @@ const ROOMS = [
     type: "combat",
     name: "女儿国",
     lore: "子母河畔，花影迷阵",
+    clearLore: "花影渐散，情关未尽",
     enemySprite: "taoistDemon",
     background: [42, 32, 48],
     wallColor: [112, 70, 104],
@@ -276,6 +280,7 @@ const ROOMS = [
     type: "combat",
     name: "盘丝洞",
     lore: "蛛丝结网，七情缠路",
+    clearLore: "丝网已断，去路复明",
     enemySprite: "spiderDemon",
     background: [30, 28, 44],
     wallColor: [74, 82, 104],
@@ -312,6 +317,7 @@ const ROOMS = [
     type: "elite",
     name: "狮驼岭前哨",
     lore: "狮吼压岭，妖军列阵",
+    clearLore: "狮吼渐远，大岭在前",
     enemySprite: "lionElite",
     background: [42, 32, 30],
     wallColor: [106, 76, 54],
@@ -1281,7 +1287,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       marker.opacity = 0.58;
     });
     sealedDoorFadeTimer = SEALED_DOOR_FADE_TIME;
-    feedbackText.text = doorMessage;
+    feedbackText.text = !roomAlreadyCleared && room.clearLore ? room.clearLore : doorMessage;
     feedbackTimer = 1.2;
     roomExits.forEach((exit) => {
       addRoomCue(doorCue, exit.x + DOOR_SIZE / 2, Math.max(58, exit.y - 14), [120, 255, 150]);

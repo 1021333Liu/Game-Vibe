@@ -19,6 +19,8 @@ const HIT_SPARK_LIFETIME = 0.28;
 const BONE_TRACKING_STRENGTH = 18;
 const SAND_DRIFT_STRENGTH = 24;
 const ENEMY_TRAIL_INTERVAL = 0.16;
+const PLAYER_HIT_FLASH_LIFETIME = 0.32;
+const ROOM_CUE_LIFETIME = 1.25;
 
 const ROOMS = [
   {
@@ -270,6 +272,31 @@ function addEnemyMotionCue(enemy, room) {
   }
 }
 
+function addScreenFlash(flashColor, maxLife) {
+  const flash = add([
+    rect(width(), height()),
+    pos(0, 0),
+    color(...flashColor),
+    opacity(0.28),
+    "screenFlash",
+  ]);
+  flash.life = 0;
+  flash.maxLife = maxLife;
+}
+
+function addRoomCue(cueText, x, y, cueColor, maxLife = ROOM_CUE_LIFETIME) {
+  const cue = add([
+    text(cueText, { size: 12 }),
+    pos(x, y),
+    anchor("center"),
+    color(...cueColor),
+    opacity(1),
+    "roomCue",
+  ]);
+  cue.life = 0;
+  cue.maxLife = maxLife;
+}
+
 function getHealthLabel(health) {
   return `${"心".repeat(health)}${"空".repeat(PLAYER_MAX_HEALTH - health)}`;
 }
@@ -368,6 +395,8 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     ]);
     feedbackText.text = "传送门已开启";
     feedbackTimer = 1.2;
+    addRoomCue("门已开启，去传送门", room.door.x + DOOR_SIZE / 2, Math.max(58, room.door.y - 14), [120, 255, 150]);
+    addHitBurst(room.door.x + DOOR_SIZE / 2, room.door.y + DOOR_SIZE / 2, [118, 255, 142]);
     updateStatusText();
   }
 
@@ -387,6 +416,8 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
 
     runHealth -= 1;
     updateStatusText();
+    addScreenFlash([190, 32, 32], PLAYER_HIT_FLASH_LIFETIME);
+    addRoomCue("-1 生命", player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), [255, 168, 150], 0.75);
 
     const playerCenter = {
       x: player.pos.x + PLAYER_SIZE / 2,
@@ -447,6 +478,23 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
       spark.opacity = Math.max(0, 1 - spark.life / spark.maxLife);
       if (spark.life >= spark.maxLife) {
         destroy(spark);
+      }
+    });
+
+    get("screenFlash").forEach((flash) => {
+      flash.life += dt();
+      flash.opacity = Math.max(0, 0.28 * (1 - flash.life / flash.maxLife));
+      if (flash.life >= flash.maxLife) {
+        destroy(flash);
+      }
+    });
+
+    get("roomCue").forEach((cue) => {
+      cue.life += dt();
+      cue.pos.y -= 12 * dt();
+      cue.opacity = Math.max(0, 1 - cue.life / cue.maxLife);
+      if (cue.life >= cue.maxLife) {
+        destroy(cue);
       }
     });
 

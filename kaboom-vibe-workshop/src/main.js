@@ -528,7 +528,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   }));
 
   add([
-    text(`${room.name} ${roomIndex + 1} / ${ROOMS.length}：方向键射击，清敌开门`, { size: 13 }),
+    text(`${room.name} 房间 ${roomIndex + 1}/${ROOMS.length}：方向键射击，清敌开门`, { size: 13 }),
     pos(10, 8),
     color(230, 230, 238),
   ]);

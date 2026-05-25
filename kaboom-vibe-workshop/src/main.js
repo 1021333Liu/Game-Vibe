@@ -77,6 +77,13 @@ const DIRECTION_LABELS = {
   right: "右",
 };
 
+const ROOM_TYPE_MAP_STYLE = {
+  combat: { border: [104, 116, 128], mark: "" },
+  treasure: { border: [255, 214, 104], mark: "宝" },
+  elite: { border: [255, 132, 84], mark: "精" },
+  final: { border: [255, 244, 164], mark: "终" },
+};
+
 const ROOMS = [
   {
     id: "flame-mountain",
@@ -583,6 +590,9 @@ function addMiniMap(currentRoom) {
     const isCurrent = room.id === currentRoom.id;
     const isCleared = clearedRoomIds.has(room.id);
     const isExplored = exploredRoomIds.has(room.id);
+    const typeStyle = ROOM_TYPE_MAP_STYLE[room.type] ?? ROOM_TYPE_MAP_STYLE.combat;
+    const tileX = originX + (mapPos.x - minX) * (tileSize + gap) - centerOffsetX;
+    const tileY = originY + (mapPos.y - minY) * (tileSize + gap);
     const fill = isCurrent
       ? [255, 232, 150]
       : isCleared
@@ -592,21 +602,34 @@ function addMiniMap(currentRoom) {
           : [60, 64, 74];
     add([
       rect(tileSize, tileSize),
-      pos(
-        originX + (mapPos.x - minX) * (tileSize + gap) - centerOffsetX,
-        originY + (mapPos.y - minY) * (tileSize + gap),
-      ),
+      pos(tileX, tileY),
       color(...fill),
       opacity(isExplored || isCurrent || isCleared ? 0.92 : 0.42),
-      outline(1, isCurrent ? [255, 250, 210] : [90, 94, 104]),
+      outline(isCurrent ? 2 : 1, isCurrent ? [255, 250, 210] : typeStyle.border),
     ]);
+    if (typeStyle.mark) {
+      add([
+        text(typeStyle.mark, { size: 6 }),
+        pos(tileX + tileSize / 2, tileY + tileSize / 2),
+        anchor("center"),
+        color(20, 22, 28),
+        opacity(isExplored || isCurrent || isCleared ? 0.9 : 0.55),
+      ]);
+    }
   });
 
+  const footerY = originY + (maxY - minY + 1) * (tileSize + gap) + 6;
   add([
     text(`出口 ${getExitLabel(currentRoom)}`, { size: 9 }),
-    pos(width() - 10, originY + (maxY - minY + 1) * (tileSize + gap) + 6),
+    pos(width() - 10, footerY),
     anchor("topright"),
     color(204, 206, 198),
+  ]);
+  add([
+    text("宝=奖励 精=精英 终=终点", { size: 8 }),
+    pos(width() - 10, footerY + 12),
+    anchor("topright"),
+    color(196, 198, 190),
   ]);
 }
 
@@ -1099,7 +1122,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   ]);
 
   const pauseHelp = add([
-    text("WASD 移动 / 方向键射击\nP 继续 / R 重开本局 / M 静音\n评级：少受伤 + 更快通关", { size: 12 }),
+    text("WASD 移动 / 方向键射击\nP 继续 / R 重开本局 / M 静音\n地图：宝=奖励 精=精英 终=终点\n评级：少受伤 + 更快通关", { size: 12 }),
     pos(width() / 2, 150),
     anchor("center"),
     color(230, 230, 238),

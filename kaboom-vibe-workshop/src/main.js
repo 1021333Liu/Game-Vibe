@@ -1071,6 +1071,13 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     color(214, 210, 198),
   ]);
 
+  const timerText = add([
+    text(`用时 ${formatRunTime(runStats.time)}`, { size: 10 }),
+    pos(width() - 10, 30),
+    anchor("topright"),
+    color(255, 235, 190),
+  ]);
+
   addMiniMap(room);
 
   const feedbackText = add([
@@ -1446,6 +1453,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     lowHealthPulseTimer += dt();
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
     runStats.time += dt();
+    timerText.text = `用时 ${formatRunTime(runStats.time)}`;
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);
     roomIntroTitle.opacity = introAlpha;
     roomIntroSubtitle.opacity = introAlpha;

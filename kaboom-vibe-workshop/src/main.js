@@ -86,6 +86,7 @@ const ROOMS = [
 ];
 
 let activeWalls = [];
+let runHealth = PLAYER_MAX_HEALTH;
 
 const {
   add,
@@ -207,9 +208,12 @@ function getHealthLabel(health) {
   return `${"心".repeat(health)}${"空".repeat(PLAYER_MAX_HEALTH - health)}`;
 }
 
-scene("game", (roomIndex = 0) => {
+scene("game", (roomIndex = 0, shouldResetRun = false) => {
   const room = ROOMS[roomIndex];
   activeWalls = room.walls;
+  if (roomIndex === 0 && shouldResetRun) {
+    runHealth = PLAYER_MAX_HEALTH;
+  }
 
   add([
     rect(width(), height()),
@@ -245,7 +249,7 @@ scene("game", (roomIndex = 0) => {
   ]);
 
   const statusText = add([
-    text(`生命 ${getHealthLabel(PLAYER_MAX_HEALTH)} / 敌人 ${enemies.length} / 门未开启`, { size: 12 }),
+    text(`生命 ${getHealthLabel(runHealth)} / 敌人 ${enemies.length} / 门未开启`, { size: 12 }),
     pos(10, 26),
     color(...room.statusColor),
   ]);
@@ -261,12 +265,11 @@ scene("game", (roomIndex = 0) => {
   let invincibleTimer = 0;
   let feedbackTimer = 0;
   let door = null;
-  let health = PLAYER_MAX_HEALTH;
   let enemiesLeft = enemies.length;
 
   function updateStatusText() {
     const doorStatus = door ? "门已开启" : "门未开启";
-    statusText.text = `生命 ${getHealthLabel(health)} / 敌人 ${enemiesLeft} / ${doorStatus}`;
+    statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌人 ${enemiesLeft} / ${doorStatus}`;
   }
 
   function openDoorIfReady() {
@@ -296,7 +299,7 @@ scene("game", (roomIndex = 0) => {
   player.onCollide("enemy", (enemy) => {
     if (ended || invincibleTimer > 0) return;
 
-    health -= 1;
+    runHealth -= 1;
     updateStatusText();
 
     const playerCenter = {
@@ -313,7 +316,7 @@ scene("game", (roomIndex = 0) => {
     moveByAmount(player, (awayX / length) * PLAYER_KNOCKBACK, 0, PLAYER_SIZE);
     moveByAmount(player, 0, (awayY / length) * PLAYER_KNOCKBACK, PLAYER_SIZE);
 
-    if (health <= 0) {
+    if (runHealth <= 0) {
       ended = true;
       go("lose", roomIndex);
       return;
@@ -331,7 +334,7 @@ scene("game", (roomIndex = 0) => {
       go("complete");
       return;
     }
-    go("game", roomIndex + 1);
+    go("game", roomIndex + 1, false);
   });
 
   onUpdate(() => {
@@ -421,7 +424,7 @@ scene("complete", () => {
     anchor("center"),
     color(255, 255, 200),
   ]);
-  onKeyDown("r", () => go("game", 0));
+  onKeyDown("r", () => go("game", 0, true));
 });
 
 scene("lose", (roomIndex = 0) => {
@@ -431,7 +434,7 @@ scene("lose", (roomIndex = 0) => {
     anchor("center"),
     color(255, 200, 200),
   ]);
-  onKeyDown("r", () => go("game", roomIndex));
+  onKeyDown("r", () => go("game", roomIndex, true));
 });
 
-go("game", 0);
+go("game", 0, true);

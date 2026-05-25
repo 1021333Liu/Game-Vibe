@@ -417,22 +417,70 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   });
 });
 
-scene("complete", () => {
+function addResultScreen({ title, subtitle, hint, accentColor, backgroundColor }) {
   add([
-    text("全部房间清理完成！按 R 再玩", { size: 18 }),
+    rect(width(), height()),
+    pos(0, 0),
+    color(...backgroundColor),
+  ]);
+  add([
+    rect(330, 130),
     pos(width() / 2, height() / 2),
     anchor("center"),
-    color(255, 255, 200),
+    color(24, 25, 34),
+    outline(3, accentColor),
+  ]);
+  add([
+    text(title, { size: 22 }),
+    pos(width() / 2, 112),
+    anchor("center"),
+    color(...accentColor),
+  ]);
+  add([
+    text(subtitle, { size: 12 }),
+    pos(width() / 2, 146),
+    anchor("center"),
+    color(230, 230, 238),
+  ]);
+  add([
+    text(hint, { size: 12 }),
+    pos(width() / 2, 178),
+    anchor("center"),
+    color(255, 235, 190),
+  ]);
+}
+
+scene("complete", () => {
+  addResultScreen({
+    title: "三关已净",
+    subtitle: "火焰山、白骨洞、流沙河都被清理完成",
+    hint: "按 R 开始新一轮取经",
+    accentColor: [255, 232, 150],
+    backgroundColor: [32, 38, 30],
+  });
+  add([
+    text("传送门光芒稳定，妖气暂退。", { size: 11 }),
+    pos(width() / 2, 216),
+    anchor("center"),
+    color(190, 216, 190),
   ]);
   onKeyDown("r", () => go("game", 0, true));
 });
 
 scene("lose", (roomIndex = 0) => {
+  const roomName = ROOMS[roomIndex]?.name ?? "当前房间";
+  addResultScreen({
+    title: "取经受阻",
+    subtitle: `${roomName} 的妖气仍未散尽`,
+    hint: "按 R 满血重试本房间",
+    accentColor: [255, 156, 132],
+    backgroundColor: [44, 30, 34],
+  });
   add([
-    text("被敌人撞到了，按 R 重试本房间", { size: 18 }),
-    pos(width() / 2, height() / 2),
+    text(`当前进度：第 ${roomIndex + 1} / ${ROOMS.length} 间`, { size: 11 }),
+    pos(width() / 2, 216),
     anchor("center"),
-    color(255, 200, 200),
+    color(236, 204, 198),
   ]);
   onKeyDown("r", () => go("game", roomIndex, true));
 });

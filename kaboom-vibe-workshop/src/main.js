@@ -21,6 +21,7 @@ const SAND_DRIFT_STRENGTH = 24;
 const ENEMY_TRAIL_INTERVAL = 0.16;
 const PLAYER_HIT_FLASH_LIFETIME = 0.32;
 const ROOM_CUE_LIFETIME = 1.25;
+const QUICKSAND_SPEED_SCALE = 0.58;
 
 const ROOMS = [
   {
@@ -86,6 +87,12 @@ const ROOMS = [
     enemyBehavior: "sandDrift",
     player: { x: 42, y: 272 },
     door: { x: 430, y: 42 },
+    slowZones: [
+      { x: 96, y: 18, w: 42, h: 44 },
+      { x: 170, y: 222, w: 40, h: 58 },
+      { x: 314, y: 118, w: 40, h: 72 },
+      { x: 390, y: 194, w: 48, h: 54 },
+    ],
     walls: [
       { x: 72, y: 72, w: 24, h: 216 },
       { x: 144, y: 48, w: 24, h: 192 },
@@ -325,6 +332,17 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     ]);
   });
 
+  (room.slowZones ?? []).forEach((zone) => {
+    add([
+      rect(zone.w, zone.h),
+      pos(zone.x, zone.y),
+      color(166, 130, 72),
+      opacity(0.46),
+      outline(1, [226, 192, 112]),
+      "slowZone",
+    ]);
+  });
+
   const player = addMonkeyHero(room.player.x, room.player.y);
 
   const speedScale = room.enemySpeedScale ?? 1;
@@ -503,7 +521,9 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     if (isKeyDown("up")) shoot(0, -1);
     if (isKeyDown("down")) shoot(0, 1);
 
-    const sp = MOVE_SPEED;
+    const playerRect = { x: player.pos.x, y: player.pos.y, w: PLAYER_SIZE, h: PLAYER_SIZE };
+    const inSlowZone = (room.slowZones ?? []).some((zone) => rectsOverlap(playerRect, zone));
+    const sp = inSlowZone ? MOVE_SPEED * QUICKSAND_SPEED_SCALE : MOVE_SPEED;
     let dx = 0;
     let dy = 0;
     if (isKeyDown("a")) dx -= sp;

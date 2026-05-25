@@ -123,6 +123,11 @@ const ROOMS = [
 
 let activeWalls = [];
 let runHealth = PLAYER_MAX_HEALTH;
+let runStats = {
+  defeats: 0,
+  hitsTaken: 0,
+  time: 0,
+};
 
 const {
   add,
@@ -338,11 +343,26 @@ function getHealthLabel(health) {
   return `${"心".repeat(health)}${"空".repeat(PLAYER_MAX_HEALTH - health)}`;
 }
 
+function resetRunStats() {
+  runStats = {
+    defeats: 0,
+    hitsTaken: 0,
+    time: 0,
+  };
+}
+
+function formatRunTime(seconds) {
+  return `${Math.floor(seconds)} 秒`;
+}
+
 scene("game", (roomIndex = 0, shouldResetRun = false) => {
   const room = ROOMS[roomIndex];
   activeWalls = room.walls;
-  if (roomIndex === 0 && shouldResetRun) {
-    runHealth = PLAYER_MAX_HEALTH;
+  if (shouldResetRun) {
+    resetRunStats();
+    if (roomIndex === 0) {
+      runHealth = PLAYER_MAX_HEALTH;
+    }
   }
 
   add([
@@ -489,6 +509,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     if (ended || invincibleTimer > 0) return false;
 
     runHealth -= 1;
+    runStats.hitsTaken += 1;
     updateStatusText();
     addScreenFlash([190, 32, 32], PLAYER_HIT_FLASH_LIFETIME);
     addRoomCue(message, player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), [255, 168, 150], 0.75);
@@ -540,6 +561,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     invincibleTimer = Math.max(0, invincibleTimer - dt());
     feedbackTimer = Math.max(0, feedbackTimer - dt());
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
+    runStats.time += dt();
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);
     roomIntroTitle.opacity = introAlpha;
     roomIntroSubtitle.opacity = introAlpha;
@@ -661,6 +683,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
             addBoneAfterimage(enemy.pos.x, enemy.pos.y);
           }
           enemiesLeft -= 1;
+          runStats.defeats += 1;
           destroy(enemy);
           destroy(bullet);
           feedbackText.text = "妖怪已击破";
@@ -734,6 +757,12 @@ scene("complete", () => {
     anchor("center"),
     color(190, 216, 190),
   ]);
+  add([
+    text(`用时 ${formatRunTime(runStats.time)} / 击败 ${runStats.defeats} / 受伤 ${runStats.hitsTaken}`, { size: 11 }),
+    pos(width() / 2, 236),
+    anchor("center"),
+    color(230, 226, 194),
+  ]);
   onKeyDown("r", () => go("game", 0, true));
 });
 
@@ -748,9 +777,15 @@ scene("lose", (roomIndex = 0) => {
   });
   add([
     text(`当前进度：第 ${roomIndex + 1} / ${ROOMS.length} 间`, { size: 11 }),
-    pos(width() / 2, 216),
+    pos(width() / 2, 210),
     anchor("center"),
     color(236, 204, 198),
+  ]);
+  add([
+    text(`用时 ${formatRunTime(runStats.time)} / 击败 ${runStats.defeats} / 受伤 ${runStats.hitsTaken}`, { size: 11 }),
+    pos(width() / 2, 230),
+    anchor("center"),
+    color(228, 214, 206),
   ]);
   onKeyDown("r", () => go("game", roomIndex, true));
 });

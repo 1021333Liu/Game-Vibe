@@ -37,6 +37,7 @@ const ROOMS = [
     statusColor: [255, 196, 126],
     introColor: [255, 174, 92],
     introSubtitle: "烈焰翻涌，妖影逼近",
+    mechanicHint: "机制：注意火焰预警 / P 暂停",
     enemyBehavior: "flameRush",
     enemySpeedScale: 1.12,
     player: { x: 40, y: 160 },
@@ -69,6 +70,7 @@ const ROOMS = [
     statusColor: [216, 214, 232],
     introColor: [190, 218, 255],
     introSubtitle: "阴风入骨，白影游移",
+    mechanicHint: "机制：击破后有骨影 / P 暂停",
     enemyBehavior: "boneTrack",
     enemyAfterimage: "bone",
     player: { x: 42, y: 42 },
@@ -95,6 +97,7 @@ const ROOMS = [
     statusColor: [235, 204, 142],
     introColor: [245, 210, 132],
     introSubtitle: "黄沙压境，水路难行",
+    mechanicHint: "机制：流沙会减速 / P 暂停",
     enemyBehavior: "sandDrift",
     player: { x: 42, y: 272 },
     door: { x: 430, y: 42 },
@@ -444,9 +447,15 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     color(...room.statusColor),
   ]);
 
+  add([
+    text(room.mechanicHint, { size: 10 }),
+    pos(10, 44),
+    color(214, 210, 198),
+  ]);
+
   const feedbackText = add([
     text("", { size: 12 }),
-    pos(10, 44),
+    pos(10, 58),
     color(255, 220, 160),
   ]);
 

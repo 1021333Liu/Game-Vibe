@@ -8,6 +8,9 @@ const ELITE_SIZE = 28;
 const DOOR_SIZE = 22;
 const HEAL_PEACH_SIZE = 16;
 const ATTACK_ITEM_SIZE = 16;
+const ELITE_HEALTH_TICK_WIDTH = 5;
+const ELITE_HEALTH_TICK_HEIGHT = 3;
+const ELITE_HEALTH_TICK_GAP = 2;
 const BULLET_SIZE = 6;
 const BULLET_SPEED = 9000;
 const SHOT_COOLDOWN = 0.035;
@@ -661,6 +664,44 @@ function addDemonEnemy(x, y, spriteName, enemySize = ENEMY_SIZE) {
   ]);
 }
 
+function addEliteHealthBar(enemyBody, enemySize) {
+  const maxHp = enemyBody.maxHp ?? 1;
+  if (maxHp <= 1) return null;
+
+  const totalWidth = maxHp * ELITE_HEALTH_TICK_WIDTH + (maxHp - 1) * ELITE_HEALTH_TICK_GAP;
+  const ticks = Array.from({ length: maxHp }, (_, index) => add([
+    rect(ELITE_HEALTH_TICK_WIDTH, ELITE_HEALTH_TICK_HEIGHT),
+    pos(enemyBody.pos.x + enemySize / 2 - totalWidth / 2 + index * (ELITE_HEALTH_TICK_WIDTH + ELITE_HEALTH_TICK_GAP), enemyBody.pos.y - 8),
+    color(255, 82, 76),
+    outline(1, [58, 24, 28]),
+    opacity(1),
+    "eliteHealthTick",
+  ]));
+
+  return { ticks, totalWidth };
+}
+
+function updateEliteHealthBar(enemy) {
+  if (!enemy.healthBar) return;
+  const enemySize = enemy.size ?? ENEMY_SIZE;
+  enemy.healthBar.ticks.forEach((tick, index) => {
+    if (!tick.exists()) return;
+    tick.pos.x = enemy.body.pos.x + enemySize / 2 - enemy.healthBar.totalWidth / 2 + index * (ELITE_HEALTH_TICK_WIDTH + ELITE_HEALTH_TICK_GAP);
+    tick.pos.y = enemy.body.pos.y - 8;
+    tick.opacity = index < enemy.body.hp ? 1 : 0.22;
+    tick.color = index < enemy.body.hp ? [255, 82, 76] : [92, 62, 66];
+  });
+}
+
+function destroyEliteHealthBar(enemy) {
+  if (!enemy.healthBar) return;
+  enemy.healthBar.ticks.forEach((tick) => {
+    if (tick.exists()) {
+      destroy(tick);
+    }
+  });
+}
+
 function addHealPeach(x, y) {
   return add([
     sprite("healPeach", { width: HEAL_PEACH_SIZE, height: HEAL_PEACH_SIZE }),
@@ -940,7 +981,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     body.hp = enemyConfig.hp ?? 1;
     body.maxHp = body.hp;
     body.enemySize = enemySize;
-    return {
+    const enemy = {
       body,
       size: enemySize,
       velocity: {
@@ -950,6 +991,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       phase: (enemyConfig.x + enemyConfig.y) * 0.03,
       trailTimer: (enemyConfig.x % 3) * 0.04,
     };
+    enemy.healthBar = addEliteHealthBar(body, enemySize);
+    return enemy;
   });
 
   add([
@@ -1452,7 +1495,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     if (dy !== 0) moveOnAxis(player, 0, dy, PLAYER_SIZE);
 
     enemies.forEach((enemy) => {
-      if (!enemy.body.exists()) return;
+      if (!enemy.body.exists()) {
+        destroyEliteHealthBar(enemy);
+        return;
+      }
       const enemySize = enemy.size ?? ENEMY_SIZE;
       enemy.trailTimer = Math.max(0, enemy.trailTimer - dt());
       let moveX = enemy.velocity.x;
@@ -1487,6 +1533,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         addEnemyMotionCue(enemy, room);
         enemy.trailTimer = ENEMY_TRAIL_INTERVAL;
       }
+      updateEliteHealthBar(enemy);
     });
 
     get("bullet").forEach((bullet) => {
@@ -1512,6 +1559,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
             feedbackText.text = `精英妖怪 ${enemy.hp}/${enemy.maxHp}`;
             feedbackTimer = 0.45;
           } else {
+            const enemyRecord = enemies.find((entry) => entry.body === enemy);
+            if (enemyRecord) {
+              destroyEliteHealthBar(enemyRecord);
+            }
             if (room.enemyAfterimage === "bone") {
               addBoneAfterimage(enemy.pos.x, enemy.pos.y);
             }

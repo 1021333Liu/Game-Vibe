@@ -15,6 +15,7 @@ const PLAYER_INVINCIBLE_TIME = 1.1;
 const PLAYER_KNOCKBACK = 26;
 const ROOM_INTRO_DURATION = 1.6;
 const ROOM_INTRO_FADE_TIME = 0.55;
+const HIT_SPARK_LIFETIME = 0.28;
 
 const ROOMS = [
   {
@@ -212,6 +213,32 @@ function addStaffBullet(x, y, dirX, dirY) {
   return body;
 }
 
+function addHitSpark(x, y, velocity, sparkColor, size = 4) {
+  const spark = add([
+    rect(size, size),
+    pos(x - size / 2, y - size / 2),
+    color(...sparkColor),
+    opacity(1),
+    "hitSpark",
+  ]);
+  spark.velocity = velocity;
+  spark.life = 0;
+  spark.maxLife = HIT_SPARK_LIFETIME;
+  return spark;
+}
+
+function addHitBurst(x, y, sparkColor) {
+  addHitSpark(x, y, { x: 0, y: 0 }, [255, 248, 205], 12);
+  [
+    { x: 68, y: 0 },
+    { x: -68, y: 0 },
+    { x: 0, y: 68 },
+    { x: 0, y: -68 },
+    { x: 48, y: 48 },
+    { x: -48, y: -48 },
+  ].forEach((velocity) => addHitSpark(x, y, velocity, sparkColor));
+}
+
 function getHealthLabel(health) {
   return `${"心".repeat(health)}${"空".repeat(PLAYER_MAX_HEALTH - health)}`;
 }
@@ -380,6 +407,15 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
       player.opacity = 1;
     }
 
+    get("hitSpark").forEach((spark) => {
+      spark.life += dt();
+      spark.move(spark.velocity.x * dt(), spark.velocity.y * dt());
+      spark.opacity = Math.max(0, 1 - spark.life / spark.maxLife);
+      if (spark.life >= spark.maxLife) {
+        destroy(spark);
+      }
+    });
+
     if (isKeyDown("left")) shoot(-1, 0);
     if (isKeyDown("right")) shoot(1, 0);
     if (isKeyDown("up")) shoot(0, -1);
@@ -419,6 +455,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
 
         const enemy = get("enemy").find((enemyBody) => bulletOverlapsTarget(bullet, enemyBody, ENEMY_SIZE));
         if (enemy) {
+          addHitBurst(enemy.pos.x + ENEMY_SIZE / 2, enemy.pos.y + ENEMY_SIZE / 2, room.introColor);
           enemiesLeft -= 1;
           destroy(enemy);
           destroy(bullet);

@@ -24,6 +24,8 @@ const ENEMY_TRAIL_INTERVAL = 0.16;
 const PLAYER_HIT_FLASH_LIFETIME = 0.32;
 const ROOM_CUE_LIFETIME = 1.25;
 const QUICKSAND_SPEED_SCALE = 0.58;
+const SEALED_DOOR_HINT_DISTANCE = 42;
+const SEALED_DOOR_HINT_COOLDOWN = 0.9;
 const FLAME_WARNING_TIME = 1.05;
 const FLAME_ACTIVE_TIME = 0.72;
 const FLAME_REST_TIME = 2.15;
@@ -558,6 +560,14 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     color(255, 220, 160),
   ]);
 
+  const sealedDoorMarker = add([
+    rect(DOOR_SIZE, DOOR_SIZE),
+    pos(room.door.x, room.door.y),
+    color(72, 98, 72),
+    opacity(0.34),
+    outline(1, [120, 170, 120]),
+  ]);
+
   if (roomIndex === 0 && shouldResetRun) {
     addRoomCue("清掉妖怪，进绿色门 / P 暂停 / M 静音", width() / 2, height() - 36, [255, 235, 190], 2);
   }
@@ -625,6 +635,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   let entrySafeTimer = ENTRY_SAFE_TIME;
   let invincibleTimer = 0;
   let feedbackTimer = 0;
+  let sealedDoorHintTimer = 0;
   let lowHealthPulseTimer = 0;
   let roomIntroTimer = ROOM_INTRO_DURATION;
   let door = null;
@@ -658,6 +669,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
       area(),
       "door",
     ]);
+    sealedDoorMarker.opacity = 0;
     feedbackText.text = doorMessage;
     feedbackTimer = 1.2;
     addRoomCue(doorCue, room.door.x + DOOR_SIZE / 2, Math.max(58, room.door.y - 14), [120, 255, 150]);
@@ -752,6 +764,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     entrySafeTimer = Math.max(0, entrySafeTimer - dt());
     invincibleTimer = Math.max(0, invincibleTimer - dt());
     feedbackTimer = Math.max(0, feedbackTimer - dt());
+    sealedDoorHintTimer = Math.max(0, sealedDoorHintTimer - dt());
     lowHealthPulseTimer += dt();
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
     runStats.time += dt();
@@ -804,6 +817,18 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     if (isKeyDown("down")) shoot(0, 1);
 
     const playerRect = { x: player.pos.x, y: player.pos.y, w: PLAYER_SIZE, h: PLAYER_SIZE };
+    if (!door && sealedDoorHintTimer <= 0) {
+      const doorCenterX = room.door.x + DOOR_SIZE / 2;
+      const doorCenterY = room.door.y + DOOR_SIZE / 2;
+      const playerCenterX = player.pos.x + PLAYER_SIZE / 2;
+      const playerCenterY = player.pos.y + PLAYER_SIZE / 2;
+      if (Math.hypot(playerCenterX - doorCenterX, playerCenterY - doorCenterY) <= SEALED_DOOR_HINT_DISTANCE) {
+        feedbackText.text = "先清掉妖怪";
+        feedbackTimer = 0.75;
+        sealedDoorHintTimer = SEALED_DOOR_HINT_COOLDOWN;
+      }
+    }
+
     flameHazards.forEach((hazard) => {
       const cycleLength = FLAME_WARNING_TIME + FLAME_ACTIVE_TIME + FLAME_REST_TIME;
       hazard.timer = (hazard.timer + dt()) % cycleLength;

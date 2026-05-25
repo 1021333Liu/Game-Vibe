@@ -596,7 +596,7 @@ function addMiniMap(currentRoom) {
   if (mapEntries.length === 0) return;
 
   const originX = width() - 72;
-  const originY = 72;
+  const originY = 86;
   const tileSize = 9;
   const gap = 4;
   const minX = Math.min(...mapEntries.map((entry) => entry.mapPos.x));
@@ -607,7 +607,7 @@ function addMiniMap(currentRoom) {
 
   add([
     text(`地图 ${currentRoom.name}`, { size: 9 }),
-    pos(width() - 10, 58),
+    pos(width() - 10, 70),
     anchor("topright"),
     color(220, 222, 216),
   ]);
@@ -1066,14 +1066,14 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const muteText = add([
     text("", { size: 10 }),
-    pos(width() - 10, 44),
+    pos(width() - 10, 42),
     anchor("topright"),
     color(214, 210, 198),
   ]);
 
   const timerText = add([
     text(`用时 ${formatRunTime(runStats.time)}`, { size: 10 }),
-    pos(width() - 10, 30),
+    pos(width() - 10, 26),
     anchor("topright"),
     color(255, 235, 190),
   ]);
@@ -1117,8 +1117,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const lowHealthText = add([
     text("危险：生命仅剩 1", { size: 11 }),
-    pos(width() - 10, 26),
-    anchor("topright"),
+    pos(10, 88),
     color(255, 150, 140),
     opacity(0),
   ]);

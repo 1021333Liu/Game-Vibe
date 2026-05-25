@@ -10,6 +10,9 @@ const BULLET_SPEED = 9000;
 const SHOT_COOLDOWN = 0.035;
 const BULLET_STEP = 6;
 const BULLET_LIFETIME = 4;
+const PLAYER_MAX_HEALTH = 3;
+const PLAYER_INVINCIBLE_TIME = 1.1;
+const PLAYER_KNOCKBACK = 26;
 
 const ROOMS = [
   {
@@ -94,6 +97,7 @@ const {
   text,
   anchor,
   outline,
+  opacity,
   onUpdate,
   onKeyDown,
   destroy,
@@ -146,8 +150,12 @@ function wallContainsBullet(bullet) {
 }
 
 function moveOnAxis(body, dx, dy, bodySize) {
-  const nextX = Math.max(0, Math.min(body.pos.x + dx * dt(), width() - bodySize));
-  const nextY = Math.max(0, Math.min(body.pos.y + dy * dt(), height() - bodySize));
+  return moveByAmount(body, dx * dt(), dy * dt(), bodySize);
+}
+
+function moveByAmount(body, amountX, amountY, bodySize) {
+  const nextX = Math.max(0, Math.min(body.pos.x + amountX, width() - bodySize));
+  const nextY = Math.max(0, Math.min(body.pos.y + amountY, height() - bodySize));
   const nextRect = { x: nextX, y: nextY, w: bodySize, h: bodySize };
   if (activeWalls.some((wall) => rectsOverlap(nextRect, wall))) {
     return true;
@@ -162,6 +170,7 @@ function addMonkeyHero(x, y) {
     sprite("wukong", { width: PLAYER_SIZE, height: PLAYER_SIZE }),
     pos(x, y),
     area(),
+    opacity(1),
     "player",
   ]);
 }
@@ -192,6 +201,10 @@ function addStaffBullet(x, y, dirX, dirY) {
   body.life = 0;
   body.hitSize = horizontal ? { w: 16, h: 6 } : { w: 6, h: 16 };
   return body;
+}
+
+function getHealthLabel(health) {
+  return `${"心".repeat(health)}${"空".repeat(PLAYER_MAX_HEALTH - health)}`;
 }
 
 scene("game", (roomIndex = 0) => {
@@ -232,15 +245,29 @@ scene("game", (roomIndex = 0) => {
   ]);
 
   const statusText = add([
-    text(`敌人 ${enemies.length} / 门未开启`, { size: 12 }),
+    text(`生命 ${getHealthLabel(PLAYER_MAX_HEALTH)} / 敌人 ${enemies.length} / 门未开启`, { size: 12 }),
     pos(10, 26),
     color(...room.statusColor),
   ]);
 
+  const feedbackText = add([
+    text("", { size: 12 }),
+    pos(10, 44),
+    color(255, 220, 160),
+  ]);
+
   let ended = false;
   let shotTimer = 0;
+  let invincibleTimer = 0;
+  let feedbackTimer = 0;
   let door = null;
+  let health = PLAYER_MAX_HEALTH;
   let enemiesLeft = enemies.length;
+
+  function updateStatusText() {
+    const doorStatus = door ? "门已开启" : "门未开启";
+    statusText.text = `生命 ${getHealthLabel(health)} / 敌人 ${enemiesLeft} / ${doorStatus}`;
+  }
 
   function openDoorIfReady() {
     if (door || enemiesLeft > 0) return;
@@ -250,7 +277,9 @@ scene("game", (roomIndex = 0) => {
       area(),
       "door",
     ]);
-    statusText.text = "敌人 0 / 门已开启";
+    feedbackText.text = "传送门已开启";
+    feedbackTimer = 1.2;
+    updateStatusText();
   }
 
   function shoot(dirX, dirY) {
@@ -264,10 +293,35 @@ scene("game", (roomIndex = 0) => {
     );
   }
 
-  player.onCollide("enemy", () => {
-    if (ended) return;
-    ended = true;
-    go("lose", roomIndex);
+  player.onCollide("enemy", (enemy) => {
+    if (ended || invincibleTimer > 0) return;
+
+    health -= 1;
+    updateStatusText();
+
+    const playerCenter = {
+      x: player.pos.x + PLAYER_SIZE / 2,
+      y: player.pos.y + PLAYER_SIZE / 2,
+    };
+    const enemyCenter = {
+      x: enemy.pos.x + ENEMY_SIZE / 2,
+      y: enemy.pos.y + ENEMY_SIZE / 2,
+    };
+    const awayX = playerCenter.x - enemyCenter.x;
+    const awayY = playerCenter.y - enemyCenter.y;
+    const length = Math.max(1, Math.hypot(awayX, awayY));
+    moveByAmount(player, (awayX / length) * PLAYER_KNOCKBACK, 0, PLAYER_SIZE);
+    moveByAmount(player, 0, (awayY / length) * PLAYER_KNOCKBACK, PLAYER_SIZE);
+
+    if (health <= 0) {
+      ended = true;
+      go("lose", roomIndex);
+      return;
+    }
+
+    invincibleTimer = PLAYER_INVINCIBLE_TIME;
+    feedbackText.text = "受击！短暂无敌";
+    feedbackTimer = PLAYER_INVINCIBLE_TIME;
   });
 
   player.onCollide("door", () => {
@@ -283,6 +337,16 @@ scene("game", (roomIndex = 0) => {
   onUpdate(() => {
     if (ended) return;
     shotTimer = Math.max(0, shotTimer - dt());
+    invincibleTimer = Math.max(0, invincibleTimer - dt());
+    feedbackTimer = Math.max(0, feedbackTimer - dt());
+    if (feedbackTimer <= 0) {
+      feedbackText.text = "";
+    }
+    if (invincibleTimer > 0) {
+      player.opacity = Math.floor(invincibleTimer * 12) % 2 === 0 ? 0.45 : 1;
+    } else {
+      player.opacity = 1;
+    }
 
     if (isKeyDown("left")) shoot(-1, 0);
     if (isKeyDown("right")) shoot(1, 0);
@@ -326,7 +390,9 @@ scene("game", (roomIndex = 0) => {
           enemiesLeft -= 1;
           destroy(enemy);
           destroy(bullet);
-          statusText.text = `敌人 ${enemiesLeft} / 门未开启`;
+          feedbackText.text = "妖怪已击破";
+          feedbackTimer = 0.45;
+          updateStatusText();
           openDoorIfReady();
           break;
         }

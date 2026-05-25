@@ -134,6 +134,7 @@ let runStats = {
   hitsTaken: 0,
   time: 0,
 };
+let audioContext = null;
 
 const {
   add,
@@ -175,6 +176,51 @@ loadSprite("boneDemon", "/sprites/bone-demon.svg");
 loadSprite("sandDemon", "/sprites/sand-demon.svg");
 loadSprite("staff", "/sprites/staff.svg");
 loadSprite("portal", "/sprites/portal.svg");
+
+function getAudioContext() {
+  if (audioContext) return audioContext;
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    audioContext = new AudioContextClass();
+    return audioContext;
+  } catch {
+    return null;
+  }
+}
+
+function playTone(frequency, duration = 0.06, volume = 0.025, type = "square") {
+  try {
+    const context = getAudioContext();
+    if (!context) return;
+    if (context.state === "suspended") {
+      context.resume().catch(() => {});
+    }
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const startTime = context.currentTime;
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+    gain.gain.setValueAtTime(volume, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+  } catch {
+    // Audio feedback is optional; gameplay should never fail if audio is blocked.
+  }
+}
+
+function playToneSequence(notes) {
+  try {
+    notes.forEach((note, index) => {
+      window.setTimeout(() => playTone(note.frequency, note.duration, note.volume, note.type), index * 70);
+    });
+  } catch {
+    // Ignore unavailable timer/audio environments.
+  }
+}
 
 function rectsOverlap(a, b) {
   return (
@@ -580,12 +626,14 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     feedbackTimer = 1.2;
     addRoomCue("门已开启，去传送门", room.door.x + DOOR_SIZE / 2, Math.max(58, room.door.y - 14), [120, 255, 150]);
     addHitBurst(room.door.x + DOOR_SIZE / 2, room.door.y + DOOR_SIZE / 2, [118, 255, 142]);
+    playTone(660, 0.12, 0.022, "triangle");
     updateStatusText();
   }
 
   function shoot(dirX, dirY) {
     if (ended || shotTimer > 0) return;
     shotTimer = SHOT_COOLDOWN;
+    playTone(520, 0.035, 0.018, "square");
     addStaffBullet(
       player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2,
       player.pos.y + PLAYER_SIZE / 2 - BULLET_SIZE / 2,
@@ -602,6 +650,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     updateStatusText();
     addScreenFlash([190, 32, 32], PLAYER_HIT_FLASH_LIFETIME);
     addRoomCue(message, player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), [255, 168, 150], 0.75);
+    playTone(150, 0.13, 0.03, "sawtooth");
 
     const playerCenter = {
       x: player.pos.x + PLAYER_SIZE / 2,
@@ -800,6 +849,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
           }
           enemiesLeft -= 1;
           runStats.defeats += 1;
+          playTone(760, 0.055, 0.024, "triangle");
           destroy(enemy);
           destroy(bullet);
           feedbackText.text = "妖怪已击破";
@@ -863,6 +913,11 @@ scene("complete", () => {
   const bestResult = updateBestTime(runStats.time);
   const bestLabel = bestResult.bestTime === null ? "暂无记录" : formatRunTime(bestResult.bestTime);
   const bestPrefix = bestResult.isNewBest ? "新最快" : "最快";
+  playToneSequence([
+    { frequency: 520, duration: 0.08, volume: 0.022, type: "triangle" },
+    { frequency: 660, duration: 0.08, volume: 0.022, type: "triangle" },
+    { frequency: 880, duration: 0.12, volume: 0.024, type: "triangle" },
+  ]);
   addResultScreen({
     title: "三关已净",
     subtitle: "火焰山、白骨洞、流沙河都被清理完成",

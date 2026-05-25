@@ -16,6 +16,8 @@ const PLAYER_KNOCKBACK = 26;
 const ROOM_INTRO_DURATION = 1.6;
 const ROOM_INTRO_FADE_TIME = 0.55;
 const HIT_SPARK_LIFETIME = 0.28;
+const BONE_TRACKING_STRENGTH = 18;
+const SAND_DRIFT_STRENGTH = 24;
 
 const ROOMS = [
   {
@@ -27,6 +29,8 @@ const ROOMS = [
     statusColor: [255, 196, 126],
     introColor: [255, 174, 92],
     introSubtitle: "烈焰翻涌，妖影逼近",
+    enemyBehavior: "flameRush",
+    enemySpeedScale: 1.12,
     player: { x: 40, y: 160 },
     door: { x: 430, y: 152 },
     walls: [
@@ -51,6 +55,7 @@ const ROOMS = [
     statusColor: [216, 214, 232],
     introColor: [190, 218, 255],
     introSubtitle: "阴风入骨，白影游移",
+    enemyBehavior: "boneTrack",
     player: { x: 42, y: 42 },
     door: { x: 430, y: 272 },
     walls: [
@@ -75,6 +80,7 @@ const ROOMS = [
     statusColor: [235, 204, 142],
     introColor: [245, 210, 132],
     introSubtitle: "黄沙压境，水路难行",
+    enemyBehavior: "sandDrift",
     player: { x: 42, y: 272 },
     door: { x: 430, y: 42 },
     walls: [
@@ -157,6 +163,13 @@ function wallContainsBullet(bullet) {
     { x: bullet.pos.x, y: bullet.pos.y, w: bullet.hitSize.w, h: bullet.hitSize.h },
     wall,
   ));
+}
+
+function limitVelocity(velocity, maxSpeed) {
+  const speed = Math.hypot(velocity.x, velocity.y);
+  if (speed <= maxSpeed || speed === 0) return;
+  velocity.x = (velocity.x / speed) * maxSpeed;
+  velocity.y = (velocity.y / speed) * maxSpeed;
 }
 
 function moveOnAxis(body, dx, dy, bodySize) {
@@ -269,12 +282,14 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
 
   const player = addMonkeyHero(room.player.x, room.player.y);
 
+  const speedScale = room.enemySpeedScale ?? 1;
   const enemies = room.enemies.map((enemyConfig) => ({
     body: addDemonEnemy(enemyConfig.x, enemyConfig.y, room.enemySprite),
     velocity: {
-      x: enemyConfig.vx,
-      y: enemyConfig.vy,
+      x: enemyConfig.vx * speedScale,
+      y: enemyConfig.vy * speedScale,
     },
+    phase: (enemyConfig.x + enemyConfig.y) * 0.03,
   }));
 
   add([
@@ -433,8 +448,28 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
 
     enemies.forEach((enemy) => {
       if (!enemy.body.exists()) return;
-      const hitX = moveOnAxis(enemy.body, enemy.velocity.x, 0, ENEMY_SIZE);
-      const hitY = moveOnAxis(enemy.body, 0, enemy.velocity.y, ENEMY_SIZE);
+      let moveX = enemy.velocity.x;
+      let moveY = enemy.velocity.y;
+
+      if (room.enemyBehavior === "boneTrack") {
+        const targetX = player.pos.x - enemy.body.pos.x;
+        const targetY = player.pos.y - enemy.body.pos.y;
+        const distance = Math.max(1, Math.hypot(targetX, targetY));
+        enemy.velocity.x += (targetX / distance) * BONE_TRACKING_STRENGTH * dt();
+        enemy.velocity.y += (targetY / distance) * BONE_TRACKING_STRENGTH * dt();
+        limitVelocity(enemy.velocity, ENEMY_SPEED * 1.18);
+        moveX = enemy.velocity.x;
+        moveY = enemy.velocity.y;
+      }
+
+      if (room.enemyBehavior === "sandDrift") {
+        enemy.phase += dt() * 2.1;
+        moveX += Math.sin(enemy.phase) * SAND_DRIFT_STRENGTH;
+        moveY += Math.cos(enemy.phase * 0.8) * SAND_DRIFT_STRENGTH;
+      }
+
+      const hitX = moveOnAxis(enemy.body, moveX, 0, ENEMY_SIZE);
+      const hitY = moveOnAxis(enemy.body, 0, moveY, ENEMY_SIZE);
       if (hitX || enemy.body.pos.x <= 0 || enemy.body.pos.x + ENEMY_SIZE >= width()) {
         enemy.velocity.x *= -1;
       }

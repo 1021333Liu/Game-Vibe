@@ -4,6 +4,7 @@ const MOVE_SPEED = 150;
 const ENEMY_SPEED = 85;
 const PLAYER_SIZE = 16;
 const ENEMY_SIZE = 18;
+const ELITE_SIZE = 28;
 const DOOR_SIZE = 22;
 const BULLET_SIZE = 6;
 const BULLET_SPEED = 9000;
@@ -153,7 +154,7 @@ const ROOMS = [
     mechanicHint: "机制：流沙会减速 / P 暂停",
     enemyBehavior: "sandDrift",
     player: { x: 42, y: 272 },
-    exits: { left: "bone-cave", down: "lesser-thunder" },
+    exits: { left: "bone-cave", down: "lion-outpost" },
     exitPositions: { down: { x: 258, y: 290 } },
     entrySpawns: { down: { x: 258, y: 270 } },
     slowZones: [
@@ -220,7 +221,7 @@ const ROOMS = [
     mechanicHint: "机制：蛛妖会轻追踪 / P 暂停",
     enemyBehavior: "boneTrack",
     player: { x: 40, y: 250 },
-    exits: { left: "daughter-kingdom", up: "bone-cave", right: "lesser-thunder" },
+    exits: { left: "daughter-kingdom", up: "bone-cave", right: "lion-outpost" },
     walls: [
       { x: 76, y: 76, w: 120, h: 20 },
       { x: 284, y: 76, w: 120, h: 20 },
@@ -233,6 +234,35 @@ const ROOMS = [
       { x: 234, y: 52, vx: -ENEMY_SPEED, vy: ENEMY_SPEED * 0.72 },
       { x: 358, y: 194, vx: -ENEMY_SPEED * 0.92, vy: -ENEMY_SPEED },
       { x: 230, y: 268, vx: ENEMY_SPEED * 0.8, vy: -ENEMY_SPEED * 0.9 },
+    ],
+  },
+  {
+    id: "lion-outpost",
+    type: "elite",
+    name: "狮驼岭前哨",
+    lore: "狮吼压岭，妖军列阵",
+    enemySprite: "lionElite",
+    background: [42, 32, 30],
+    wallColor: [106, 76, 54],
+    wallOutline: [50, 34, 26],
+    statusColor: [255, 204, 144],
+    introColor: [255, 188, 112],
+    introSubtitle: "狮吼压岭，妖军列阵",
+    mechanicHint: "机制：精英妖怪需多次命中 / P 暂停",
+    enemyBehavior: "flameRush",
+    enemySpeedScale: 0.72,
+    player: { x: 42, y: 160 },
+    exits: { left: "spider-cave", up: "sand-river", right: "lesser-thunder" },
+    walls: [
+      { x: 96, y: 58, w: 24, h: 204 },
+      { x: 360, y: 58, w: 24, h: 204 },
+      { x: 176, y: 70, w: 128, h: 22 },
+      { x: 176, y: 228, w: 128, h: 22 },
+    ],
+    enemies: [
+      { x: 226, y: 146, vx: ENEMY_SPEED * 0.8, vy: ENEMY_SPEED * 0.68, hp: 5, size: ELITE_SIZE, sprite: "lionElite" },
+      { x: 154, y: 112, vx: ENEMY_SPEED * 0.76, vy: -ENEMY_SPEED * 0.66 },
+      { x: 322, y: 198, vx: -ENEMY_SPEED * 0.74, vy: ENEMY_SPEED * 0.68 },
     ],
   },
   {
@@ -251,7 +281,7 @@ const ROOMS = [
     enemyBehavior: "flameRush",
     enemySpeedScale: 1.04,
     player: { x: 42, y: 160 },
-    exits: { left: "spider-cave", up: "sand-river" },
+    exits: { left: "lion-outpost" },
     walls: [
       { x: 96, y: 58, w: 24, h: 204 },
       { x: 176, y: 112, w: 128, h: 24 },
@@ -322,6 +352,7 @@ loadSprite("boneDemon", "/sprites/bone-demon.svg");
 loadSprite("sandDemon", "/sprites/sand-demon.svg");
 loadSprite("spiderDemon", "/sprites/spider-demon.svg");
 loadSprite("taoistDemon", "/sprites/taoist-demon.svg");
+loadSprite("lionElite", "/sprites/lion-elite.svg");
 loadSprite("staff", "/sprites/staff.svg");
 loadSprite("portal", "/sprites/portal.svg");
 
@@ -531,9 +562,9 @@ function addMonkeyHero(x, y) {
   ]);
 }
 
-function addDemonEnemy(x, y, spriteName) {
+function addDemonEnemy(x, y, spriteName, enemySize = ENEMY_SIZE) {
   return add([
-    sprite(spriteName, { width: ENEMY_SIZE, height: ENEMY_SIZE }),
+    sprite(spriteName, { width: enemySize, height: enemySize }),
     pos(x, y),
     area(),
     "enemy",
@@ -586,8 +617,9 @@ function addHitBurst(x, y, sparkColor) {
 }
 
 function addEnemyMotionCue(enemy, room) {
-  const centerX = enemy.body.pos.x + ENEMY_SIZE / 2;
-  const centerY = enemy.body.pos.y + ENEMY_SIZE / 2;
+  const enemySize = enemy.size ?? ENEMY_SIZE;
+  const centerX = enemy.body.pos.x + enemySize / 2;
+  const centerY = enemy.body.pos.y + enemySize / 2;
   if (room.enemyBehavior === "flameRush") {
     addHitSpark(centerX - enemy.velocity.x * 0.035, centerY - enemy.velocity.y * 0.035, { x: 0, y: -8 }, [255, 116, 58], 5);
     return;
@@ -786,15 +818,23 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const roomAlreadyCleared = clearedRoomIds.has(room.id);
   const speedScale = room.enemySpeedScale ?? 1;
-  const enemies = (roomAlreadyCleared ? [] : room.enemies).map((enemyConfig) => ({
-    body: addDemonEnemy(enemyConfig.x, enemyConfig.y, room.enemySprite),
-    velocity: {
-      x: enemyConfig.vx * speedScale,
-      y: enemyConfig.vy * speedScale,
-    },
-    phase: (enemyConfig.x + enemyConfig.y) * 0.03,
-    trailTimer: (enemyConfig.x % 3) * 0.04,
-  }));
+  const enemies = (roomAlreadyCleared ? [] : room.enemies).map((enemyConfig) => {
+    const enemySize = enemyConfig.size ?? ENEMY_SIZE;
+    const body = addDemonEnemy(enemyConfig.x, enemyConfig.y, enemyConfig.sprite ?? room.enemySprite, enemySize);
+    body.hp = enemyConfig.hp ?? 1;
+    body.maxHp = body.hp;
+    body.enemySize = enemySize;
+    return {
+      body,
+      size: enemySize,
+      velocity: {
+        x: enemyConfig.vx * speedScale,
+        y: enemyConfig.vy * speedScale,
+      },
+      phase: (enemyConfig.x + enemyConfig.y) * 0.03,
+      trailTimer: (enemyConfig.x % 3) * 0.04,
+    };
+  });
 
   add([
     text(`${room.name} ${roomProgress}：方向键射击，清敌开门`, { size: 13 }),
@@ -1024,9 +1064,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   player.onCollide("enemy", (enemy) => {
     if (ended || paused || invincibleTimer > 0) return;
+    const enemySize = enemy.enemySize ?? ENEMY_SIZE;
     const enemyCenter = {
-      x: enemy.pos.x + ENEMY_SIZE / 2,
-      y: enemy.pos.y + ENEMY_SIZE / 2,
+      x: enemy.pos.x + enemySize / 2,
+      y: enemy.pos.y + enemySize / 2,
     };
     hurtPlayer(enemyCenter.x, enemyCenter.y);
   });
@@ -1168,6 +1209,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
     enemies.forEach((enemy) => {
       if (!enemy.body.exists()) return;
+      const enemySize = enemy.size ?? ENEMY_SIZE;
       enemy.trailTimer = Math.max(0, enemy.trailTimer - dt());
       let moveX = enemy.velocity.x;
       let moveY = enemy.velocity.y;
@@ -1189,12 +1231,12 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         moveY += Math.cos(enemy.phase * 0.8) * SAND_DRIFT_STRENGTH;
       }
 
-      const hitX = moveOnAxis(enemy.body, moveX, 0, ENEMY_SIZE);
-      const hitY = moveOnAxis(enemy.body, 0, moveY, ENEMY_SIZE);
-      if (hitX || enemy.body.pos.x <= 0 || enemy.body.pos.x + ENEMY_SIZE >= width()) {
+      const hitX = moveOnAxis(enemy.body, moveX, 0, enemySize);
+      const hitY = moveOnAxis(enemy.body, 0, moveY, enemySize);
+      if (hitX || enemy.body.pos.x <= 0 || enemy.body.pos.x + enemySize >= width()) {
         enemy.velocity.x *= -1;
       }
-      if (hitY || enemy.body.pos.y <= 0 || enemy.body.pos.y + ENEMY_SIZE >= height()) {
+      if (hitY || enemy.body.pos.y <= 0 || enemy.body.pos.y + enemySize >= height()) {
         enemy.velocity.y *= -1;
       }
       if (enemy.trailTimer <= 0) {
@@ -1213,21 +1255,31 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         if (!bullet.exists()) break;
         bullet.move(stepX, stepY);
 
-        const enemy = get("enemy").find((enemyBody) => bulletOverlapsTarget(bullet, enemyBody, ENEMY_SIZE));
+        const enemy = get("enemy").find((enemyBody) => bulletOverlapsTarget(bullet, enemyBody, enemyBody.enemySize ?? ENEMY_SIZE));
         if (enemy) {
-          addHitBurst(enemy.pos.x + ENEMY_SIZE / 2, enemy.pos.y + ENEMY_SIZE / 2, room.introColor);
-          if (room.enemyAfterimage === "bone") {
-            addBoneAfterimage(enemy.pos.x, enemy.pos.y);
-          }
-          enemiesLeft -= 1;
-          runStats.defeats += 1;
-          playTone(760, 0.055, 0.024, "triangle");
-          destroy(enemy);
+          const enemySize = enemy.enemySize ?? ENEMY_SIZE;
+          const enemyCenterX = enemy.pos.x + enemySize / 2;
+          const enemyCenterY = enemy.pos.y + enemySize / 2;
+          enemy.hp = Math.max(0, (enemy.hp ?? 1) - 1);
+          addHitBurst(enemyCenterX, enemyCenterY, room.introColor);
           destroy(bullet);
-          feedbackText.text = "妖怪已击破";
-          feedbackTimer = 0.45;
-          updateStatusText();
-          openDoorIfReady();
+          if (enemy.hp > 0) {
+            playTone(560, 0.045, 0.02, "triangle");
+            feedbackText.text = `精英妖怪 ${enemy.hp}/${enemy.maxHp}`;
+            feedbackTimer = 0.45;
+          } else {
+            if (room.enemyAfterimage === "bone") {
+              addBoneAfterimage(enemy.pos.x, enemy.pos.y);
+            }
+            enemiesLeft -= 1;
+            runStats.defeats += 1;
+            playTone(760, 0.055, 0.024, "triangle");
+            destroy(enemy);
+            feedbackText.text = enemy.maxHp > 1 ? "精英妖怪已击破" : "妖怪已击破";
+            feedbackTimer = 0.45;
+            updateStatusText();
+            openDoorIfReady();
+          }
           break;
         }
 

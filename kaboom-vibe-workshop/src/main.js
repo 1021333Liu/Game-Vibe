@@ -758,7 +758,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
 
   onKeyPress("r", () => {
     if (ended) return;
-    go("game", roomIndex, true);
+    go("game", 0, true);
   });
 
   onUpdate(() => {

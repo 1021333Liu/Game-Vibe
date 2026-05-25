@@ -649,15 +649,18 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
 
   function openDoorIfReady() {
     if (door || enemiesLeft > 0) return;
+    const isFinalRoom = roomIndex + 1 >= ROOMS.length;
+    const doorMessage = isFinalRoom ? "最终传送门已开启" : "传送门已开启";
+    const doorCue = isFinalRoom ? "最后一道门已开" : "门已开启，去传送门";
     door = add([
       sprite("portal", { width: DOOR_SIZE, height: DOOR_SIZE }),
       pos(room.door.x, room.door.y),
       area(),
       "door",
     ]);
-    feedbackText.text = "传送门已开启";
+    feedbackText.text = doorMessage;
     feedbackTimer = 1.2;
-    addRoomCue("门已开启，去传送门", room.door.x + DOOR_SIZE / 2, Math.max(58, room.door.y - 14), [120, 255, 150]);
+    addRoomCue(doorCue, room.door.x + DOOR_SIZE / 2, Math.max(58, room.door.y - 14), [120, 255, 150]);
     addHitBurst(room.door.x + DOOR_SIZE / 2, room.door.y + DOOR_SIZE / 2, [118, 255, 142]);
     playTone(660, 0.12, 0.022, "triangle");
     updateStatusText();

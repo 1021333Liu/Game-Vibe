@@ -607,7 +607,7 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
   ]);
 
   const pauseHelp = add([
-    text("WASD 移动 / 方向键射击\nP 继续 / R 重开本局 / M 静音", { size: 12 }),
+    text("WASD 移动 / 方向键射击\nP 继续 / R 重开本局 / M 静音\n评级：少受伤 + 更快通关", { size: 12 }),
     pos(width() / 2, 150),
     anchor("center"),
     color(230, 230, 238),

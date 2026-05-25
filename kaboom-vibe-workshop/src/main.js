@@ -25,6 +25,7 @@ const QUICKSAND_SPEED_SCALE = 0.58;
 const FLAME_WARNING_TIME = 1.05;
 const FLAME_ACTIVE_TIME = 0.72;
 const FLAME_REST_TIME = 2.15;
+const BONE_AFTERIMAGE_LIFETIME = 0.9;
 
 const ROOMS = [
   {
@@ -69,6 +70,7 @@ const ROOMS = [
     introColor: [190, 218, 255],
     introSubtitle: "阴风入骨，白影游移",
     enemyBehavior: "boneTrack",
+    enemyAfterimage: "bone",
     player: { x: 42, y: 42 },
     door: { x: 430, y: 272 },
     walls: [
@@ -286,6 +288,17 @@ function addEnemyMotionCue(enemy, room) {
     addHitSpark(centerX - 9, centerY + Math.sin(enemy.phase) * 4, { x: -18, y: 4 }, [210, 176, 104], 4);
     addHitSpark(centerX + 9, centerY - Math.sin(enemy.phase) * 4, { x: 18, y: -4 }, [236, 204, 130], 3);
   }
+}
+
+function addBoneAfterimage(x, y) {
+  const ghost = add([
+    sprite("boneDemon", { width: ENEMY_SIZE, height: ENEMY_SIZE }),
+    pos(x, y),
+    opacity(0.44),
+    "boneAfterimage",
+  ]);
+  ghost.life = 0;
+  ghost.maxLife = BONE_AFTERIMAGE_LIFETIME;
 }
 
 function addScreenFlash(flashColor, maxLife) {
@@ -557,6 +570,14 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
       }
     });
 
+    get("boneAfterimage").forEach((ghost) => {
+      ghost.life += dt();
+      ghost.opacity = Math.max(0, 0.44 * (1 - ghost.life / ghost.maxLife));
+      if (ghost.life >= ghost.maxLife) {
+        destroy(ghost);
+      }
+    });
+
     if (isKeyDown("left")) shoot(-1, 0);
     if (isKeyDown("right")) shoot(1, 0);
     if (isKeyDown("up")) shoot(0, -1);
@@ -644,6 +665,9 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
         const enemy = get("enemy").find((enemyBody) => bulletOverlapsTarget(bullet, enemyBody, ENEMY_SIZE));
         if (enemy) {
           addHitBurst(enemy.pos.x + ENEMY_SIZE / 2, enemy.pos.y + ENEMY_SIZE / 2, room.introColor);
+          if (room.enemyAfterimage === "bone") {
+            addBoneAfterimage(enemy.pos.x, enemy.pos.y);
+          }
           enemiesLeft -= 1;
           destroy(enemy);
           destroy(bullet);

@@ -26,6 +26,7 @@ const FLAME_WARNING_TIME = 1.05;
 const FLAME_ACTIVE_TIME = 0.72;
 const FLAME_REST_TIME = 2.15;
 const BONE_AFTERIMAGE_LIFETIME = 0.9;
+const BEST_TIME_KEY = "game-vibe-best-time";
 
 const ROOMS = [
   {
@@ -358,6 +359,33 @@ function resetRunStats() {
 
 function formatRunTime(seconds) {
   return `${Math.floor(seconds)} 秒`;
+}
+
+function readBestTime() {
+  try {
+    const saved = window.localStorage?.getItem(BEST_TIME_KEY);
+    const parsed = Number(saved);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveBestTime(seconds) {
+  try {
+    window.localStorage?.setItem(BEST_TIME_KEY, String(seconds));
+  } catch {
+    // Best-time storage is optional; gameplay should continue if blocked.
+  }
+}
+
+function updateBestTime(seconds) {
+  const bestTime = readBestTime();
+  if (bestTime === null || seconds < bestTime) {
+    saveBestTime(seconds);
+    return { bestTime: seconds, isNewBest: true };
+  }
+  return { bestTime, isNewBest: false };
 }
 
 scene("game", (roomIndex = 0, shouldResetRun = false) => {
@@ -798,6 +826,9 @@ function addResultScreen({ title, subtitle, hint, accentColor, backgroundColor }
 }
 
 scene("complete", () => {
+  const bestResult = updateBestTime(runStats.time);
+  const bestLabel = bestResult.bestTime === null ? "暂无记录" : formatRunTime(bestResult.bestTime);
+  const bestPrefix = bestResult.isNewBest ? "新最快" : "最快";
   addResultScreen({
     title: "三关已净",
     subtitle: "火焰山、白骨洞、流沙河都被清理完成",
@@ -813,9 +844,15 @@ scene("complete", () => {
   ]);
   add([
     text(`用时 ${formatRunTime(runStats.time)} / 击败 ${runStats.defeats} / 受伤 ${runStats.hitsTaken}`, { size: 11 }),
-    pos(width() / 2, 236),
+    pos(width() / 2, 232),
     anchor("center"),
     color(230, 226, 194),
+  ]);
+  add([
+    text(`${bestPrefix} ${bestLabel}`, { size: 11 }),
+    pos(width() / 2, 250),
+    anchor("center"),
+    color(255, 232, 150),
   ]);
   onKeyDown("r", () => go("game", 0, true));
 });

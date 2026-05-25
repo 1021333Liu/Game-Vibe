@@ -6,6 +6,7 @@ const PLAYER_SIZE = 16;
 const ENEMY_SIZE = 18;
 const ELITE_SIZE = 28;
 const DOOR_SIZE = 22;
+const HEAL_PEACH_SIZE = 16;
 const BULLET_SIZE = 6;
 const BULLET_SPEED = 9000;
 const SHOT_COOLDOWN = 0.035;
@@ -309,6 +310,7 @@ let runStats = {
 };
 let exploredRoomIds = new Set();
 let clearedRoomIds = new Set();
+let rewardedRoomIds = new Set();
 let audioContext = null;
 let isMuted = false;
 
@@ -355,6 +357,7 @@ loadSprite("taoistDemon", "/sprites/taoist-demon.svg");
 loadSprite("lionElite", "/sprites/lion-elite.svg");
 loadSprite("staff", "/sprites/staff.svg");
 loadSprite("portal", "/sprites/portal.svg");
+loadSprite("healPeach", "/sprites/heal-peach.svg");
 
 function getAudioContext() {
   if (audioContext) return audioContext;
@@ -571,6 +574,16 @@ function addDemonEnemy(x, y, spriteName, enemySize = ENEMY_SIZE) {
   ]);
 }
 
+function addHealPeach(x, y) {
+  return add([
+    sprite("healPeach", { width: HEAL_PEACH_SIZE, height: HEAL_PEACH_SIZE }),
+    pos(x, y),
+    area(),
+    opacity(1),
+    "healPeach",
+  ]);
+}
+
 function addStaffBullet(x, y, dirX, dirY) {
   const horizontal = dirX !== 0;
   const body = add([
@@ -690,6 +703,7 @@ function resetRunStats() {
   };
   exploredRoomIds = new Set();
   clearedRoomIds = new Set();
+  rewardedRoomIds = new Set();
 }
 
 function formatRunTime(seconds) {
@@ -697,13 +711,13 @@ function formatRunTime(seconds) {
 }
 
 function getClearRank(stats) {
-  if (stats.time <= 55 && stats.hitsTaken === 0) {
-    return { grade: "S", comment: "毫发无伤" };
+  if (stats.time <= 125 && stats.hitsTaken <= 1) {
+    return { grade: "S", comment: "近乎无伤" };
   }
-  if (stats.time <= 75 && stats.hitsTaken <= 1) {
+  if (stats.time <= 165 && stats.hitsTaken <= 3) {
     return { grade: "A", comment: "身法不错" };
   }
-  if (stats.time <= 105 && stats.hitsTaken <= 3) {
+  if (stats.time <= 220 && stats.hitsTaken <= 5) {
     return { grade: "B", comment: "稳住阵脚" };
   }
   return { grade: "C", comment: "再战会更顺" };
@@ -954,6 +968,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   let roomIntroTimer = ROOM_INTRO_DURATION;
   let doorsOpened = false;
   let doors = [];
+  let healPeach = null;
   let enemiesLeft = enemies.length;
 
   function updateStatusText() {
@@ -973,6 +988,22 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   updateMuteText();
 
+  function dropHealRewardIfNeeded() {
+    if (room.type === "final") return;
+    if (roomAlreadyCleared) return;
+    if (rewardedRoomIds.has(room.id)) return;
+    if (runHealth >= PLAYER_MAX_HEALTH) return;
+
+    rewardedRoomIds.add(room.id);
+    const rewardX = Math.max(26, Math.min(width() - HEAL_PEACH_SIZE - 26, entrySpawn.x + 34));
+    const rewardY = Math.max(64, Math.min(height() - HEAL_PEACH_SIZE - 28, entrySpawn.y));
+    healPeach = addHealPeach(rewardX, rewardY);
+    feedbackText.text = "清房奖励：回血桃出现";
+    feedbackTimer = 1.25;
+    addRoomCue("+1 生命", rewardX + HEAL_PEACH_SIZE / 2, Math.max(58, rewardY - 12), [255, 198, 144], 1.2);
+    playTone(720, 0.08, 0.02, "triangle");
+  }
+
   function openDoorIfReady() {
     if (doorsOpened || enemiesLeft > 0) return;
     doorsOpened = true;
@@ -988,6 +1019,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       go("complete");
       return;
     }
+    dropHealRewardIfNeeded();
     doors = roomExits.map((exit) => {
       const openedDoor = add([
         sprite("portal", { width: DOOR_SIZE, height: DOOR_SIZE }),
@@ -1078,6 +1110,21 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     go("game", doorBody.targetId, false, OPPOSITE_DIRECTIONS[doorBody.direction] ?? null);
   });
 
+  player.onCollide("healPeach", (peach) => {
+    if (ended || paused || runHealth >= PLAYER_MAX_HEALTH) return;
+    runHealth = Math.min(PLAYER_MAX_HEALTH, runHealth + 1);
+    destroy(peach);
+    healPeach = null;
+    updateStatusText();
+    feedbackText.text = "回血桃 +1 生命";
+    feedbackTimer = 1.05;
+    addRoomCue("+1 生命", player.pos.x + PLAYER_SIZE / 2, Math.max(58, player.pos.y - 12), [255, 198, 144], 1);
+    playToneSequence([
+      { frequency: 640, duration: 0.055, volume: 0.02, type: "triangle" },
+      { frequency: 820, duration: 0.07, volume: 0.022, type: "triangle" },
+    ]);
+  });
+
   onKeyPress("p", () => {
     if (ended) return;
     paused = !paused;
@@ -1153,6 +1200,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
     get("boneAfterimage").forEach((ghost) => {
       fadeAndDestroy(ghost, 0.44);
+    });
+
+    get("healPeach").forEach((peach) => {
+      peach.opacity = 0.74 + Math.sin(runStats.time * 8) * 0.18;
     });
 
     if (isKeyDown("left")) shoot(-1, 0);

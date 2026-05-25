@@ -877,6 +877,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     rect(width(), height()),
     pos(0, 0),
     color(...room.background),
+    z(-2),
   ]);
 
   drawRoomDecor(room);

@@ -13,6 +13,8 @@ const BULLET_LIFETIME = 4;
 const PLAYER_MAX_HEALTH = 3;
 const PLAYER_INVINCIBLE_TIME = 1.1;
 const PLAYER_KNOCKBACK = 26;
+const ROOM_INTRO_DURATION = 1.6;
+const ROOM_INTRO_FADE_TIME = 0.55;
 
 const ROOMS = [
   {
@@ -22,6 +24,8 @@ const ROOMS = [
     wallColor: [110, 56, 42],
     wallOutline: [48, 24, 20],
     statusColor: [255, 196, 126],
+    introColor: [255, 174, 92],
+    introSubtitle: "烈焰翻涌，妖影逼近",
     player: { x: 40, y: 160 },
     door: { x: 430, y: 152 },
     walls: [
@@ -44,6 +48,8 @@ const ROOMS = [
     wallColor: [92, 88, 104],
     wallOutline: [44, 42, 54],
     statusColor: [216, 214, 232],
+    introColor: [190, 218, 255],
+    introSubtitle: "阴风入骨，白影游移",
     player: { x: 42, y: 42 },
     door: { x: 430, y: 272 },
     walls: [
@@ -66,6 +72,8 @@ const ROOMS = [
     wallColor: [122, 94, 54],
     wallOutline: [58, 43, 24],
     statusColor: [235, 204, 142],
+    introColor: [245, 210, 132],
+    introSubtitle: "黄沙压境，水路难行",
     player: { x: 42, y: 272 },
     door: { x: 430, y: 42 },
     walls: [
@@ -260,10 +268,27 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     color(255, 220, 160),
   ]);
 
+  const roomIntroTitle = add([
+    text(room.name, { size: 24 }),
+    pos(width() / 2, 78),
+    anchor("center"),
+    color(...room.introColor),
+    opacity(1),
+  ]);
+
+  const roomIntroSubtitle = add([
+    text(room.introSubtitle, { size: 12 }),
+    pos(width() / 2, 106),
+    anchor("center"),
+    color(238, 232, 218),
+    opacity(1),
+  ]);
+
   let ended = false;
   let shotTimer = 0;
   let invincibleTimer = 0;
   let feedbackTimer = 0;
+  let roomIntroTimer = ROOM_INTRO_DURATION;
   let door = null;
   let enemiesLeft = enemies.length;
 
@@ -342,6 +367,10 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     shotTimer = Math.max(0, shotTimer - dt());
     invincibleTimer = Math.max(0, invincibleTimer - dt());
     feedbackTimer = Math.max(0, feedbackTimer - dt());
+    roomIntroTimer = Math.max(0, roomIntroTimer - dt());
+    const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);
+    roomIntroTitle.opacity = introAlpha;
+    roomIntroSubtitle.opacity = introAlpha;
     if (feedbackTimer <= 0) {
       feedbackText.text = "";
     }

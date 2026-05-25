@@ -1057,14 +1057,20 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   ]);
 
   const statusText = add([
-    text(`生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()} / 敌人 ${enemies.length} / 门未开启`, { size: 12 }),
+    text(`生命 ${getHealthLabel(runHealth)} / 敌 ${enemies.length} / 门 未开`, { size: 12 }),
     pos(10, 26),
     color(...room.statusColor),
   ]);
 
+  const clearProgressText = add([
+    text(`清房 ${getClearedProgressLabel()}`, { size: 10 }),
+    pos(10, 42),
+    color(214, 210, 198),
+  ]);
+
   add([
     text(room.mechanicHint, { size: 10 }),
-    pos(10, 44),
+    pos(10, 58),
     color(214, 210, 198),
   ]);
 
@@ -1086,13 +1092,13 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const feedbackText = add([
     text("入场安全", { size: 12 }),
-    pos(10, 58),
+    pos(10, 72),
     color(255, 220, 160),
   ]);
 
   const itemText = add([
     text("", { size: 10 }),
-    pos(10, 74),
+    pos(10, 88),
     color(214, 210, 198),
   ]);
 
@@ -1121,7 +1127,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const lowHealthText = add([
     text("危险：生命仅剩 1", { size: 11 }),
-    pos(10, 88),
+    pos(10, 102),
     color(255, 150, 140),
     opacity(0),
   ]);
@@ -1185,8 +1191,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   let enemiesLeft = enemies.length;
 
   function updateStatusText() {
-    const doorStatus = doorsOpened ? "门已开启" : "门未开启";
-    statusText.text = `生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()} / 敌人 ${enemiesLeft} / ${doorStatus}`;
+    const doorStatus = doorsOpened ? "已开" : "未开";
+    statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌 ${enemiesLeft} / 门 ${doorStatus}`;
+    clearProgressText.text = `清房 ${getClearedProgressLabel()}`;
   }
 
   function updateMuteText() {

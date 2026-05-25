@@ -326,6 +326,14 @@ function addRoomCue(cueText, x, y, cueColor, maxLife = ROOM_CUE_LIFETIME) {
   cue.maxLife = maxLife;
 }
 
+function fadeAndDestroy(entity, startOpacity) {
+  entity.life += dt();
+  entity.opacity = Math.max(0, startOpacity * (1 - entity.life / entity.maxLife));
+  if (entity.life >= entity.maxLife) {
+    destroy(entity);
+  }
+}
+
 function getHealthLabel(health) {
   return `${"心".repeat(health)}${"空".repeat(PLAYER_MAX_HEALTH - health)}`;
 }
@@ -545,37 +553,21 @@ scene("game", (roomIndex = 0, shouldResetRun = false) => {
     }
 
     get("hitSpark").forEach((spark) => {
-      spark.life += dt();
       spark.move(spark.velocity.x * dt(), spark.velocity.y * dt());
-      spark.opacity = Math.max(0, 1 - spark.life / spark.maxLife);
-      if (spark.life >= spark.maxLife) {
-        destroy(spark);
-      }
+      fadeAndDestroy(spark, 1);
     });
 
     get("screenFlash").forEach((flash) => {
-      flash.life += dt();
-      flash.opacity = Math.max(0, 0.28 * (1 - flash.life / flash.maxLife));
-      if (flash.life >= flash.maxLife) {
-        destroy(flash);
-      }
+      fadeAndDestroy(flash, 0.28);
     });
 
     get("roomCue").forEach((cue) => {
-      cue.life += dt();
       cue.pos.y -= 12 * dt();
-      cue.opacity = Math.max(0, 1 - cue.life / cue.maxLife);
-      if (cue.life >= cue.maxLife) {
-        destroy(cue);
-      }
+      fadeAndDestroy(cue, 1);
     });
 
     get("boneAfterimage").forEach((ghost) => {
-      ghost.life += dt();
-      ghost.opacity = Math.max(0, 0.44 * (1 - ghost.life / ghost.maxLife));
-      if (ghost.life >= ghost.maxLife) {
-        destroy(ghost);
-      }
+      fadeAndDestroy(ghost, 0.44);
     });
 
     if (isKeyDown("left")) shoot(-1, 0);

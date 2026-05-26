@@ -1123,6 +1123,7 @@ style.textContent = `
     max-height: calc(100vh - 24px);
     overflow: auto;
     padding: 20px;
+    padding-bottom: 58px;
     border: 1px solid rgba(255, 232, 150, 0.42);
     background:
       linear-gradient(90deg, rgba(255, 232, 150, 0.06), transparent 16%, transparent 84%, rgba(255, 232, 150, 0.05)),
@@ -1308,7 +1309,7 @@ style.textContent = `
   }
 
   .start-version {
-    margin: -4px 0 10px;
+    margin: -4px 0 14px;
     color: #aeb8c8;
     font-size: 11px;
   }
@@ -1327,18 +1328,9 @@ style.textContent = `
     font-weight: 700;
     cursor: pointer;
     isolation: isolate;
-    box-shadow: 0 8px 20px rgba(255, 232, 150, 0.16);
-  }
-
-  #start-button::before {
-    content: "";
-    position: absolute;
-    left: -16px;
-    right: -16px;
-    top: -10px;
-    height: 10px;
-    pointer-events: none;
-    background: linear-gradient(180deg, rgba(14, 17, 26, 0), rgba(14, 17, 26, 0.9));
+    box-shadow:
+      0 -12px 16px rgba(14, 17, 26, 0.88),
+      0 8px 20px rgba(255, 232, 150, 0.16);
   }
 
   #start-button:disabled {
@@ -1349,6 +1341,7 @@ style.textContent = `
   @media (max-width: 620px) {
     #start-panel {
       padding: 14px;
+      padding-bottom: 54px;
     }
 
     #start-panel h1 {

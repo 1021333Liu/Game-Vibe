@@ -951,6 +951,9 @@ const TRIAL_POOL = [
 let ROOMS = [];
 let ROOM_BY_ID = {};
 let ROOM_MAP_POSITIONS = {};
+let currentStartRoomId = START_ROOM_ID;
+let currentRunSeed = 0;
+let currentRunRouteName = "";
 
 let activeWalls = [];
 let gameStarted = false;
@@ -968,10 +971,112 @@ let runItem = null;
 let audioContext = null;
 let isMuted = false;
 
-function rebuildRoomLookup() {
-  ROOMS = ROOM_TEMPLATES;
+function cloneRoomConfig(room) {
+  return JSON.parse(JSON.stringify(room));
+}
+
+function shuffled(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function takeCycling(items, count) {
+  const source = shuffled(items);
+  if (source.length === 0) return [];
+  return Array.from({ length: count }, (_, index) => source[index % source.length]);
+}
+
+function getTemplatePool(role) {
+  if (role === "final") return ROOM_TEMPLATES.filter((room) => room.type === "final");
+  return ROOM_TEMPLATES.filter((room) => room.type === role);
+}
+
+function getTrialPool(role) {
+  if (role === "final") return TRIAL_POOL.filter((trial) => trial.type === "boss");
+  return TRIAL_POOL.filter((trial) => trial.type === role);
+}
+
+function getRandomItemId(seedOffset = 0) {
+  return RUN_ITEM_IDS[(currentRunSeed + seedOffset) % RUN_ITEM_IDS.length] ?? "cloneHair";
+}
+
+function resetStartMenuRoutePreview() {
+  const dashboard = document.querySelector(".start-dashboard");
+  if (dashboard) dashboard.remove();
+  const version = document.querySelector(".start-version");
+  if (version) version.remove();
+}
+
+function generateRunMap() {
+  currentRunSeed = Math.floor(Math.random() * 1000000);
+  currentStartRoomId = START_ROOM_ID;
+
+  const layout = [
+    { id: currentStartRoomId, role: "combat", exits: { right: "trial-east-1", down: "trial-south-1", left: "trial-west-2" } },
+    { id: "trial-east-1", role: "combat", exits: { left: currentStartRoomId, right: "trial-east-2", up: "trial-treasure-1", down: "trial-center-1" } },
+    { id: "trial-east-2", role: "combat", exits: { left: "trial-east-1", down: "trial-elite-1" } },
+    { id: "trial-elite-1", role: "elite", exits: { up: "trial-east-2", left: "trial-center-1", right: "trial-final" } },
+    { id: "trial-center-1", role: "combat", exits: { up: "trial-east-1", right: "trial-elite-1", left: "trial-south-1", down: "trial-treasure-2" } },
+    { id: "trial-south-1", role: "combat", exits: { up: currentStartRoomId, right: "trial-center-1", left: "trial-elite-2" } },
+    { id: "trial-elite-2", role: "elite", exits: { right: "trial-south-1", up: "trial-west-2" } },
+    { id: "trial-west-2", role: "combat", exits: { down: "trial-elite-2", right: currentStartRoomId } },
+    { id: "trial-treasure-1", role: "treasure", exits: { down: "trial-east-1" } },
+    { id: "trial-treasure-2", role: "treasure", exits: { up: "trial-center-1", right: "trial-elite-3" } },
+    { id: "trial-elite-3", role: "elite", exits: { left: "trial-treasure-2" } },
+    { id: "trial-final", role: "final", exits: { left: "trial-elite-1" } },
+  ];
+  const roleCounts = layout.reduce((counts, slot) => {
+    counts[slot.role] = (counts[slot.role] ?? 0) + 1;
+    return counts;
+  }, {});
+  const templatesByRole = Object.fromEntries(
+    Object.entries(roleCounts).map(([role, count]) => [role, takeCycling(getTemplatePool(role), count)]),
+  );
+  const trialsByRole = Object.fromEntries(
+    Object.entries(roleCounts).map(([role, count]) => [role, takeCycling(getTrialPool(role), count)]),
+  );
+  const roleIndex = {};
+
+  ROOMS = layout.map((slot, slotIndex) => {
+    const index = roleIndex[slot.role] ?? 0;
+    roleIndex[slot.role] = index + 1;
+    const template = templatesByRole[slot.role]?.[index] ?? ROOM_TEMPLATES[0];
+    const trial = trialsByRole[slot.role]?.[index] ?? TRIAL_POOL[slotIndex % TRIAL_POOL.length];
+    const room = cloneRoomConfig(template);
+    room.id = slot.id;
+    room.type = slot.role;
+    room.exits = { ...slot.exits };
+    room.trialNo = trial.trialNo;
+    room.trialName = trial.trialName;
+    room.name = trial.name;
+    room.lore = `${trial.trialName}，本局随机显形`;
+    room.clearLore = slot.role === "treasure"
+      ? `${trial.name}宝光暂收，道具择主`
+      : `${trial.name}已清，下一难开路`;
+    room.introSubtitle = trial.trialName;
+    if (slot.role === "treasure") {
+      room.mechanicHint = "机制：奖励房三选一，从大规模道具池抽取 / P 暂停";
+    }
+    if (slot.role === "elite") {
+      room.rewardItemId = getRandomItemId(slotIndex * 7 + trial.trialNo);
+    }
+    if (slot.role === "final") {
+      room.mechanicHint = "机制：Boss 房，击破首领即可通关 / P 暂停";
+      room.clearLore = `${trial.name}首领已破，本轮取经完成`;
+    }
+    return room;
+  });
+
   ROOM_BY_ID = Object.fromEntries(ROOMS.map((room) => [room.id, room]));
   ROOM_MAP_POSITIONS = buildRoomMapPositions();
+  currentRunRouteName = ROOMS
+    .slice(0, 4)
+    .map((room) => `第${room.trialNo}难`)
+    .join(" / ");
 }
 
 function getTrialPoolPreview(limit = 5) {
@@ -1405,6 +1510,7 @@ function initGsapShell() {
     combat: "战斗",
     treasure: "奖励",
     elite: "精英",
+    boss: "Boss",
     final: "终点",
   };
   const roomTypeClass = {
@@ -1449,16 +1555,17 @@ function initGsapShell() {
     }).join("");
     dashboard.innerHTML = `
       <div class="route-preview">
-        <span class="menu-section-title">取经路线</span>
+        <span class="menu-section-title">本局随机路线</span>
         <div class="route-map" style="--map-cols:${mapCols};--map-rows:${mapRows}">
           ${routeNodes}
         </div>
       </div>
       <div class="menu-brief">
         <span class="menu-section-title">探索情报</span>
-        <p><strong>清房开门</strong>，多出口会通向不同劫难。</p>
-        <p><strong>奖励房</strong>给攻击道具，精英房通向终点。</p>
+        <p><strong>每次新局</strong>都会从 81 难题材池抽取本局房间。</p>
+        <p><strong>奖励房</strong>从 28 个道具池里三选一，精英房也会掉落随机道具。</p>
         <p>按 P 暂停看地图，按 M 切换静音。</p>
+        <p>本局种子：${currentRunSeed} / ${currentRunRouteName}</p>
         <div class="trial-teaser"><span>81 难题材池</span>：${getTrialPoolPreview()}</div>
       </div>
     `;
@@ -1468,7 +1575,7 @@ function initGsapShell() {
   if (!panel.querySelector(".start-version")) {
     const version = document.createElement("div");
     version.className = "start-version";
-    version.textContent = "当前体验：多房间探索 / 道具分支 / 黄眉 Boss 阶段反馈";
+    version.textContent = "当前体验：本局随机 12 房 / 81 难题材池 / 28 道具池 / Boss 房";
     panel.insertBefore(version, button);
   }
 
@@ -1528,7 +1635,7 @@ function initGsapShell() {
   });
 }
 
-rebuildRoomLookup();
+generateRunMap();
 initGsapShell();
 
 loadSprite("wukong", "/sprites/wukong.svg");
@@ -2163,8 +2270,15 @@ function updateBestTime(seconds) {
 }
 
 scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = null) => {
+  if (shouldResetRun) {
+    generateRunMap();
+    resetStartMenuRoutePreview();
+    if (!gameStarted) initGsapShell();
+    roomId = currentStartRoomId;
+    fromDirection = null;
+  }
   if (typeof roomId === "number") {
-    roomId = ROOMS[roomId]?.id ?? START_ROOM_ID;
+    roomId = ROOMS[roomId]?.id ?? currentStartRoomId;
   }
   const room = getRoomById(roomId);
   const roomIndex = getRoomIndex(room.id);
@@ -2397,7 +2511,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     return marker;
   });
 
-  if (room.id === START_ROOM_ID && shouldResetRun) {
+  if (room.id === currentStartRoomId && shouldResetRun) {
     addRoomCue("清掉妖怪，探索四周门 / P 暂停 / M 静音", width() / 2, height() - 36, [255, 235, 190], 2);
   }
 
@@ -2547,18 +2661,20 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
 
   function dropAttackItemIfNeeded() {
-    if (room.id !== "lion-outpost") return;
+    if (room.type !== "elite") return;
     if (roomAlreadyCleared) return;
     if (runItem) return;
     if (itemRewardedRoomIds.has(room.id)) return;
 
     itemRewardedRoomIds.add(room.id);
+    const rewardItemId = room.rewardItemId ?? getRandomItemId(getRoomIndex(room.id) * 11 + runStats.defeats);
+    const itemInfo = getRunItemInfo(rewardItemId) ?? RUN_ITEM_INFO.cloneHair;
     const rewardX = Math.max(28, Math.min(width() - ATTACK_ITEM_SIZE - 28, width() / 2 - ATTACK_ITEM_SIZE / 2));
     const rewardY = Math.max(68, Math.min(height() - ATTACK_ITEM_SIZE - 30, height() / 2 + 34));
-    attackItem = spawnAttackItem("cloneHair", rewardX, rewardY);
-    feedbackText.text = "精英奖励：分身毫毛出现";
+    attackItem = spawnAttackItem(rewardItemId, rewardX, rewardY);
+    feedbackText.text = `精英奖励：${itemInfo.name}`;
     feedbackTimer = 1.25;
-    addRoomCue("分身毫毛", rewardX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), [230, 235, 255], 1.2);
+    addRoomCue(itemInfo.name, rewardX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), itemInfo.color, 1.2);
     playTone(880, 0.08, 0.02, "triangle");
   }
 
@@ -2851,7 +2967,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   onKeyPress("r", () => {
     if (!gameStarted) return;
     if (ended) return;
-    go("game", START_ROOM_ID, true);
+    go("game", currentStartRoomId, true);
   });
 
   onUpdate(() => {
@@ -3286,12 +3402,12 @@ scene("complete", () => {
     anchor("center"),
     color(255, 235, 190),
   ]);
-  onKeyDown("r", () => go("game", START_ROOM_ID, true));
+  onKeyDown("r", () => go("game", currentStartRoomId, true));
 });
 
 scene("lose", (roomId = START_ROOM_ID) => {
   if (typeof roomId === "number") {
-    roomId = ROOMS[roomId]?.id ?? START_ROOM_ID;
+    roomId = ROOMS[roomId]?.id ?? currentStartRoomId;
   }
   const room = getRoomById(roomId);
   const roomIndex = getRoomIndex(room.id);
@@ -3345,7 +3461,7 @@ scene("lose", (roomId = START_ROOM_ID) => {
     anchor("center"),
     color(255, 220, 190),
   ]);
-  onKeyDown("r", () => go("game", room.id, true));
+  onKeyDown("r", () => go("game", currentStartRoomId, true));
 });
 
-go("game", START_ROOM_ID, true);
+go("game", currentStartRoomId, false);

@@ -1087,6 +1087,10 @@ function getTrialPoolPreview(limit = 5) {
     .join(" / ");
 }
 
+function getRunRouteSummary() {
+  return `种子 ${currentRunSeed} / ${currentRunRouteName || "随机路线"}`;
+}
+
 const {
   add,
   rect,
@@ -2636,7 +2640,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     pauseHelp.opacity = paused ? 1 : 0;
     pauseStatus.opacity = paused ? 1 : 0;
     const itemInfo = getRunItemInfo();
-    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / 攻击间隔 ${SHOT_COOLDOWN}s / ${itemInfo ? itemInfo.name : "无道具"}`;
+    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / 攻击间隔 ${SHOT_COOLDOWN}s / ${itemInfo ? itemInfo.name : "无道具"}\n${getRunRouteSummary()}`;
   }
 
   updateMuteText();
@@ -3397,7 +3401,7 @@ scene("complete", () => {
   addResultStatCard(width() / 2 + 6, 256, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 256, 64, 30, "清房", getClearedProgressLabel(), [190, 216, 190]);
   add([
-    text(`道具 ${getRunItemName()} / ${bestPrefix} ${bestLabel} / R 新一轮`, { size: 10 }),
+    text(`道具 ${getRunItemName()} / ${bestPrefix} ${bestLabel} / ${getRunRouteSummary()}`, { size: 9 }),
     pos(width() / 2, 294),
     anchor("center"),
     color(255, 235, 190),
@@ -3415,7 +3419,7 @@ scene("lose", (roomId = START_ROOM_ID) => {
   addResultScreen({
     title: "取经受阻",
     subtitle: `${roomName} 的妖气仍未散尽`,
-    hint: "按 R 满血重试本房间",
+    hint: "按 R 开始新一轮取经",
     accentColor: [255, 156, 132],
     backgroundColor: [44, 30, 34],
   });
@@ -3456,7 +3460,7 @@ scene("lose", (roomId = START_ROOM_ID) => {
   addResultStatCard(width() / 2 + 6, 254, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 254, 64, 30, "节点", `${roomIndex + 1}/${ROOMS.length}`, [236, 204, 198]);
   add([
-    text(`道具 ${getRunItemName()} / R 满血重试本房间`, { size: 10 }),
+    text(`道具 ${getRunItemName()} / ${getRunRouteSummary()} / R 新一轮`, { size: 9 }),
     pos(width() / 2, 292),
     anchor("center"),
     color(255, 220, 190),

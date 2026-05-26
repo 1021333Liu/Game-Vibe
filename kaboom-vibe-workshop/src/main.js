@@ -1293,6 +1293,17 @@ function getExitLabel(room) {
   return labels.length > 0 ? labels.join(" ") : "无";
 }
 
+function getExitPreviewText(roomExits, doorsOpened) {
+  if (roomExits.length === 0) return "出口：无";
+  if (!doorsOpened) return `出口：${roomExits.map((exit) => DIRECTION_LABELS[exit.direction] ?? exit.direction).join(" ")} / 清敌后开启`;
+  return `出口：${roomExits
+    .map((exit) => {
+      const targetRoom = getRoomById(exit.targetId);
+      return `${DIRECTION_LABELS[exit.direction] ?? exit.direction}->${targetRoom.name}`;
+    })
+    .join("  ")}`;
+}
+
 function getDoorLabelPosition(exit) {
   const centerX = exit.x + DOOR_SIZE / 2;
   const centerY = exit.y + DOOR_SIZE / 2;
@@ -1962,6 +1973,15 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     z(HUD_TEXT_Z),
   ]);
 
+  const exitPreviewText = add([
+    text(getExitPreviewText(roomExits, false), { size: 9 }),
+    pos(width() / 2, HUD_FEEDBACK_PANEL.y - 12),
+    anchor("center"),
+    color(198, 226, 210),
+    opacity(0.82),
+    z(HUD_TEXT_Z),
+  ]);
+
   const attackReadyText = add([
     text("", { size: 10 }),
     pos(HUD_FEEDBACK_PANEL.x + HUD_FEEDBACK_PANEL.w - HUD_MARGIN, HUD_FEEDBACK_PANEL.y + 7),
@@ -2077,6 +2097,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const doorStatus = doorsOpened ? "已开" : "未开";
     statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌 ${enemiesLeft} / 门 ${doorStatus}`;
     clearProgressText.text = `清房 ${getClearedProgressLabel()}`;
+    exitPreviewText.text = getExitPreviewText(roomExits, doorsOpened);
+    exitPreviewText.color = doorsOpened ? [156, 244, 176] : [198, 226, 210];
   }
 
   function updateMuteText() {

@@ -435,6 +435,7 @@ const ROOM_BY_ID = Object.fromEntries(ROOMS.map((room) => [room.id, room]));
 const ROOM_MAP_POSITIONS = buildRoomMapPositions();
 
 let activeWalls = [];
+let gameStarted = false;
 let runHealth = PLAYER_MAX_HEALTH;
 let runStats = {
   defeats: 0,
@@ -509,8 +510,11 @@ style.textContent = `
   #game-shell {
     position: fixed;
     inset: 0;
-    pointer-events: none;
     z-index: 20;
+  }
+
+  #game-shell.is-playing {
+    pointer-events: none;
   }
 
   #game-brand,
@@ -547,19 +551,95 @@ style.textContent = `
     font-size: 12px;
     color: #e8dfca;
   }
+
+  #start-menu {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background:
+      linear-gradient(180deg, rgba(16, 19, 28, 0.78), rgba(16, 19, 28, 0.52)),
+      radial-gradient(circle at 50% 42%, rgba(255, 232, 150, 0.18), transparent 34%);
+    pointer-events: auto;
+  }
+
+  #start-panel {
+    width: min(420px, calc(100vw - 32px));
+    padding: 24px;
+    border: 1px solid rgba(255, 232, 150, 0.42);
+    background: rgba(14, 17, 26, 0.82);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(8px);
+    text-align: center;
+  }
+
+  .start-kicker {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: #9be7c6;
+  }
+
+  #start-panel h1 {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: #ffe79a;
+  }
+
+  #start-panel p {
+    margin: 12px auto 18px;
+    max-width: 330px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #efe7d3;
+  }
+
+  #start-button {
+    min-width: 132px;
+    height: 38px;
+    border: 1px solid rgba(255, 232, 150, 0.78);
+    background: #ffe79a;
+    color: #171518;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
 `;
 document.head.appendChild(style);
 
 function initGsapShell() {
+  const shell = document.querySelector("#game-shell");
   const brand = document.querySelector("#game-brand");
   const note = document.querySelector("#game-ui-note");
-  if (!brand || !note) return;
+  const menu = document.querySelector("#start-menu");
+  const panel = document.querySelector("#start-panel");
+  const button = document.querySelector("#start-button");
+  if (!shell || !brand || !note || !menu || !panel || !button) return;
 
   gsap.set([brand, note], { autoAlpha: 0, y: -10 });
+  gsap.set(panel, { autoAlpha: 0, y: 18, scale: 0.98 });
   gsap.timeline({ defaults: { ease: "power3.out" } })
-    .to(brand, { autoAlpha: 1, y: 0, duration: 0.55 })
-    .to(note, { autoAlpha: 1, y: 0, duration: 0.45 }, "-=0.22")
-    .to(note, { autoAlpha: 0.62, duration: 0.8, delay: 2.2, ease: "power1.out" });
+    .to(panel, { autoAlpha: 1, y: 0, scale: 1, duration: 0.62 })
+    .to(brand, { autoAlpha: 1, y: 0, duration: 0.45 }, "-=0.3")
+    .to(note, { autoAlpha: 0.9, y: 0, duration: 0.45 }, "-=0.22");
+
+  button.addEventListener("mouseenter", () => {
+    gsap.to(button, { scale: 1.04, duration: 0.18, ease: "power2.out" });
+  });
+  button.addEventListener("mouseleave", () => {
+    gsap.to(button, { scale: 1, duration: 0.18, ease: "power2.out" });
+  });
+  button.addEventListener("click", () => {
+    gameStarted = true;
+    shell.classList.add("is-playing");
+    gsap.timeline({ defaults: { ease: "power2.inOut" } })
+      .to(panel, { autoAlpha: 0, y: -16, scale: 0.98, duration: 0.32 })
+      .to(menu, { autoAlpha: 0, duration: 0.28 }, "-=0.12")
+      .set(menu, { display: "none" })
+      .to(note, { autoAlpha: 0.62, duration: 0.5, ease: "power1.out" });
+  });
 }
 
 initGsapShell();
@@ -1599,7 +1679,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
 
   function shoot(dirX, dirY) {
-    if (ended || shotTimer > 0) return;
+    if (!gameStarted || ended || shotTimer > 0) return;
     shotTimer = SHOT_COOLDOWN;
     playTone(520, 0.035, 0.018, "square");
     const bulletX = player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2;
@@ -1711,17 +1791,20 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   });
 
   onKeyPress("p", () => {
+    if (!gameStarted) return;
     if (ended) return;
     paused = !paused;
     updatePauseOverlay();
   });
 
   onKeyPress("m", () => {
+    if (!gameStarted) return;
     isMuted = !isMuted;
     updateMuteText();
   });
 
   onKeyPress("r", () => {
+    if (!gameStarted) return;
     if (ended) return;
     go("game", START_ROOM_ID, true);
   });
@@ -1729,6 +1812,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   onUpdate(() => {
     if (ended) return;
     if (paused) return;
+    if (!gameStarted) return;
     shotTimer = Math.max(0, shotTimer - dt());
     entrySafeTimer = Math.max(0, entrySafeTimer - dt());
     invincibleTimer = Math.max(0, invincibleTimer - dt());

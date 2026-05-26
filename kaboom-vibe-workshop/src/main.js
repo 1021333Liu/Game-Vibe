@@ -50,7 +50,7 @@ const HUD_Z = 900;
 const HUD_TEXT_Z = HUD_Z + 1;
 const HUD_MARGIN = 8;
 const HUD_PANEL_OPACITY = 0.46;
-const HUD_LEFT_PANEL = { x: 8, y: 8, w: 276, h: 70 };
+const HUD_LEFT_PANEL = { x: 8, y: 8, w: 300, h: 84 };
 const HUD_RIGHT_PANEL = { x: 328, y: 8, w: 144, h: 120 };
 const HUD_FEEDBACK_PANEL = { x: 104, y: 288, w: 272, h: 24 };
 
@@ -68,6 +68,13 @@ const RUN_ITEM_INFO = {
     cue: "扇形弹幕开启",
     pickup: "拾取芭蕉扇：扇形三发",
     color: [170, 238, 190],
+  },
+  windPearl: {
+    name: "定风珠",
+    hud: "定风珠 / 抵挡一次",
+    cue: "护身一次",
+    pickup: "拾取定风珠：抵挡一次伤害",
+    color: [152, 220, 255],
   },
 };
 
@@ -1113,6 +1120,7 @@ loadSprite("portal", "/sprites/portal.svg");
 loadSprite("healPeach", "/sprites/heal-peach.svg");
 loadSprite("cloneHair", "/sprites/clone-hair.svg");
 loadSprite("plantainFan", "/sprites/plantain-fan.svg");
+loadSprite("windPearl", "/sprites/wind-pearl.svg");
 
 function getAudioContext() {
   if (audioContext) return audioContext;
@@ -1268,6 +1276,17 @@ function addHudPanel(panel, panelColor = [12, 14, 22], outlineColor = [82, 88, 1
     pos(panel.x, panel.y),
     color(...panelColor),
     opacity(HUD_PANEL_OPACITY),
+    outline(1, outlineColor),
+    z(HUD_Z),
+  ]);
+}
+
+function addHudChip(x, y, w, h, chipColor, outlineColor) {
+  add([
+    rect(w, h),
+    pos(x, y),
+    color(...chipColor),
+    opacity(0.34),
     outline(1, outlineColor),
     z(HUD_Z),
   ]);
@@ -1470,21 +1489,35 @@ function addPlantainFanItem(x, y) {
   ]);
 }
 
+function addWindPearlItem(x, y) {
+  return add([
+    sprite("windPearl", { width: ATTACK_ITEM_SIZE, height: ATTACK_ITEM_SIZE }),
+    pos(x, y),
+    area(),
+    opacity(1),
+    "attackItem",
+  ]);
+}
+
 function getRunItemInfo(itemId = runItem) {
   return RUN_ITEM_INFO[itemId] ?? null;
 }
 
-  function spawnAttackItem(itemId, x, y) {
-    const item = itemId === "plantainFan" ? addPlantainFanItem(x, y) : addCloneHairItem(x, y);
-    item.itemId = itemId;
-    return item;
-  }
+function spawnAttackItem(itemId, x, y) {
+  const item = itemId === "plantainFan"
+    ? addPlantainFanItem(x, y)
+    : itemId === "windPearl"
+      ? addWindPearlItem(x, y)
+      : addCloneHairItem(x, y);
+  item.itemId = itemId;
+  return item;
+}
 
-  function spawnTreasureChoiceItem(itemId, x, y, roomId) {
-    const item = spawnAttackItem(itemId, x, y);
-    item.treasureChoiceRoomId = roomId;
-    return item;
-  }
+function spawnTreasureChoiceItem(itemId, x, y, roomId) {
+  const item = spawnAttackItem(itemId, x, y);
+  item.treasureChoiceRoomId = roomId;
+  return item;
+}
 
 function rotateDirection(dirX, dirY, angle) {
   const cos = Math.cos(angle);
@@ -1790,6 +1823,12 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   addHudPanel(HUD_LEFT_PANEL, [12, 14, 22], room.wallOutline);
   addHudPanel(HUD_RIGHT_PANEL, [12, 14, 22], room.wallOutline);
   addHudPanel(HUD_FEEDBACK_PANEL, [16, 18, 28], room.wallOutline);
+  addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 24, 92, 18, [80, 26, 32], room.wallOutline);
+  addHudChip(HUD_LEFT_PANEL.x + 106, HUD_LEFT_PANEL.y + 24, 54, 18, [28, 48, 72], room.wallOutline);
+  addHudChip(HUD_LEFT_PANEL.x + 166, HUD_LEFT_PANEL.y + 24, 54, 18, [42, 72, 48], room.wallOutline);
+  addHudChip(HUD_LEFT_PANEL.x + 226, HUD_LEFT_PANEL.y + 24, 66, 18, [72, 58, 28], room.wallOutline);
+  addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 48, 92, 18, [54, 48, 78], room.wallOutline);
+  addHudChip(HUD_LEFT_PANEL.x + 106, HUD_LEFT_PANEL.y + 48, 186, 18, [42, 50, 52], room.wallOutline);
 
   add([
     text(`${getRoomTrialLabel(room)} ${roomProgress}：方向键射击`, { size: 13 }),
@@ -1805,16 +1844,37 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     z(HUD_TEXT_Z),
   ]);
 
+  const enemyText = add([
+    text("", { size: 10 }),
+    pos(HUD_LEFT_PANEL.x + 112, HUD_LEFT_PANEL.y + 29),
+    color(204, 224, 255),
+    z(HUD_TEXT_Z),
+  ]);
+
+  const doorText = add([
+    text("", { size: 10 }),
+    pos(HUD_LEFT_PANEL.x + 172, HUD_LEFT_PANEL.y + 29),
+    color(196, 238, 190),
+    z(HUD_TEXT_Z),
+  ]);
+
+  const compactStatusText = add([
+    text("", { size: 10 }),
+    pos(HUD_LEFT_PANEL.x + 14, HUD_LEFT_PANEL.y + 29),
+    color(...room.statusColor),
+    z(HUD_TEXT_Z + 1),
+  ]);
+
   const clearProgressText = add([
     text(`清房 ${getClearedProgressLabel()}`, { size: 10 }),
-    pos(HUD_LEFT_PANEL.x + HUD_MARGIN, HUD_LEFT_PANEL.y + 42),
+    pos(HUD_LEFT_PANEL.x + 232, HUD_LEFT_PANEL.y + 29),
     color(214, 210, 198),
     z(HUD_TEXT_Z),
   ]);
 
   add([
     text(room.mechanicHint, { size: 10 }),
-    pos(HUD_LEFT_PANEL.x + 92, HUD_LEFT_PANEL.y + 42),
+    pos(HUD_LEFT_PANEL.x + 112, HUD_LEFT_PANEL.y + 53),
     color(214, 210, 198),
     z(HUD_TEXT_Z),
   ]);
@@ -1847,7 +1907,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const itemText = add([
     text("", { size: 10 }),
-    pos(HUD_LEFT_PANEL.x + HUD_MARGIN, HUD_LEFT_PANEL.y + 56),
+    pos(HUD_LEFT_PANEL.x + 14, HUD_LEFT_PANEL.y + 53),
     color(214, 210, 198),
     z(HUD_TEXT_Z),
   ]);
@@ -2081,15 +2141,18 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       return;
     }
 
-    const leftChoiceX = rewardX - 42;
-    const rightChoiceX = rewardX + 42;
+    const leftChoiceX = rewardX - 56;
+    const centerChoiceX = rewardX;
+    const rightChoiceX = rewardX + 56;
     attackChoices = [
       spawnTreasureChoiceItem("cloneHair", leftChoiceX, rewardY, room.id),
+      spawnTreasureChoiceItem("windPearl", centerChoiceX, rewardY, room.id),
       spawnTreasureChoiceItem("plantainFan", rightChoiceX, rewardY, room.id),
     ];
     attackItem = attackChoices[0];
-    feedbackText.text = "龙宫宝库：二选一道具";
+    feedbackText.text = "龙宫宝库：三选一道具";
     addRoomCue("分身毫毛", leftChoiceX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.cloneHair.color, 1.2);
+    addRoomCue("定风珠", centerChoiceX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.windPearl.color, 1.2);
     addRoomCue("芭蕉扇", rightChoiceX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.plantainFan.color, 1.2);
     playTone(880, 0.08, 0.02, "triangle");
   }
@@ -2204,6 +2267,21 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   function hurtPlayer(sourceX, sourceY, message = "-1 生命") {
     if (ended || paused || entrySafeTimer > 0 || invincibleTimer > 0) return false;
+
+    if (runItem === "windPearl") {
+      runItem = null;
+      invincibleTimer = PLAYER_INVINCIBLE_TIME;
+      updateItemText();
+      addScreenFlash(RUN_ITEM_INFO.windPearl.color, 0.18);
+      addRoomCue("定风珠护身", player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), RUN_ITEM_INFO.windPearl.color, 1);
+      feedbackText.text = "定风珠抵挡一次伤害";
+      feedbackTimer = 1.15;
+      playToneSequence([
+        { frequency: 640, duration: 0.06, volume: 0.022, type: "triangle" },
+        { frequency: 920, duration: 0.09, volume: 0.024, type: "sine" },
+      ]);
+      return true;
+    }
 
     runHealth -= 1;
     runStats.hitsTaken += 1;
@@ -2322,6 +2400,12 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     lowHealthPulseTimer += dt();
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
     runStats.time += dt();
+    const compactDoorStatus = doorsOpened ? "开" : "封";
+    statusText.opacity = 0;
+    compactStatusText.text = `HP ${getHealthLabel(runHealth)}`;
+    enemyText.text = `妖 ${enemiesLeft}`;
+    doorText.text = `门 ${compactDoorStatus}`;
+    clearProgressText.text = `清 ${getClearedProgressLabel()}`;
     timerText.text = `用时 ${formatRunTime(runStats.time)}`;
     updateAttackReadyText();
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);

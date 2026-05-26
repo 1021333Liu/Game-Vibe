@@ -258,7 +258,11 @@ const ROOMS = [
     statusColor: [172, 222, 210],
     introColor: [136, 228, 210],
     introSubtitle: "黑风卷岭，妖影绕行",
-    mechanicHint: "机制：绕开风眼短墙 / P 暂停",
+    mechanicHint: "机制：清掉妖风后有伏击 / P 暂停",
+    ambushCue: "熊罴精现身",
+    ambushEnemies: [
+      { x: 226, y: 146, vx: ENEMY_SPEED * 0.72, vy: ENEMY_SPEED * 0.64, hp: 4, size: ELITE_SIZE, sprite: "blackWindDemon", phaseCue: "黑风压顶", phaseSpeedScale: 1.16 },
+    ],
     decor: [
       { x: 38, y: 42, w: 84, h: 3, color: [112, 190, 190], opacity: 0.16 },
       { x: 322, y: 54, w: 74, h: 3, color: [150, 226, 210], opacity: 0.14 },
@@ -695,13 +699,38 @@ style.textContent = `
     pointer-events: auto;
   }
 
+  #start-menu::before,
+  #start-menu::after {
+    content: "";
+    position: fixed;
+    pointer-events: none;
+  }
+
+  #start-menu::before {
+    inset: 9% 8%;
+    border-top: 1px solid rgba(210, 164, 86, 0.22);
+    border-bottom: 1px solid rgba(210, 164, 86, 0.18);
+  }
+
+  #start-menu::after {
+    width: 74px;
+    height: 74px;
+    right: 8%;
+    bottom: 12%;
+    border: 2px solid rgba(196, 58, 46, 0.34);
+    background: rgba(120, 22, 22, 0.08);
+    transform: rotate(-10deg);
+  }
+
   #start-panel {
     width: min(620px, calc(100vw - 32px));
     max-height: calc(100vh - 32px);
     overflow: auto;
     padding: 24px;
     border: 1px solid rgba(255, 232, 150, 0.42);
-    background: rgba(14, 17, 26, 0.82);
+    background:
+      linear-gradient(90deg, rgba(255, 232, 150, 0.06), transparent 16%, transparent 84%, rgba(255, 232, 150, 0.05)),
+      rgba(14, 17, 26, 0.84);
     box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
     backdrop-filter: blur(8px);
     text-align: center;
@@ -789,10 +818,12 @@ style.textContent = `
     margin-bottom: 0;
   }
 
-  .route-grid {
+  .route-map {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--map-cols), minmax(58px, 1fr));
+    grid-template-rows: repeat(var(--map-rows), 42px);
     gap: 6px;
+    position: relative;
   }
 
   .route-node {
@@ -806,6 +837,17 @@ style.textContent = `
     display: grid;
     align-content: center;
     gap: 2px;
+    position: relative;
+    isolation: isolate;
+  }
+
+  .route-node::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-top: 1px solid rgba(255, 232, 150, 0.1);
+    opacity: 0.7;
+    z-index: -1;
   }
 
   .route-node em {
@@ -867,6 +909,7 @@ style.textContent = `
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 8px 20px rgba(255, 232, 150, 0.16);
   }
 
   #start-button:disabled {
@@ -893,8 +936,9 @@ style.textContent = `
       gap: 6px;
     }
 
-    .route-grid {
+    .route-map {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: none;
     }
 
     .start-dashboard {
@@ -946,6 +990,15 @@ function initGsapShell() {
   if (!panel.querySelector(".start-dashboard")) {
     const dashboard = document.createElement("div");
     dashboard.className = "start-dashboard";
+    const mapPositions = ROOMS
+      .map((room) => ROOM_MAP_POSITIONS[room.id])
+      .filter(Boolean);
+    const minMapX = Math.min(...mapPositions.map((mapPos) => mapPos.x));
+    const minMapY = Math.min(...mapPositions.map((mapPos) => mapPos.y));
+    const maxMapX = Math.max(...mapPositions.map((mapPos) => mapPos.x));
+    const maxMapY = Math.max(...mapPositions.map((mapPos) => mapPos.y));
+    const mapCols = maxMapX - minMapX + 1;
+    const mapRows = maxMapY - minMapY + 1;
     const routeNodes = ROOMS.map((room) => {
       const isBranch = Object.keys(room.exits ?? {}).length > 2;
       const className = ["route-node", roomTypeClass[room.type] ?? "", isBranch ? "is-branch" : ""]
@@ -1700,7 +1753,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const roomAlreadyCleared = clearedRoomIds.has(room.id);
   const speedScale = room.enemySpeedScale ?? 1;
-  const enemies = (roomAlreadyCleared ? [] : room.enemies).map((enemyConfig) => {
+  function addRoomEnemy(enemyConfig) {
     const enemySize = enemyConfig.size ?? ENEMY_SIZE;
     const body = addDemonEnemy(enemyConfig.x, enemyConfig.y, enemyConfig.sprite ?? room.enemySprite, enemySize);
     body.hp = enemyConfig.hp ?? 1;
@@ -1723,7 +1776,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     };
     enemy.healthBar = addEliteHealthBar(body, enemySize);
     return enemy;
-  });
+  }
+  const enemies = (roomAlreadyCleared ? [] : room.enemies).map(addRoomEnemy);
 
   addHudPanel(HUD_LEFT_PANEL, [12, 14, 22], room.wallOutline);
   addHudPanel(HUD_RIGHT_PANEL, [12, 14, 22], room.wallOutline);
@@ -1899,6 +1953,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   let attackItem = null;
   let attackChoices = [];
   let enemiesLeft = enemies.length;
+  let ambushTriggered = false;
 
   function updateStatusText() {
     const doorStatus = doorsOpened ? "已开" : "未开";
@@ -1973,6 +2028,26 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     playTone(880, 0.08, 0.02, "triangle");
   }
 
+  function triggerAmbushIfNeeded() {
+    if (ambushTriggered || roomAlreadyCleared || !(room.ambushEnemies?.length > 0)) return false;
+
+    ambushTriggered = true;
+    room.ambushEnemies.forEach((enemyConfig) => {
+      enemies.push(addRoomEnemy(enemyConfig));
+    });
+    enemiesLeft += room.ambushEnemies.length;
+    updateStatusText();
+    feedbackText.text = room.ambushCue ?? "伏击出现";
+    feedbackTimer = 1.3;
+    addRoomCue(room.ambushCue ?? "伏击出现", width() / 2, Math.max(58, height() / 2 - 42), room.introColor, 1.25);
+    addScreenFlash(room.introColor, 0.22);
+    playToneSequence([
+      { frequency: 210, duration: 0.07, volume: 0.024, type: "sawtooth" },
+      { frequency: 420, duration: 0.09, volume: 0.026, type: "triangle" },
+    ]);
+    return true;
+  }
+
   function dropTreasureRoomRewardIfNeeded() {
     if (room.type !== "treasure") return;
     if (itemRewardedRoomIds.has(room.id)) {
@@ -2013,6 +2088,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   function openDoorIfReady() {
     if (doorsOpened || enemiesLeft > 0) return;
+    if (triggerAmbushIfNeeded()) return;
     doorsOpened = true;
     clearedRoomIds.add(room.id);
     const isFinalRoom = room.type === "final";

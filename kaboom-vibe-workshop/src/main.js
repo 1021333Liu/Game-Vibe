@@ -423,7 +423,7 @@ const ROOMS = [
       { x: 360, y: 58, w: 24, h: 204 },
     ],
     enemies: [
-      { x: 224, y: 144, vx: ENEMY_SPEED * 0.62, vy: ENEMY_SPEED * 0.54, hp: 7, size: ELITE_SIZE + 4, sprite: "yellowBrowBoss", phaseCue: "金钹合鸣" },
+      { x: 224, y: 144, vx: ENEMY_SPEED * 0.62, vy: ENEMY_SPEED * 0.54, hp: 7, size: ELITE_SIZE + 4, sprite: "yellowBrowBoss", phaseCue: "金钹合鸣", phaseSpeedScale: 1.18 },
       { x: 150, y: 56, vx: ENEMY_SPEED * 0.9, vy: ENEMY_SPEED * 0.78 },
       { x: 404, y: 236, vx: -ENEMY_SPEED * 0.86, vy: -ENEMY_SPEED * 0.82 },
     ],
@@ -1151,6 +1151,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       eliteTimer: enemyConfig.hp > 1 ? ELITE_ROAR_INTERVAL * 0.72 : 0,
       eliteState: "idle",
       phaseCue: enemyConfig.phaseCue,
+      phaseSpeedScale: enemyConfig.phaseSpeedScale ?? 1,
       bossPhaseWarned: false,
     };
     enemy.healthBar = addEliteHealthBar(body, enemySize);
@@ -1866,6 +1867,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
               && enemy.hp <= Math.ceil((enemy.maxHp ?? 1) / 2)
             ) {
               enemyRecord.bossPhaseWarned = true;
+              enemyRecord.velocity.x *= enemyRecord.phaseSpeedScale;
+              enemyRecord.velocity.y *= enemyRecord.phaseSpeedScale;
               feedbackText.text = enemyRecord.phaseCue;
               feedbackTimer = 1.05;
               addRoomCue(enemyRecord.phaseCue, enemyCenterX, Math.max(58, enemyCenterY - 24), [255, 232, 118], 1.1);

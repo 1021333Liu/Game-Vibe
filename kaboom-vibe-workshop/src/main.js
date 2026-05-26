@@ -589,6 +589,15 @@ function getDoorLabelAnchor(exit) {
   return "center";
 }
 
+function getDoorLabelText(room) {
+  const typeMark = ROOM_TYPE_MAP_STYLE[room.type]?.mark;
+  return typeMark ? `${typeMark} ${room.name}` : room.name;
+}
+
+function getDoorAccentColor(room) {
+  return (ROOM_TYPE_MAP_STYLE[room.type] ?? ROOM_TYPE_MAP_STYLE.combat).border;
+}
+
 function addMiniMap(currentRoom) {
   const mapEntries = ROOMS
     .map((room) => ({ room, mapPos: ROOM_MAP_POSITIONS[room.id] }))
@@ -1306,14 +1315,26 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     dropAttackItemIfNeeded();
     dropHealRewardIfNeeded();
     doors = roomExits.map((exit) => {
+      const targetRoom = getRoomById(exit.targetId);
+      const accentColor = getDoorAccentColor(targetRoom);
+      const doorGlow = add([
+        rect(DOOR_SIZE + 10, DOOR_SIZE + 10),
+        pos(exit.x - 5, exit.y - 5),
+        color(...accentColor),
+        opacity(0.16),
+        "doorGlow",
+      ]);
+      doorGlow.phase = (exit.x + exit.y) * 0.02;
       const openedDoor = add([
         sprite("portal", { width: DOOR_SIZE, height: DOOR_SIZE }),
         pos(exit.x, exit.y),
         area(),
+        opacity(0.92),
         "door",
       ]);
       openedDoor.targetId = exit.targetId;
       openedDoor.direction = exit.direction;
+      openedDoor.phase = (exit.x + exit.y) * 0.02;
       return openedDoor;
     });
     sealedDoorMarkers.forEach((marker) => {
@@ -1326,16 +1347,17 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     roomExits.forEach((exit) => {
       addRoomCue(doorCue, exit.x + DOOR_SIZE / 2, Math.max(58, exit.y - 14), [120, 255, 150]);
       addHitBurst(exit.x + DOOR_SIZE / 2, exit.y + DOOR_SIZE / 2, [118, 255, 142]);
-      const targetRoom = getRoomById(exit.targetId);
       const labelPos = getDoorLabelPosition(exit);
-      add([
-        text(targetRoom.name, { size: 9 }),
+      const targetRoom = getRoomById(exit.targetId);
+      const label = add([
+        text(getDoorLabelText(targetRoom), { size: 9 }),
         pos(labelPos.x, labelPos.y),
         anchor(getDoorLabelAnchor(exit)),
-        color(204, 255, 210),
+        color(...getDoorAccentColor(targetRoom)),
         opacity(0.9),
         "doorLabel",
       ]);
+      label.phase = (exit.x + exit.y) * 0.02;
     });
     playTone(660, 0.12, 0.022, "triangle");
     updateStatusText();
@@ -1530,6 +1552,18 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
     get("attackItem").forEach((item) => {
       item.opacity = 0.76 + Math.sin(runStats.time * 7) * 0.16;
+    });
+
+    get("doorGlow").forEach((glow) => {
+      glow.opacity = 0.12 + Math.sin(runStats.time * 4 + glow.phase) * 0.05;
+    });
+
+    get("door").forEach((door) => {
+      door.opacity = 0.84 + Math.sin(runStats.time * 4.4 + door.phase) * 0.12;
+    });
+
+    get("doorLabel").forEach((label) => {
+      label.opacity = 0.78 + Math.sin(runStats.time * 3.2 + label.phase) * 0.14;
     });
 
     if (isKeyDown("left") || isKeyDown("j")) shoot(-1, 0);

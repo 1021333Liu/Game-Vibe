@@ -1314,15 +1314,31 @@ style.textContent = `
   }
 
   #start-button {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
     min-width: 132px;
     height: 38px;
+    margin-top: 2px;
     border: 1px solid rgba(255, 232, 150, 0.78);
     background: #ffe79a;
     color: #171518;
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+    isolation: isolate;
     box-shadow: 0 8px 20px rgba(255, 232, 150, 0.16);
+  }
+
+  #start-button::before {
+    content: "";
+    position: absolute;
+    left: -16px;
+    right: -16px;
+    top: -10px;
+    height: 10px;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(14, 17, 26, 0), rgba(14, 17, 26, 0.9));
   }
 
   #start-button:disabled {
@@ -1353,6 +1369,10 @@ style.textContent = `
       min-height: 28px;
       padding: 4px;
       font-size: 10px;
+    }
+
+    #start-button {
+      width: min(180px, 100%);
     }
 
     .route-map {

@@ -367,7 +367,7 @@ const ROOMS = [
     enemyBehavior: "sandDrift",
     enemySpeedScale: 1.08,
     player: { x: 40, y: 160 },
-    exits: { left: "sand-river" },
+    exits: { left: "sand-river", right: "jindou-cave" },
     slowZones: [
       { x: 136, y: 20, w: 208, h: 58 },
       { x: 136, y: 242, w: 208, h: 58 },
@@ -387,6 +387,49 @@ const ROOMS = [
       { x: 300, y: 260, vx: -ENEMY_SPEED, vy: -ENEMY_SPEED * 0.92 },
       { x: 388, y: 82, vx: -ENEMY_SPEED * 0.86, vy: ENEMY_SPEED * 1.1 },
       { x: 74, y: 228, vx: ENEMY_SPEED * 0.9, vy: -ENEMY_SPEED },
+    ],
+  },
+  {
+    id: "jindou-cave",
+    type: "elite",
+    trialNo: 52,
+    trialName: "金兜洞青牛",
+    name: "金兜洞",
+    lore: "金圈收兵，青牛守洞",
+    clearLore: "金圈暂歇，洞门复开",
+    enemySprite: "greenBullDemon",
+    background: [28, 38, 34],
+    wallColor: [62, 94, 76],
+    wallOutline: [28, 48, 38],
+    statusColor: [184, 232, 184],
+    introColor: [178, 232, 156],
+    introSubtitle: "金环绕洞，受击反冲",
+    mechanicHint: "机制：击中敌人会反向加速 / P 暂停",
+    enemyHitReaction: "counterRush",
+    hitBoostTime: 0.72,
+    hitBoostScale: 1.55,
+    decor: [
+      { x: 54, y: 46, w: 64, h: 4, color: [218, 196, 96], opacity: 0.16 },
+      { x: 182, y: 78, w: 116, h: 4, color: [118, 206, 142], opacity: 0.14 },
+      { x: 342, y: 236, w: 70, h: 4, color: [218, 196, 96], opacity: 0.15 },
+      { x: 66, y: 260, w: 86, h: 4, color: [118, 206, 142], opacity: 0.13 },
+    ],
+    enemyBehavior: "flameRush",
+    enemySpeedScale: 0.82,
+    player: { x: 42, y: 160 },
+    exits: { left: "tongtian-river" },
+    walls: [
+      { x: 96, y: 70, w: 24, h: 76 },
+      { x: 96, y: 194, w: 24, h: 76 },
+      { x: 360, y: 70, w: 24, h: 76 },
+      { x: 360, y: 194, w: 24, h: 76 },
+      { x: 190, y: 48, w: 100, h: 22 },
+      { x: 190, y: 250, w: 100, h: 22 },
+    ],
+    enemies: [
+      { x: 222, y: 142, vx: ENEMY_SPEED * 0.72, vy: ENEMY_SPEED * 0.58, hp: 5, size: ELITE_SIZE, sprite: "greenBullDemon", phaseCue: "金刚琢回旋", phaseSpeedScale: 1.14 },
+      { x: 150, y: 104, vx: ENEMY_SPEED * 0.8, vy: ENEMY_SPEED * 0.7, sprite: "greenBullDemon" },
+      { x: 314, y: 212, vx: -ENEMY_SPEED * 0.82, vy: -ENEMY_SPEED * 0.72, sprite: "greenBullDemon" },
     ],
   },
   {
@@ -1111,6 +1154,7 @@ loadSprite("redBoy", "/sprites/red-boy.svg");
 loadSprite("boneDemon", "/sprites/bone-demon.svg");
 loadSprite("blackWindDemon", "/sprites/black-wind-demon.svg");
 loadSprite("sandDemon", "/sprites/sand-demon.svg");
+loadSprite("greenBullDemon", "/sprites/green-bull-demon.svg");
 loadSprite("spiderDemon", "/sprites/spider-demon.svg");
 loadSprite("taoistDemon", "/sprites/taoist-demon.svg");
 loadSprite("lionElite", "/sprites/lion-elite.svg");
@@ -1809,6 +1853,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       },
       phase: (enemyConfig.x + enemyConfig.y) * 0.03,
       trailTimer: (enemyConfig.x % 3) * 0.04,
+      hitBoostTimer: 0,
+      hitBoostScale: 1,
       eliteTimer: enemyConfig.hp > 1 ? ELITE_ROAR_INTERVAL * 0.72 : 0,
       eliteState: "idle",
       phaseCue: enemyConfig.phaseCue,
@@ -2536,6 +2582,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       }
       const enemySize = enemy.size ?? ENEMY_SIZE;
       enemy.trailTimer = Math.max(0, enemy.trailTimer - dt());
+      enemy.hitBoostTimer = Math.max(0, enemy.hitBoostTimer - dt());
       if ((enemy.body.maxHp ?? 1) > 1) {
         enemy.eliteTimer -= dt();
         if (enemy.eliteState === "idle" && enemy.eliteTimer <= 0) {
@@ -2581,6 +2628,11 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         moveY *= ELITE_ROAR_SPEED_SCALE;
       }
 
+      if (enemy.hitBoostTimer > 0) {
+        moveX *= enemy.hitBoostScale;
+        moveY *= enemy.hitBoostScale;
+      }
+
       const hitX = moveOnAxis(enemy.body, moveX, 0, enemySize);
       const hitY = moveOnAxis(enemy.body, 0, moveY, enemySize);
       if (hitX || enemy.body.pos.x <= 0 || enemy.body.pos.x + enemySize >= width()) {
@@ -2611,11 +2663,18 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
           const enemySize = enemy.enemySize ?? ENEMY_SIZE;
           const enemyCenterX = enemy.pos.x + enemySize / 2;
           const enemyCenterY = enemy.pos.y + enemySize / 2;
+          const enemyRecord = enemies.find((entry) => entry.body === enemy);
           enemy.hp = Math.max(0, (enemy.hp ?? 1) - 1);
           addHitBurst(enemyCenterX, enemyCenterY, room.introColor);
           destroy(bullet);
           if (enemy.hp > 0) {
-            const enemyRecord = enemies.find((entry) => entry.body === enemy);
+            if (room.enemyHitReaction === "counterRush" && enemyRecord) {
+              enemyRecord.velocity.x *= -1;
+              enemyRecord.velocity.y *= -1;
+              enemyRecord.hitBoostTimer = room.hitBoostTime ?? 0.65;
+              enemyRecord.hitBoostScale = room.hitBoostScale ?? 1.45;
+              addRoomCue("反冲", enemyCenterX, Math.max(58, enemyCenterY - 18), room.introColor, 0.6);
+            }
             if (
               enemyRecord?.phaseCue
               && !enemyRecord.bossPhaseWarned
@@ -2638,7 +2697,6 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
             }
             playTone(560, 0.045, 0.02, "triangle");
           } else {
-            const enemyRecord = enemies.find((entry) => entry.body === enemy);
             if (enemyRecord) {
               destroyEliteHealthBar(enemyRecord);
             }
@@ -2707,6 +2765,29 @@ function addResultScreen({ title, subtitle, hint, accentColor, backgroundColor }
   ]);
 }
 
+function addResultStatCard(x, y, w, h, label, value, accentColor) {
+  add([
+    rect(w, h),
+    pos(x, y),
+    anchor("center"),
+    color(18, 21, 28),
+    opacity(0.86),
+    outline(1, accentColor),
+  ]);
+  add([
+    text(label, { size: 9 }),
+    pos(x, y - 10),
+    anchor("center"),
+    color(184, 190, 196),
+  ]);
+  add([
+    text(value, { size: 12 }),
+    pos(x, y + 5),
+    anchor("center"),
+    color(...accentColor),
+  ]);
+}
+
 scene("complete", () => {
   const bestResult = updateBestTime(runStats.time);
   const bestLabel = bestResult.bestTime === null ? "暂无记录" : formatRunTime(bestResult.bestTime);
@@ -2753,6 +2834,36 @@ scene("complete", () => {
     pos(width() / 2, 282),
     anchor("center"),
     color(255, 232, 150),
+  ]);
+  add([
+    rect(312, 94),
+    pos(width() / 2, 242),
+    anchor("center"),
+    color(24, 25, 34),
+    opacity(0.94),
+    outline(2, [255, 232, 150]),
+  ]);
+  add([
+    text(`评级 ${clearRank.grade}`, { size: 19 }),
+    pos(width() / 2 - 104, 220),
+    anchor("center"),
+    color(255, 232, 150),
+  ]);
+  add([
+    text(clearRank.comment, { size: 10 }),
+    pos(width() / 2 - 104, 244),
+    anchor("center"),
+    color(230, 226, 194),
+  ]);
+  addResultStatCard(width() / 2 + 6, 220, 64, 30, "用时", formatRunTime(runStats.time), [255, 232, 150]);
+  addResultStatCard(width() / 2 + 76, 220, 64, 30, "最快", bestLabel, bestResult.isNewBest ? [152, 238, 190] : [210, 228, 198]);
+  addResultStatCard(width() / 2 + 6, 256, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
+  addResultStatCard(width() / 2 + 76, 256, 64, 30, "清房", getClearedProgressLabel(), [190, 216, 190]);
+  add([
+    text(`道具 ${getRunItemName()} / ${bestPrefix} ${bestLabel} / R 新一轮`, { size: 10 }),
+    pos(width() / 2, 294),
+    anchor("center"),
+    color(255, 235, 190),
   ]);
   onKeyDown("r", () => go("game", START_ROOM_ID, true));
 });

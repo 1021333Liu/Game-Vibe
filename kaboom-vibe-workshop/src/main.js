@@ -13,7 +13,7 @@ const ELITE_HEALTH_TICK_HEIGHT = 3;
 const ELITE_HEALTH_TICK_GAP = 2;
 const BULLET_SIZE = 6;
 const BULLET_SPEED = 9000;
-const SHOT_COOLDOWN = 0.035;
+const SHOT_COOLDOWN = 0.12;
 const BULLET_STEP = 6;
 const BULLET_LIFETIME = 4;
 const PLAYER_MAX_HEALTH = 3;
@@ -45,6 +45,30 @@ const BEST_TIME_KEY = "game-vibe-best-time";
 const SCREEN_WIDTH = 480;
 const SCREEN_HEIGHT = 320;
 const START_ROOM_ID = "flame-mountain";
+const HUD_Z = 900;
+const HUD_TEXT_Z = HUD_Z + 1;
+const HUD_MARGIN = 8;
+const HUD_PANEL_OPACITY = 0.46;
+const HUD_LEFT_PANEL = { x: 8, y: 8, w: 276, h: 70 };
+const HUD_RIGHT_PANEL = { x: 328, y: 8, w: 144, h: 120 };
+const HUD_FEEDBACK_PANEL = { x: 104, y: 288, w: 272, h: 24 };
+
+const RUN_ITEM_INFO = {
+  cloneHair: {
+    name: "分身毫毛",
+    hud: "分身毫毛 / 双发",
+    cue: "双发开启",
+    pickup: "拾取分身毫毛：双发",
+    color: [230, 235, 255],
+  },
+  plantainFan: {
+    name: "芭蕉扇",
+    hud: "芭蕉扇 / 扇形三发",
+    cue: "扇形弹幕开启",
+    pickup: "拾取芭蕉扇：扇形三发",
+    color: [170, 238, 190],
+  },
+};
 
 const DOOR_POSITIONS = {
   up: { x: SCREEN_WIDTH / 2 - DOOR_SIZE / 2, y: 8 },
@@ -453,6 +477,7 @@ loadSprite("staff", "/sprites/staff.svg");
 loadSprite("portal", "/sprites/portal.svg");
 loadSprite("healPeach", "/sprites/heal-peach.svg");
 loadSprite("cloneHair", "/sprites/clone-hair.svg");
+loadSprite("plantainFan", "/sprites/plantain-fan.svg");
 
 function getAudioContext() {
   if (audioContext) return audioContext;
@@ -598,14 +623,25 @@ function getDoorAccentColor(room) {
   return (ROOM_TYPE_MAP_STYLE[room.type] ?? ROOM_TYPE_MAP_STYLE.combat).border;
 }
 
+function addHudPanel(panel, panelColor = [12, 14, 22], outlineColor = [82, 88, 104]) {
+  add([
+    rect(panel.w, panel.h),
+    pos(panel.x, panel.y),
+    color(...panelColor),
+    opacity(HUD_PANEL_OPACITY),
+    outline(1, outlineColor),
+    z(HUD_Z),
+  ]);
+}
+
 function addMiniMap(currentRoom) {
   const mapEntries = ROOMS
     .map((room) => ({ room, mapPos: ROOM_MAP_POSITIONS[room.id] }))
     .filter((entry) => entry.mapPos);
   if (mapEntries.length === 0) return;
 
-  const originX = width() - 72;
-  const originY = 86;
+  const originX = HUD_RIGHT_PANEL.x + HUD_RIGHT_PANEL.w / 2;
+  const originY = HUD_RIGHT_PANEL.y + 48;
   const tileSize = 9;
   const gap = 4;
   const minX = Math.min(...mapEntries.map((entry) => entry.mapPos.x));
@@ -616,9 +652,10 @@ function addMiniMap(currentRoom) {
 
   add([
     text(`地图 ${currentRoom.name}`, { size: 9 }),
-    pos(width() - 10, 70),
-    anchor("topright"),
+    pos(originX, HUD_RIGHT_PANEL.y + 28),
+    anchor("center"),
     color(220, 222, 216),
+    z(HUD_TEXT_Z),
   ]);
 
   mapEntries.forEach(({ room, mapPos }) => {
@@ -641,6 +678,7 @@ function addMiniMap(currentRoom) {
       color(...fill),
       opacity(isExplored || isCurrent || isCleared ? 0.92 : 0.42),
       outline(isCurrent ? 2 : 1, isCurrent ? [255, 250, 210] : typeStyle.border),
+      z(HUD_TEXT_Z),
     ]);
     if (typeStyle.mark) {
       add([
@@ -649,6 +687,7 @@ function addMiniMap(currentRoom) {
         anchor("center"),
         color(20, 22, 28),
         opacity(isExplored || isCurrent || isCleared ? 0.9 : 0.55),
+        z(HUD_TEXT_Z + 1),
       ]);
     }
   });
@@ -656,15 +695,17 @@ function addMiniMap(currentRoom) {
   const footerY = originY + (maxY - minY + 1) * (tileSize + gap) + 6;
   add([
     text(`出口 ${getExitLabel(currentRoom)}`, { size: 9 }),
-    pos(width() - 10, footerY),
+    pos(HUD_RIGHT_PANEL.x + HUD_RIGHT_PANEL.w - HUD_MARGIN, footerY),
     anchor("topright"),
     color(204, 206, 198),
+    z(HUD_TEXT_Z),
   ]);
   add([
     text("宝=奖励 精=精英 终=终点", { size: 8 }),
-    pos(width() - 10, footerY + 12),
+    pos(HUD_RIGHT_PANEL.x + HUD_RIGHT_PANEL.w - HUD_MARGIN, footerY + 12),
     anchor("topright"),
     color(196, 198, 190),
+    z(HUD_TEXT_Z),
   ]);
 }
 
@@ -780,7 +821,36 @@ function addCloneHairItem(x, y) {
   ]);
 }
 
-function addStaffBullet(x, y, dirX, dirY) {
+function addPlantainFanItem(x, y) {
+  return add([
+    sprite("plantainFan", { width: ATTACK_ITEM_SIZE, height: ATTACK_ITEM_SIZE }),
+    pos(x, y),
+    area(),
+    opacity(1),
+    "attackItem",
+  ]);
+}
+
+function getRunItemInfo(itemId = runItem) {
+  return RUN_ITEM_INFO[itemId] ?? null;
+}
+
+function spawnAttackItem(itemId, x, y) {
+  const item = itemId === "plantainFan" ? addPlantainFanItem(x, y) : addCloneHairItem(x, y);
+  item.itemId = itemId;
+  return item;
+}
+
+function rotateDirection(dirX, dirY, angle) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return {
+    x: dirX * cos - dirY * sin,
+    y: dirX * sin + dirY * cos,
+  };
+}
+
+function addStaffBullet(x, y, dirX, dirY, options = {}) {
   const horizontal = dirX !== 0;
   const body = add([
     sprite("staff", {
@@ -791,9 +861,14 @@ function addStaffBullet(x, y, dirX, dirY) {
     }),
     pos(x, y),
     area(),
+    opacity(options.opacity ?? 1),
     "bullet",
   ]);
-  body.velocity = { x: dirX * BULLET_SPEED, y: dirY * BULLET_SPEED };
+  const sideDrift = options.sideDrift ?? 0;
+  body.velocity = {
+    x: dirX * BULLET_SPEED + (horizontal ? 0 : sideDrift * BULLET_SPEED),
+    y: dirY * BULLET_SPEED + (horizontal ? sideDrift * BULLET_SPEED : 0),
+  };
   body.life = 0;
   body.hitSize = horizontal ? { w: 16, h: 6 } : { w: 6, h: 16 };
   return body;
@@ -1059,56 +1134,78 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     return enemy;
   });
 
+  addHudPanel(HUD_LEFT_PANEL, [12, 14, 22], room.wallOutline);
+  addHudPanel(HUD_RIGHT_PANEL, [12, 14, 22], room.wallOutline);
+  addHudPanel(HUD_FEEDBACK_PANEL, [16, 18, 28], room.wallOutline);
+
   add([
     text(`${room.name} ${roomProgress}：方向键射击，清敌开门`, { size: 13 }),
-    pos(10, 8),
+    pos(HUD_LEFT_PANEL.x + HUD_MARGIN, HUD_LEFT_PANEL.y + 7),
     color(230, 230, 238),
+    z(HUD_TEXT_Z),
   ]);
 
   const statusText = add([
     text(`生命 ${getHealthLabel(runHealth)} / 敌 ${enemies.length} / 门 未开`, { size: 12 }),
-    pos(10, 26),
+    pos(HUD_LEFT_PANEL.x + HUD_MARGIN, HUD_LEFT_PANEL.y + 25),
     color(...room.statusColor),
+    z(HUD_TEXT_Z),
   ]);
 
   const clearProgressText = add([
     text(`清房 ${getClearedProgressLabel()}`, { size: 10 }),
-    pos(10, 42),
+    pos(HUD_LEFT_PANEL.x + HUD_MARGIN, HUD_LEFT_PANEL.y + 42),
     color(214, 210, 198),
+    z(HUD_TEXT_Z),
   ]);
 
   add([
     text(room.mechanicHint, { size: 10 }),
-    pos(10, 58),
+    pos(HUD_LEFT_PANEL.x + 92, HUD_LEFT_PANEL.y + 42),
     color(214, 210, 198),
+    z(HUD_TEXT_Z),
   ]);
 
   const muteText = add([
     text("", { size: 10 }),
-    pos(width() - 10, 42),
+    pos(HUD_RIGHT_PANEL.x + HUD_RIGHT_PANEL.w - HUD_MARGIN, HUD_RIGHT_PANEL.y + 20),
     anchor("topright"),
     color(214, 210, 198),
+    z(HUD_TEXT_Z),
   ]);
 
   const timerText = add([
     text(`用时 ${formatRunTime(runStats.time)}`, { size: 10 }),
-    pos(width() - 10, 26),
+    pos(HUD_RIGHT_PANEL.x + HUD_RIGHT_PANEL.w - HUD_MARGIN, HUD_RIGHT_PANEL.y + 8),
     anchor("topright"),
     color(255, 235, 190),
+    z(HUD_TEXT_Z),
   ]);
 
   addMiniMap(room);
 
   const feedbackText = add([
     text("入场安全", { size: 12 }),
-    pos(10, 72),
+    pos(width() / 2, HUD_FEEDBACK_PANEL.y + 7),
+    anchor("top"),
     color(255, 220, 160),
+    z(HUD_TEXT_Z),
   ]);
 
   const itemText = add([
     text("", { size: 10 }),
-    pos(10, 88),
+    pos(HUD_LEFT_PANEL.x + HUD_MARGIN, HUD_LEFT_PANEL.y + 56),
     color(214, 210, 198),
+    z(HUD_TEXT_Z),
+  ]);
+
+  const attackReadyText = add([
+    text("", { size: 10 }),
+    pos(HUD_FEEDBACK_PANEL.x + HUD_FEEDBACK_PANEL.w - HUD_MARGIN, HUD_FEEDBACK_PANEL.y + 7),
+    anchor("topright"),
+    color(170, 238, 190),
+    opacity(0.86),
+    z(HUD_TEXT_Z),
   ]);
 
   const sealedDoorMarkers = roomExits.map((exit) => {
@@ -1136,9 +1233,11 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const lowHealthText = add([
     text("危险：生命仅剩 1", { size: 11 }),
-    pos(10, 102),
+    pos(width() / 2, HUD_FEEDBACK_PANEL.y - 16),
+    anchor("center"),
     color(255, 150, 140),
     opacity(0),
+    z(HUD_TEXT_Z),
   ]);
 
   const roomIntroTitle = add([
@@ -1202,6 +1301,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   let sealedDoorFadeTimer = 0;
   let lowHealthPulseTimer = 0;
   let roomIntroTimer = ROOM_INTRO_DURATION;
+  let cloneHairShotSide = 1;
   let doorsOpened = false;
   let doors = [];
   let healPeach = null;
@@ -1219,7 +1319,20 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
 
   function updateItemText() {
-    itemText.text = runItem === "cloneHair" ? "道具：分身毫毛 / 双发" : "道具：无";
+    const itemInfo = getRunItemInfo();
+    itemText.text = itemInfo ? `道具：${itemInfo.hud}` : "道具：无";
+  }
+
+  function updateAttackReadyText() {
+    if (shotTimer <= 0) {
+      attackReadyText.text = "攻击：就绪";
+      attackReadyText.color = [170, 238, 190];
+      attackReadyText.opacity = 0.78 + Math.sin(runStats.time * 5) * 0.12;
+      return;
+    }
+    attackReadyText.text = `攻击：蓄力 ${Math.ceil(shotTimer * 10) / 10}s`;
+    attackReadyText.color = [255, 214, 128];
+    attackReadyText.opacity = 0.66;
   }
 
   function updatePauseOverlay() {
@@ -1227,11 +1340,13 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     pauseTitle.opacity = paused ? 1 : 0;
     pauseHelp.opacity = paused ? 1 : 0;
     pauseStatus.opacity = paused ? 1 : 0;
-    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / ${runItem === "cloneHair" ? "分身毫毛" : "无道具"}`;
+    const itemInfo = getRunItemInfo();
+    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / 攻击间隔 ${SHOT_COOLDOWN}s / ${itemInfo ? itemInfo.name : "无道具"}`;
   }
 
   updateMuteText();
   updateItemText();
+  updateAttackReadyText();
 
   function dropHealRewardIfNeeded() {
     if (room.type === "final") return;
@@ -1259,7 +1374,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     itemRewardedRoomIds.add(room.id);
     const rewardX = Math.max(28, Math.min(width() - ATTACK_ITEM_SIZE - 28, width() / 2 - ATTACK_ITEM_SIZE / 2));
     const rewardY = Math.max(68, Math.min(height() - ATTACK_ITEM_SIZE - 30, height() / 2 + 34));
-    attackItem = addCloneHairItem(rewardX, rewardY);
+    attackItem = spawnAttackItem("cloneHair", rewardX, rewardY);
     feedbackText.text = "精英奖励：分身毫毛出现";
     feedbackTimer = 1.25;
     addRoomCue("分身毫毛", rewardX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), [230, 235, 255], 1.2);
@@ -1277,7 +1392,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     itemRewardedRoomIds.add(room.id);
     const rewardX = width() / 2 - ATTACK_ITEM_SIZE / 2;
     const rewardY = height() / 2 - ATTACK_ITEM_SIZE / 2;
-    if (runItem === "cloneHair") {
+    if (runItem) {
       if (runHealth >= PLAYER_MAX_HEALTH) {
         feedbackText.text = "宝库已取";
         feedbackTimer = 1.1;
@@ -1291,9 +1406,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       return;
     }
 
-    attackItem = addCloneHairItem(rewardX, rewardY);
-    feedbackText.text = "宝库奖励：分身毫毛";
-    addRoomCue("分身毫毛", rewardX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), [230, 235, 255], 1.2);
+    attackItem = spawnAttackItem("plantainFan", rewardX, rewardY);
+    feedbackText.text = "宝库奖励：芭蕉扇";
+    addRoomCue("芭蕉扇", rewardX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.plantainFan.color, 1.2);
     playTone(880, 0.08, 0.02, "triangle");
   }
 
@@ -1385,8 +1500,22 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       dirY,
     );
     if (runItem === "cloneHair") {
-      const spreadOffset = dirX !== 0 ? { x: 0, y: 8 } : { x: 8, y: 0 };
-      addStaffBullet(bulletX + spreadOffset.x, bulletY + spreadOffset.y, dirX, dirY);
+      cloneHairShotSide *= -1;
+      const spreadOffset = dirX !== 0
+        ? { x: 0, y: 8 * cloneHairShotSide }
+        : { x: 8 * cloneHairShotSide, y: 0 };
+      addStaffBullet(
+        bulletX + spreadOffset.x,
+        bulletY + spreadOffset.y,
+        dirX,
+        dirY,
+        { sideDrift: 0.075 * cloneHairShotSide, opacity: 0.72 },
+      );
+    } else if (runItem === "plantainFan") {
+      const leftFan = rotateDirection(dirX, dirY, -0.18);
+      const rightFan = rotateDirection(dirX, dirY, 0.18);
+      addStaffBullet(bulletX, bulletY, leftFan.x, leftFan.y);
+      addStaffBullet(bulletX, bulletY, rightFan.x, rightFan.y);
     }
   }
 
@@ -1455,13 +1584,15 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   player.onCollide("attackItem", (item) => {
     if (ended || paused) return;
-    runItem = "cloneHair";
+    const itemId = item.itemId ?? "cloneHair";
+    const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
+    runItem = itemId;
     destroy(item);
     attackItem = null;
     updateItemText();
-    feedbackText.text = "拾取分身毫毛：双发";
+    feedbackText.text = itemInfo.pickup;
     feedbackTimer = 1.35;
-    addRoomCue("双发开启", player.pos.x + PLAYER_SIZE / 2, Math.max(58, player.pos.y - 12), [230, 235, 255], 1.1);
+    addRoomCue(itemInfo.cue, player.pos.x + PLAYER_SIZE / 2, Math.max(58, player.pos.y - 12), itemInfo.color, 1.1);
     playToneSequence([
       { frequency: 720, duration: 0.055, volume: 0.02, type: "triangle" },
       { frequency: 960, duration: 0.07, volume: 0.022, type: "triangle" },
@@ -1497,6 +1628,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
     runStats.time += dt();
     timerText.text = `用时 ${formatRunTime(runStats.time)}`;
+    updateAttackReadyText();
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);
     roomIntroTitle.opacity = introAlpha;
     roomIntroSubtitle.opacity = introAlpha;

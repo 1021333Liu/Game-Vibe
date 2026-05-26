@@ -61,6 +61,8 @@ const RUN_ITEM_INFO = {
     cue: "双发开启",
     pickup: "拾取分身毫毛：双发",
     color: [230, 235, 255],
+    effect: "double",
+    sprite: "cloneHair",
   },
   plantainFan: {
     name: "芭蕉扇",
@@ -68,6 +70,8 @@ const RUN_ITEM_INFO = {
     cue: "扇形弹幕开启",
     pickup: "拾取芭蕉扇：扇形三发",
     color: [170, 238, 190],
+    effect: "fan",
+    sprite: "plantainFan",
   },
   windPearl: {
     name: "定风珠",
@@ -75,8 +79,247 @@ const RUN_ITEM_INFO = {
     cue: "护身一次",
     pickup: "拾取定风珠：抵挡一次伤害",
     color: [152, 220, 255],
+    effect: "shield",
+    sprite: "windPearl",
+  },
+  dragonScale: {
+    name: "龙鳞甲",
+    hud: "龙鳞甲 / 抵挡一次",
+    cue: "龙鳞护体",
+    pickup: "拾取龙鳞甲：抵挡一次伤害",
+    color: [120, 210, 255],
+    effect: "shield",
+    sprite: "windPearl",
+  },
+  lotusLamp: {
+    name: "莲花灯",
+    hud: "莲花灯 / 抵挡一次",
+    cue: "莲光护身",
+    pickup: "拾取莲花灯：抵挡一次伤害",
+    color: [255, 176, 224],
+    effect: "shield",
+    sprite: "windPearl",
+  },
+  cassockGuard: {
+    name: "锦襕袈裟",
+    hud: "锦襕袈裟 / 抵挡一次",
+    cue: "袈裟护身",
+    pickup: "拾取锦襕袈裟：抵挡一次伤害",
+    color: [255, 216, 132],
+    effect: "shield",
+    sprite: "windPearl",
+  },
+  goldenBell: {
+    name: "护身金铃",
+    hud: "护身金铃 / 抵挡一次",
+    cue: "金铃护体",
+    pickup: "拾取护身金铃：抵挡一次伤害",
+    color: [255, 226, 116],
+    effect: "shield",
+    sprite: "windPearl",
+  },
+  cloudBoots: {
+    name: "踏云履",
+    hud: "踏云履 / 抵挡一次",
+    cue: "踏云避劫",
+    pickup: "拾取踏云履：抵挡一次伤害",
+    color: [182, 232, 255],
+    effect: "shield",
+    sprite: "windPearl",
+  },
+  moonMirror: {
+    name: "照妖镜",
+    hud: "照妖镜 / 抵挡一次",
+    cue: "镜光护身",
+    pickup: "拾取照妖镜：抵挡一次伤害",
+    color: [202, 220, 255],
+    effect: "shield",
+    sprite: "windPearl",
+  },
+  jadeToken: {
+    name: "通关文牒",
+    hud: "通关文牒 / 抵挡一次",
+    cue: "文牒护身",
+    pickup: "拾取通关文牒：抵挡一次伤害",
+    color: [196, 238, 180],
+    effect: "shield",
+    sprite: "windPearl",
+  },
+  thunderSeal: {
+    name: "雷部符",
+    hud: "雷部符 / 双发",
+    cue: "雷符分击",
+    pickup: "拾取雷部符：双发",
+    color: [210, 226, 255],
+    effect: "double",
+    sprite: "cloneHair",
+  },
+  sixEarEcho: {
+    name: "六耳回声",
+    hud: "六耳回声 / 双发",
+    cue: "回声双发",
+    pickup: "拾取六耳回声：双发",
+    color: [220, 204, 255],
+    effect: "double",
+    sprite: "cloneHair",
+  },
+  starSand: {
+    name: "星砂",
+    hud: "星砂 / 双发",
+    cue: "星砂分光",
+    pickup: "拾取星砂：双发",
+    color: [245, 235, 170],
+    effect: "double",
+    sprite: "cloneHair",
+  },
+  pearlTear: {
+    name: "鲛人泪",
+    hud: "鲛人泪 / 双发",
+    cue: "水光双发",
+    pickup: "拾取鲛人泪：双发",
+    color: [152, 232, 244],
+    effect: "double",
+    sprite: "cloneHair",
+  },
+  whiteBoneDust: {
+    name: "白骨尘",
+    hud: "白骨尘 / 双发",
+    cue: "骨影双发",
+    pickup: "拾取白骨尘：双发",
+    color: [224, 224, 214],
+    effect: "double",
+    sprite: "cloneHair",
+  },
+  spiderSilk: {
+    name: "蛛丝结",
+    hud: "蛛丝结 / 双发",
+    cue: "蛛丝双发",
+    pickup: "拾取蛛丝结：双发",
+    color: [184, 218, 240],
+    effect: "double",
+    sprite: "cloneHair",
+  },
+  tigerTally: {
+    name: "虎符",
+    hud: "虎符 / 双发",
+    cue: "虎符双发",
+    pickup: "拾取虎符：双发",
+    color: [255, 188, 126],
+    effect: "double",
+    sprite: "cloneHair",
+  },
+  incenseAsh: {
+    name: "灵山香灰",
+    hud: "灵山香灰 / 双发",
+    cue: "香灰分光",
+    pickup: "拾取灵山香灰：双发",
+    color: [238, 226, 204],
+    effect: "double",
+    sprite: "cloneHair",
+  },
+  bananaLeaf: {
+    name: "小芭蕉叶",
+    hud: "小芭蕉叶 / 扇形三发",
+    cue: "小扇展开",
+    pickup: "拾取小芭蕉叶：扇形三发",
+    color: [152, 230, 162],
+    effect: "fan",
+    sprite: "plantainFan",
+  },
+  fireFan: {
+    name: "火云扇",
+    hud: "火云扇 / 扇形三发",
+    cue: "火云扇开",
+    pickup: "拾取火云扇：扇形三发",
+    color: [255, 142, 92],
+    effect: "fan",
+    sprite: "plantainFan",
+  },
+  riverFan: {
+    name: "流沙扇",
+    hud: "流沙扇 / 扇形三发",
+    cue: "流沙扇开",
+    pickup: "拾取流沙扇：扇形三发",
+    color: [226, 196, 126],
+    effect: "fan",
+    sprite: "plantainFan",
+  },
+  frostFan: {
+    name: "寒河扇",
+    hud: "寒河扇 / 扇形三发",
+    cue: "寒河扇开",
+    pickup: "拾取寒河扇：扇形三发",
+    color: [162, 226, 255],
+    effect: "fan",
+    sprite: "plantainFan",
+  },
+  peacockFan: {
+    name: "孔雀羽扇",
+    hud: "孔雀羽扇 / 扇形三发",
+    cue: "孔雀扇开",
+    pickup: "拾取孔雀羽扇：扇形三发",
+    color: [152, 238, 214],
+    effect: "fan",
+    sprite: "plantainFan",
+  },
+  goldenHoop: {
+    name: "金箍碎光",
+    hud: "金箍碎光 / 扇形三发",
+    cue: "金光散射",
+    pickup: "拾取金箍碎光：扇形三发",
+    color: [255, 232, 126],
+    effect: "fan",
+    sprite: "plantainFan",
+  },
+  thunderFan: {
+    name: "雷音扇",
+    hud: "雷音扇 / 扇形三发",
+    cue: "雷音散射",
+    pickup: "拾取雷音扇：扇形三发",
+    color: [236, 226, 255],
+    effect: "fan",
+    sprite: "plantainFan",
+  },
+  jadeFan: {
+    name: "玉兔蒲扇",
+    hud: "玉兔蒲扇 / 扇形三发",
+    cue: "玉兔扇开",
+    pickup: "拾取玉兔蒲扇：扇形三发",
+    color: [220, 248, 216],
+    effect: "fan",
+    sprite: "plantainFan",
+  },
+  ginsengLeaf: {
+    name: "人参果叶",
+    hud: "人参果叶 / 抵挡一次",
+    cue: "灵叶护身",
+    pickup: "拾取人参果叶：抵挡一次伤害",
+    color: [188, 238, 148],
+    effect: "shield",
+    sprite: "windPearl",
+  },
+  dragonWhisker: {
+    name: "龙须丝",
+    hud: "龙须丝 / 双发",
+    cue: "龙须双发",
+    pickup: "拾取龙须丝：双发",
+    color: [180, 236, 246],
+    effect: "double",
+    sprite: "cloneHair",
+  },
+  scripturePage: {
+    name: "残页经文",
+    hud: "残页经文 / 抵挡一次",
+    cue: "经文护身",
+    pickup: "拾取残页经文：抵挡一次伤害",
+    color: [244, 224, 176],
+    effect: "shield",
+    sprite: "windPearl",
   },
 };
+
+const RUN_ITEM_IDS = Object.keys(RUN_ITEM_INFO);
+const TREASURE_CHOICE_EFFECTS = ["double", "shield", "fan"];
 
 const DOOR_POSITIONS = {
   up: { x: SCREEN_WIDTH / 2 - DOOR_SIZE / 2, y: 8 },
@@ -120,7 +363,7 @@ const ROOM_TYPE_MAP_STYLE = {
   final: { border: [255, 244, 164], mark: "终" },
 };
 
-const ROOMS = [
+const ROOM_TEMPLATES = [
   {
     id: "flame-mountain",
     type: "combat",
@@ -621,8 +864,93 @@ const ROOMS = [
   },
 ];
 
-const ROOM_BY_ID = Object.fromEntries(ROOMS.map((room) => [room.id, room]));
-const ROOM_MAP_POSITIONS = buildRoomMapPositions();
+const TRIAL_POOL = [
+  { trialNo: 1, trialName: "金蝉遭贬", name: "金蝉旧梦", type: "combat" },
+  { trialNo: 2, trialName: "出胎几杀", name: "江流渡口", type: "combat" },
+  { trialNo: 3, trialName: "满月抛江", name: "洪江寒渡", type: "combat" },
+  { trialNo: 4, trialName: "寻亲报冤", name: "长安旧案", type: "combat" },
+  { trialNo: 5, trialName: "出城逢虎", name: "双叉岭", type: "combat" },
+  { trialNo: 6, trialName: "落坑折从", name: "猎户荒径", type: "combat" },
+  { trialNo: 7, trialName: "双叉岭上", name: "虎穴山道", type: "elite" },
+  { trialNo: 8, trialName: "两界山头", name: "两界山", type: "combat" },
+  { trialNo: 9, trialName: "陡涧换马", name: "鹰愁涧", type: "combat" },
+  { trialNo: 10, trialName: "夜被火烧", name: "观音禅院", type: "combat" },
+  { trialNo: 11, trialName: "失却袈裟", name: "袈裟暗阁", type: "treasure" },
+  { trialNo: 12, trialName: "收降八戒", name: "高老庄", type: "combat" },
+  { trialNo: 13, trialName: "黄风怪阻", name: "黄风岭", type: "elite" },
+  { trialNo: 14, trialName: "请求灵吉", name: "定风庄", type: "treasure" },
+  { trialNo: 15, trialName: "流沙难渡", name: "流沙河", type: "combat" },
+  { trialNo: 16, trialName: "收降沙僧", name: "沙河渡口", type: "combat" },
+  { trialNo: 17, trialName: "四圣显化", name: "试禅林", type: "treasure" },
+  { trialNo: 18, trialName: "五庄观中", name: "五庄观", type: "combat" },
+  { trialNo: 19, trialName: "难活人参", name: "人参果园", type: "treasure" },
+  { trialNo: 20, trialName: "贬退心猿", name: "心猿荒野", type: "elite" },
+  { trialNo: 21, trialName: "黑松林失散", name: "黑松林", type: "combat" },
+  { trialNo: 22, trialName: "宝象国捎书", name: "宝象国", type: "combat" },
+  { trialNo: 23, trialName: "金銮殿变虎", name: "金銮殿", type: "elite" },
+  { trialNo: 24, trialName: "平顶山逢魔", name: "平顶山", type: "combat" },
+  { trialNo: 25, trialName: "莲花洞高悬", name: "莲花洞", type: "elite" },
+  { trialNo: 26, trialName: "乌鸡国救主", name: "乌鸡国井", type: "combat" },
+  { trialNo: 27, trialName: "红孩儿火云", name: "火云洞", type: "elite" },
+  { trialNo: 28, trialName: "黑水河沉没", name: "黑水河", type: "combat" },
+  { trialNo: 29, trialName: "车迟国斗法", name: "车迟国", type: "elite" },
+  { trialNo: 30, trialName: "通天河遇阻", name: "通天河", type: "combat" },
+  { trialNo: 31, trialName: "金兜洞收兵", name: "金兜洞", type: "elite" },
+  { trialNo: 32, trialName: "女儿国留婚", name: "女儿国", type: "combat" },
+  { trialNo: 33, trialName: "琵琶洞蝎影", name: "琵琶洞", type: "elite" },
+  { trialNo: 34, trialName: "真假美猴王", name: "水帘迷影", type: "elite" },
+  { trialNo: 35, trialName: "火焰山借扇", name: "火焰山", type: "combat" },
+  { trialNo: 36, trialName: "芭蕉扇三借", name: "翠云山", type: "treasure" },
+  { trialNo: 37, trialName: "祭赛国扫塔", name: "金光寺塔", type: "combat" },
+  { trialNo: 38, trialName: "乱石山碧波", name: "碧波潭", type: "elite" },
+  { trialNo: 39, trialName: "荆棘岭吟诗", name: "荆棘岭", type: "combat" },
+  { trialNo: 40, trialName: "小雷音遭困", name: "小雷音寺", type: "boss" },
+  { trialNo: 41, trialName: "稀柿衕秽阻", name: "稀柿衕", type: "combat" },
+  { trialNo: 42, trialName: "朱紫国行医", name: "朱紫国", type: "treasure" },
+  { trialNo: 43, trialName: "盘丝洞蛛网", name: "盘丝洞", type: "combat" },
+  { trialNo: 44, trialName: "黄花观毒茶", name: "黄花观", type: "elite" },
+  { trialNo: 45, trialName: "狮驼岭妖军", name: "狮驼岭", type: "elite" },
+  { trialNo: 46, trialName: "比丘国救子", name: "比丘国", type: "combat" },
+  { trialNo: 47, trialName: "无底洞鼠影", name: "无底洞", type: "elite" },
+  { trialNo: 48, trialName: "灭法国剃发", name: "灭法国", type: "combat" },
+  { trialNo: 49, trialName: "隐雾山除怪", name: "隐雾山", type: "combat" },
+  { trialNo: 50, trialName: "凤仙郡求雨", name: "凤仙郡", type: "treasure" },
+  { trialNo: 51, trialName: "玉华州授艺", name: "玉华州", type: "treasure" },
+  { trialNo: 52, trialName: "豹头山黄狮", name: "豹头山", type: "elite" },
+  { trialNo: 53, trialName: "金平府观灯", name: "金平府", type: "combat" },
+  { trialNo: 54, trialName: "青龙山玄英", name: "青龙山", type: "elite" },
+  { trialNo: 55, trialName: "天竺国招亲", name: "天竺国", type: "combat" },
+  { trialNo: 56, trialName: "玉兔精捣药", name: "广寒药园", type: "elite" },
+  { trialNo: 57, trialName: "铜台府地灵", name: "铜台府", type: "combat" },
+  { trialNo: 58, trialName: "灵山脚下", name: "灵山脚", type: "combat" },
+  { trialNo: 59, trialName: "凌云渡脱胎", name: "凌云渡", type: "treasure" },
+  { trialNo: 60, trialName: "无字真经", name: "藏经阁影", type: "boss" },
+  { trialNo: 61, trialName: "通天河老鼋", name: "老鼋渡", type: "combat" },
+  { trialNo: 62, trialName: "最后一难", name: "归途洪波", type: "boss" },
+  { trialNo: 63, trialName: "白骨三变", name: "白骨洞", type: "elite" },
+  { trialNo: 64, trialName: "黑风山袈裟", name: "黑风山", type: "combat" },
+  { trialNo: 65, trialName: "黄眉金钹", name: "黄眉殿", type: "boss" },
+  { trialNo: 66, trialName: "九灵元圣", name: "竹节山", type: "boss" },
+  { trialNo: 67, trialName: "牛魔王拦路", name: "积雷山", type: "boss" },
+  { trialNo: 68, trialName: "青牛金刚琢", name: "青牛洞", type: "elite" },
+  { trialNo: 69, trialName: "蜘蛛七情", name: "蛛网密室", type: "combat" },
+  { trialNo: 70, trialName: "蝎尾倒马毒", name: "毒琵琶洞", type: "elite" },
+  { trialNo: 71, trialName: "黄风三昧", name: "黄风阵", type: "elite" },
+  { trialNo: 72, trialName: "银角紫金葫", name: "葫芦洞", type: "elite" },
+  { trialNo: 73, trialName: "红孩真火", name: "真火台", type: "elite" },
+  { trialNo: 74, trialName: "流沙八百", name: "八百流沙", type: "combat" },
+  { trialNo: 75, trialName: "女儿国情关", name: "情关水榭", type: "combat" },
+  { trialNo: 76, trialName: "三藏遇虎", name: "虎口岭", type: "combat" },
+  { trialNo: 77, trialName: "九曲盘桓", name: "九曲洞", type: "combat" },
+  { trialNo: 78, trialName: "万妖围路", name: "万妖阵", type: "elite" },
+  { trialNo: 79, trialName: "雷音幻境", name: "雷音幻境", type: "boss" },
+  { trialNo: 80, trialName: "取经在望", name: "灵山门", type: "treasure" },
+  { trialNo: 81, trialName: "功德圆满", name: "大雷音寺", type: "boss" },
+];
+
+let ROOMS = [];
+let ROOM_BY_ID = {};
+let ROOM_MAP_POSITIONS = {};
 
 let activeWalls = [];
 let gameStarted = false;
@@ -639,6 +967,12 @@ let itemRewardedRoomIds = new Set();
 let runItem = null;
 let audioContext = null;
 let isMuted = false;
+
+function rebuildRoomLookup() {
+  ROOMS = ROOM_TEMPLATES;
+  ROOM_BY_ID = Object.fromEntries(ROOMS.map((room) => [room.id, room]));
+  ROOM_MAP_POSITIONS = buildRoomMapPositions();
+}
 
 const {
   add,
@@ -1149,6 +1483,7 @@ function initGsapShell() {
   });
 }
 
+rebuildRoomLookup();
 initGsapShell();
 
 loadSprite("wukong", "/sprites/wukong.svg");
@@ -1565,12 +1900,23 @@ function getRunItemInfo(itemId = runItem) {
   return RUN_ITEM_INFO[itemId] ?? null;
 }
 
+function getTreasureChoiceItemIds(roomId) {
+  const seed = [...roomId].reduce((total, char) => total + char.charCodeAt(0), 0) + runStats.defeats;
+  return TREASURE_CHOICE_EFFECTS.map((effect, effectIndex) => {
+    const candidates = RUN_ITEM_IDS.filter((itemId) => RUN_ITEM_INFO[itemId].effect === effect);
+    return candidates[(seed + effectIndex * 3) % candidates.length] ?? candidates[0];
+  });
+}
+
 function spawnAttackItem(itemId, x, y) {
-  const item = itemId === "plantainFan"
-    ? addPlantainFanItem(x, y)
-    : itemId === "windPearl"
-      ? addWindPearlItem(x, y)
-      : addCloneHairItem(x, y);
+  const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
+  const item = add([
+    sprite(itemInfo.sprite, { width: ATTACK_ITEM_SIZE, height: ATTACK_ITEM_SIZE }),
+    pos(x, y),
+    area(),
+    opacity(1),
+    "attackItem",
+  ]);
   item.itemId = itemId;
   return item;
 }
@@ -2216,19 +2562,15 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       return;
     }
 
-    const leftChoiceX = rewardX - 56;
-    const centerChoiceX = rewardX;
-    const rightChoiceX = rewardX + 56;
-    attackChoices = [
-      spawnTreasureChoiceItem("cloneHair", leftChoiceX, rewardY, room.id),
-      spawnTreasureChoiceItem("windPearl", centerChoiceX, rewardY, room.id),
-      spawnTreasureChoiceItem("plantainFan", rightChoiceX, rewardY, room.id),
-    ];
+    const choiceIds = getTreasureChoiceItemIds(room.id);
+    const choiceX = [rewardX - 56, rewardX, rewardX + 56];
+    attackChoices = choiceIds.map((itemId, index) => spawnTreasureChoiceItem(itemId, choiceX[index], rewardY, room.id));
     attackItem = attackChoices[0];
     feedbackText.text = "龙宫宝库：三选一道具";
-    addRoomCue("分身毫毛", leftChoiceX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.cloneHair.color, 1.2);
-    addRoomCue("定风珠", centerChoiceX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.windPearl.color, 1.2);
-    addRoomCue("芭蕉扇", rightChoiceX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.plantainFan.color, 1.2);
+    choiceIds.forEach((itemId, index) => {
+      const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
+      addRoomCue(itemInfo.name, choiceX[index] + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), itemInfo.color, 1.2);
+    });
     playTone(880, 0.08, 0.02, "triangle");
   }
 
@@ -2323,7 +2665,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       dirX,
       dirY,
     );
-    if (runItem === "cloneHair") {
+    const itemEffect = getRunItemInfo()?.effect;
+    if (itemEffect === "double") {
       cloneHairShotSide *= -1;
       const spreadOffset = dirX !== 0
         ? { x: 0, y: 8 * cloneHairShotSide }
@@ -2335,7 +2678,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         dirY,
         { sideDrift: 0.075 * cloneHairShotSide, opacity: 0.72 },
       );
-    } else if (runItem === "plantainFan") {
+    } else if (itemEffect === "fan") {
       const leftFan = rotateDirection(dirX, dirY, -0.18);
       const rightFan = rotateDirection(dirX, dirY, 0.18);
       addStaffBullet(bulletX, bulletY, leftFan.x, leftFan.y);
@@ -2346,13 +2689,14 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   function hurtPlayer(sourceX, sourceY, message = "-1 生命") {
     if (ended || paused || entrySafeTimer > 0 || invincibleTimer > 0) return false;
 
-    if (runItem === "windPearl") {
+    const itemInfo = getRunItemInfo();
+    if (itemInfo?.effect === "shield") {
       runItem = null;
       invincibleTimer = PLAYER_INVINCIBLE_TIME;
       updateItemText();
-      addScreenFlash(RUN_ITEM_INFO.windPearl.color, 0.18);
-      addRoomCue("定风珠护身", player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), RUN_ITEM_INFO.windPearl.color, 1);
-      feedbackText.text = "定风珠抵挡一次伤害";
+      addScreenFlash(itemInfo.color, 0.18);
+      addRoomCue(itemInfo.cue, player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), itemInfo.color, 1);
+      feedbackText.text = `${itemInfo.name}抵挡一次伤害`;
       feedbackTimer = 1.15;
       playToneSequence([
         { frequency: 640, duration: 0.06, volume: 0.022, type: "triangle" },

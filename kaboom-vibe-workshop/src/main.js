@@ -174,6 +174,7 @@ const ROOMS = [
     name: "火云洞",
     lore: "火云压洞，童妖试胆",
     clearLore: "三昧火退，云洞暂明",
+    clearNote: "札记：烈火可逼退，贪战最伤身。",
     enemySprite: "redBoy",
     background: [50, 22, 28],
     wallColor: [128, 54, 44],
@@ -258,6 +259,7 @@ const ROOMS = [
     name: "黑风山",
     lore: "黑风卷岭，袈裟藏影",
     clearLore: "风眼已破，山路复明",
+    clearNote: "札记：黑风借势，守心不逐影。",
     enemySprite: "blackWindDemon",
     background: [24, 30, 34],
     wallColor: [54, 76, 76],
@@ -397,6 +399,7 @@ const ROOMS = [
     name: "金兜洞",
     lore: "金圈收兵，青牛守洞",
     clearLore: "金圈暂歇，洞门复开",
+    clearNote: "札记：锋芒越急，反冲越重。",
     enemySprite: "greenBullDemon",
     background: [28, 38, 34],
     wallColor: [62, 94, 76],
@@ -547,6 +550,7 @@ const ROOMS = [
     name: "狮驼岭前哨",
     lore: "狮吼压岭，妖军列阵",
     clearLore: "狮吼渐远，大岭在前",
+    clearNote: "札记：过狮驼岭，先稳阵脚。",
     enemySprite: "lionElite",
     background: [42, 32, 30],
     wallColor: [106, 76, 54],
@@ -2251,6 +2255,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     sealedDoorFadeTimer = SEALED_DOOR_FADE_TIME;
     feedbackText.text = !roomAlreadyCleared && room.clearLore ? room.clearLore : doorMessage;
     feedbackTimer = 1.2;
+    if (!roomAlreadyCleared && room.clearNote) {
+      addRoomCue(room.clearNote, width() / 2, Math.max(58, height() / 2 - 52), room.introColor, 1.8);
+    }
     roomExits.forEach((exit) => {
       addRoomCue(doorCue, exit.x + DOOR_SIZE / 2, Math.max(58, exit.y - 14), [120, 255, 150]);
       addHitBurst(exit.x + DOOR_SIZE / 2, exit.y + DOOR_SIZE / 2, [118, 255, 142]);
@@ -2893,6 +2900,36 @@ scene("lose", (roomId = START_ROOM_ID) => {
     pos(width() / 2, 230),
     anchor("center"),
     color(228, 214, 206),
+  ]);
+  add([
+    rect(312, 88),
+    pos(width() / 2, 242),
+    anchor("center"),
+    color(28, 22, 28),
+    opacity(0.94),
+    outline(2, [255, 156, 132]),
+  ]);
+  add([
+    text("本次受阻", { size: 18 }),
+    pos(width() / 2 - 104, 218),
+    anchor("center"),
+    color(255, 156, 132),
+  ]);
+  add([
+    text(roomName, { size: 10 }),
+    pos(width() / 2 - 104, 242),
+    anchor("center"),
+    color(236, 204, 198),
+  ]);
+  addResultStatCard(width() / 2 + 6, 218, 64, 30, "用时", formatRunTime(runStats.time), [255, 190, 160]);
+  addResultStatCard(width() / 2 + 76, 218, 64, 30, "清房", getClearedProgressLabel(), [210, 228, 198]);
+  addResultStatCard(width() / 2 + 6, 254, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
+  addResultStatCard(width() / 2 + 76, 254, 64, 30, "节点", `${roomIndex + 1}/${ROOMS.length}`, [236, 204, 198]);
+  add([
+    text(`道具 ${getRunItemName()} / R 满血重试本房间`, { size: 10 }),
+    pos(width() / 2, 292),
+    anchor("center"),
+    color(255, 220, 190),
   ]);
   onKeyDown("r", () => go("game", room.id, true));
 });

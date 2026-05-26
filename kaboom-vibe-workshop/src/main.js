@@ -381,14 +381,15 @@ const ROOMS = [
     type: "final",
     name: "小雷音寺前庭",
     lore: "假佛金光，终点在前",
+    clearLore: "黄眉金钹已破，雷音幻境散去",
     enemySprite: "taoistDemon",
     background: [36, 34, 48],
     wallColor: [118, 102, 62],
     wallOutline: [58, 48, 30],
     statusColor: [255, 226, 150],
     introColor: [255, 232, 150],
-    introSubtitle: "金光压云，终点在前",
-    mechanicHint: "机制：清空前庭即可通关 / P 暂停",
+    introSubtitle: "金光压云，黄眉拦路",
+    mechanicHint: "机制：击破黄眉 Boss 即可通关 / P 暂停",
     decor: [
       { x: 224, y: 22, w: 32, h: 88, color: [255, 232, 150], opacity: 0.12 },
       { x: 188, y: 120, w: 104, h: 4, color: [255, 232, 150], opacity: 0.16 },
@@ -406,10 +407,9 @@ const ROOMS = [
       { x: 360, y: 58, w: 24, h: 204 },
     ],
     enemies: [
-      { x: 150, y: 56, vx: ENEMY_SPEED, vy: ENEMY_SPEED * 0.84 },
-      { x: 252, y: 250, vx: -ENEMY_SPEED, vy: -ENEMY_SPEED * 0.86 },
-      { x: 404, y: 82, vx: -ENEMY_SPEED * 0.9, vy: ENEMY_SPEED },
-      { x: 404, y: 236, vx: -ENEMY_SPEED * 0.92, vy: -ENEMY_SPEED },
+      { x: 224, y: 144, vx: ENEMY_SPEED * 0.62, vy: ENEMY_SPEED * 0.54, hp: 7, size: ELITE_SIZE + 4, sprite: "yellowBrowBoss" },
+      { x: 150, y: 56, vx: ENEMY_SPEED * 0.9, vy: ENEMY_SPEED * 0.78 },
+      { x: 404, y: 236, vx: -ENEMY_SPEED * 0.86, vy: -ENEMY_SPEED * 0.82 },
     ],
   },
 ];
@@ -473,6 +473,7 @@ loadSprite("sandDemon", "/sprites/sand-demon.svg");
 loadSprite("spiderDemon", "/sprites/spider-demon.svg");
 loadSprite("taoistDemon", "/sprites/taoist-demon.svg");
 loadSprite("lionElite", "/sprites/lion-elite.svg");
+loadSprite("yellowBrowBoss", "/sprites/yellow-brow-boss.svg");
 loadSprite("staff", "/sprites/staff.svg");
 loadSprite("portal", "/sprites/portal.svg");
 loadSprite("healPeach", "/sprites/heal-peach.svg");

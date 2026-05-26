@@ -941,6 +941,11 @@ style.textContent = `
       grid-template-rows: none;
     }
 
+    .route-node {
+      grid-column: auto !important;
+      grid-row: auto !important;
+    }
+
     .start-dashboard {
       grid-template-columns: 1fr;
     }
@@ -1000,17 +1005,20 @@ function initGsapShell() {
     const mapCols = maxMapX - minMapX + 1;
     const mapRows = maxMapY - minMapY + 1;
     const routeNodes = ROOMS.map((room) => {
+      const mapPos = ROOM_MAP_POSITIONS[room.id] ?? { x: minMapX, y: minMapY };
       const isBranch = Object.keys(room.exits ?? {}).length > 2;
       const className = ["route-node", roomTypeClass[room.type] ?? "", isBranch ? "is-branch" : ""]
         .filter(Boolean)
         .join(" ");
       const typeLabel = roomTypeLabel[room.type] ?? "房间";
-      return `<span class="${className}">${room.name}<em>${typeLabel}</em></span>`;
+      const gridColumn = mapPos.x - minMapX + 1;
+      const gridRow = mapPos.y - minMapY + 1;
+      return `<span class="${className}" style="grid-column:${gridColumn};grid-row:${gridRow}">${room.name}<em>${typeLabel}</em></span>`;
     }).join("");
     dashboard.innerHTML = `
       <div class="route-preview">
         <span class="menu-section-title">取经路线</span>
-        <div class="route-grid">
+        <div class="route-map" style="--map-cols:${mapCols};--map-rows:${mapRows}">
           ${routeNodes}
         </div>
       </div>

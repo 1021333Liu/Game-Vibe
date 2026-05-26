@@ -1021,6 +1021,10 @@ function getClearRank(stats) {
   return { grade: "C", comment: "再战会更顺" };
 }
 
+function getRunItemName() {
+  return getRunItemInfo()?.name ?? "无道具";
+}
+
 function readBestTime() {
   try {
     const saved = window.localStorage?.getItem(BEST_TIME_KEY);
@@ -1988,8 +1992,14 @@ scene("complete", () => {
     color(230, 226, 194),
   ]);
   add([
-    text(`${bestPrefix} ${bestLabel}`, { size: 11 }),
+    text(`剩余生命 ${getHealthLabel(runHealth)} / 道具 ${getRunItemName()} / 清房 ${getClearedProgressLabel()}`, { size: 11 }),
     pos(width() / 2, 264),
+    anchor("center"),
+    color(210, 228, 198),
+  ]);
+  add([
+    text(`${bestPrefix} ${bestLabel}`, { size: 11 }),
+    pos(width() / 2, 282),
     anchor("center"),
     color(255, 232, 150),
   ]);

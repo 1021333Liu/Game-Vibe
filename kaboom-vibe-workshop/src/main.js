@@ -1119,10 +1119,10 @@ style.textContent = `
   }
 
   #start-panel {
-    width: min(620px, calc(100vw - 32px));
-    max-height: calc(100vh - 32px);
+    width: min(600px, calc(100vw - 28px));
+    max-height: calc(100vh - 24px);
     overflow: auto;
-    padding: 24px;
+    padding: 20px;
     border: 1px solid rgba(255, 232, 150, 0.42);
     background:
       linear-gradient(90deg, rgba(255, 232, 150, 0.06), transparent 16%, transparent 84%, rgba(255, 232, 150, 0.05)),
@@ -1134,24 +1134,24 @@ style.textContent = `
 
   .start-kicker {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-size: 11px;
     color: #9be7c6;
   }
 
   #start-panel h1 {
     margin: 0;
-    font-size: 34px;
+    font-size: 31px;
     font-weight: 700;
     letter-spacing: 0;
     color: #ffe79a;
   }
 
   #start-panel p {
-    margin: 12px auto 18px;
-    max-width: 330px;
-    font-size: 13px;
-    line-height: 1.7;
+    margin: 8px auto 12px;
+    max-width: 360px;
+    font-size: 12px;
+    line-height: 1.55;
     color: #efe7d3;
   }
 
@@ -1159,12 +1159,12 @@ style.textContent = `
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
-    margin: 0 auto 18px;
+    margin: 0 auto 12px;
     max-width: 360px;
   }
 
   .start-loadout span {
-    min-height: 34px;
+    min-height: 30px;
     display: grid;
     place-items: center;
     padding: 5px 8px;
@@ -1176,7 +1176,7 @@ style.textContent = `
   }
 
   .start-dashboard {
-    margin: 0 auto 18px;
+    margin: 0 auto 12px;
     max-width: 560px;
     text-align: left;
     display: grid;
@@ -1188,12 +1188,12 @@ style.textContent = `
   .menu-brief {
     border: 1px solid rgba(255, 232, 150, 0.24);
     background: rgba(255, 232, 150, 0.07);
-    padding: 10px;
+    padding: 8px;
   }
 
   .menu-section-title {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-size: 11px;
     color: #ffe79a;
   }
@@ -1217,19 +1217,19 @@ style.textContent = `
   .route-map {
     display: grid;
     grid-template-columns: repeat(var(--map-cols), minmax(58px, 1fr));
-    grid-template-rows: repeat(var(--map-rows), 42px);
-    gap: 6px;
+    grid-template-rows: repeat(var(--map-rows), 34px);
+    gap: 5px;
     position: relative;
   }
 
   .route-node {
-    min-height: 36px;
-    padding: 5px 7px;
+    min-height: 30px;
+    padding: 4px 6px;
     border: 1px solid rgba(155, 231, 198, 0.28);
     background: rgba(9, 13, 20, 0.44);
     color: #eaf6ee;
-    font-size: 11px;
-    line-height: 1.3;
+    font-size: 10px;
+    line-height: 1.2;
     display: grid;
     align-content: center;
     gap: 2px;
@@ -1248,7 +1248,7 @@ style.textContent = `
 
   .route-node em {
     font-style: normal;
-    font-size: 9px;
+    font-size: 8px;
     color: rgba(244, 237, 220, 0.58);
   }
 
@@ -1275,10 +1275,10 @@ style.textContent = `
   }
 
   .menu-brief p {
-    margin: 0 0 7px;
+    margin: 0 0 5px;
     color: #efe7d3;
     font-size: 11px;
-    line-height: 1.55;
+    line-height: 1.45;
   }
 
   .menu-brief p:last-child {
@@ -1291,12 +1291,16 @@ style.textContent = `
   }
 
   .trial-teaser {
-    margin: 10px 0 0;
-    padding-top: 8px;
+    margin: 7px 0 0;
+    padding-top: 6px;
     border-top: 1px solid rgba(255, 232, 150, 0.14);
     color: #cdd8e6;
     font-size: 10px;
     line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .trial-teaser span {
@@ -1304,7 +1308,7 @@ style.textContent = `
   }
 
   .start-version {
-    margin: -6px 0 14px;
+    margin: -4px 0 10px;
     color: #aeb8c8;
     font-size: 11px;
   }
@@ -1328,21 +1332,27 @@ style.textContent = `
 
   @media (max-width: 620px) {
     #start-panel {
-      padding: 18px;
+      padding: 14px;
     }
 
     #start-panel h1 {
-      font-size: 28px;
+      font-size: 25px;
     }
 
     #start-panel p {
-      margin-bottom: 14px;
-      font-size: 12px;
+      margin-bottom: 10px;
+      font-size: 11px;
     }
 
     .start-loadout {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px;
+    }
+
+    .start-loadout span {
+      min-height: 28px;
+      padding: 4px;
+      font-size: 10px;
     }
 
     .route-map {

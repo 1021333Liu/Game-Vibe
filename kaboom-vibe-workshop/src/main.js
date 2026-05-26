@@ -1091,6 +1091,10 @@ function getRunRouteSummary() {
   return `种子 ${currentRunSeed} / ${currentRunRouteName || "随机路线"}`;
 }
 
+function getCompactRunRouteSummary() {
+  return `种子 ${currentRunSeed} / ${currentRunRouteName || "随机路线"}`;
+}
+
 const {
   add,
   rect,
@@ -3401,10 +3405,16 @@ scene("complete", () => {
   addResultStatCard(width() / 2 + 6, 256, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 256, 64, 30, "清房", getClearedProgressLabel(), [190, 216, 190]);
   add([
-    text(`道具 ${getRunItemName()} / ${bestPrefix} ${bestLabel} / ${getRunRouteSummary()}`, { size: 9 }),
-    pos(width() / 2, 294),
+    text(`道具 ${getRunItemName()} / ${bestPrefix} ${bestLabel}`, { size: 9 }),
+    pos(width() / 2, 290),
     anchor("center"),
     color(255, 235, 190),
+  ]);
+  add([
+    text(getCompactRunRouteSummary(), { size: 8 }),
+    pos(width() / 2, 304),
+    anchor("center"),
+    color(206, 214, 190),
   ]);
   onKeyDown("r", () => go("game", currentStartRoomId, true));
 });
@@ -3460,10 +3470,16 @@ scene("lose", (roomId = START_ROOM_ID) => {
   addResultStatCard(width() / 2 + 6, 254, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 254, 64, 30, "节点", `${roomIndex + 1}/${ROOMS.length}`, [236, 204, 198]);
   add([
-    text(`道具 ${getRunItemName()} / ${getRunRouteSummary()} / R 新一轮`, { size: 9 }),
-    pos(width() / 2, 292),
+    text(`道具 ${getRunItemName()} / R 新一轮`, { size: 9 }),
+    pos(width() / 2, 288),
     anchor("center"),
     color(255, 220, 190),
+  ]);
+  add([
+    text(getCompactRunRouteSummary(), { size: 8 }),
+    pos(width() / 2, 302),
+    anchor("center"),
+    color(220, 204, 198),
   ]);
   onKeyDown("r", () => go("game", currentStartRoomId, true));
 });

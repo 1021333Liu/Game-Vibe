@@ -1296,12 +1296,15 @@ function getExitLabel(room) {
 function getExitPreviewText(roomExits, doorsOpened) {
   if (roomExits.length === 0) return "出口：无";
   if (!doorsOpened) return `出口：${roomExits.map((exit) => DIRECTION_LABELS[exit.direction] ?? exit.direction).join(" ")} / 清敌后开启`;
-  return `出口：${roomExits
-    .map((exit) => {
-      const targetRoom = getRoomById(exit.targetId);
-      return `${DIRECTION_LABELS[exit.direction] ?? exit.direction}->${targetRoom.name}`;
-    })
-    .join("  ")}`;
+  const labels = roomExits.map((exit) => {
+    const targetRoom = getRoomById(exit.targetId);
+    return `${DIRECTION_LABELS[exit.direction] ?? exit.direction}->${targetRoom.name}`;
+  });
+  const rows = [];
+  for (let i = 0; i < labels.length; i += 2) {
+    rows.push(labels.slice(i, i + 2).join("  "));
+  }
+  return `出口：${rows.join("\n")}`;
 }
 
 function getDoorLabelPosition(exit) {

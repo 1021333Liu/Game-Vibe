@@ -596,6 +596,26 @@ style.textContent = `
     color: #efe7d3;
   }
 
+  .start-loadout {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 0 auto 18px;
+    max-width: 360px;
+  }
+
+  .start-loadout span {
+    min-height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 5px 8px;
+    border: 1px solid rgba(155, 231, 198, 0.24);
+    background: rgba(155, 231, 198, 0.08);
+    color: #dff8e9;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
   #start-button {
     min-width: 132px;
     height: 38px;
@@ -605,6 +625,11 @@ style.textContent = `
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+  }
+
+  #start-button:disabled {
+    cursor: default;
+    opacity: 0.72;
   }
 `;
 document.head.appendChild(style);
@@ -616,12 +641,29 @@ function initGsapShell() {
   const menu = document.querySelector("#start-menu");
   const panel = document.querySelector("#start-panel");
   const button = document.querySelector("#start-button");
+  const canvas = document.querySelector("canvas");
   if (!shell || !brand || !note || !menu || !panel || !button) return;
 
+  if (!panel.querySelector(".start-loadout")) {
+    const loadout = document.createElement("div");
+    loadout.className = "start-loadout";
+    ["多房间探索", "攻击道具", "黄眉 Boss"].forEach((label) => {
+      const item = document.createElement("span");
+      item.textContent = label;
+      loadout.appendChild(item);
+    });
+    panel.insertBefore(loadout, button);
+  }
+
+  if (canvas) {
+    gsap.set(canvas, { scale: 0.985, filter: "saturate(0.78) brightness(0.82)" });
+  }
   gsap.set([brand, note], { autoAlpha: 0, y: -10 });
   gsap.set(panel, { autoAlpha: 0, y: 18, scale: 0.98 });
+  gsap.set(".start-loadout span", { autoAlpha: 0, y: 8 });
   gsap.timeline({ defaults: { ease: "power3.out" } })
     .to(panel, { autoAlpha: 1, y: 0, scale: 1, duration: 0.62 })
+    .to(".start-loadout span", { autoAlpha: 1, y: 0, duration: 0.34, stagger: 0.06 }, "-=0.22")
     .to(brand, { autoAlpha: 1, y: 0, duration: 0.45 }, "-=0.3")
     .to(note, { autoAlpha: 0.9, y: 0, duration: 0.45 }, "-=0.22");
 
@@ -632,13 +674,20 @@ function initGsapShell() {
     gsap.to(button, { scale: 1, duration: 0.18, ease: "power2.out" });
   });
   button.addEventListener("click", () => {
+    if (gameStarted) return;
     gameStarted = true;
+    button.disabled = true;
+    button.textContent = "进入劫难...";
     shell.classList.add("is-playing");
-    gsap.timeline({ defaults: { ease: "power2.inOut" } })
+    const startTimeline = gsap.timeline({ defaults: { ease: "power2.inOut" } })
+      .to(button, { scale: 0.98, duration: 0.12 }, 0)
       .to(panel, { autoAlpha: 0, y: -16, scale: 0.98, duration: 0.32 })
       .to(menu, { autoAlpha: 0, duration: 0.28 }, "-=0.12")
       .set(menu, { display: "none" })
       .to(note, { autoAlpha: 0.62, duration: 0.5, ease: "power1.out" });
+    if (canvas) {
+      startTimeline.to(canvas, { scale: 1, filter: "saturate(1) brightness(1)", duration: 0.42 }, 0);
+    }
   });
 }
 
@@ -1019,11 +1068,17 @@ function getRunItemInfo(itemId = runItem) {
   return RUN_ITEM_INFO[itemId] ?? null;
 }
 
-function spawnAttackItem(itemId, x, y) {
-  const item = itemId === "plantainFan" ? addPlantainFanItem(x, y) : addCloneHairItem(x, y);
-  item.itemId = itemId;
-  return item;
-}
+  function spawnAttackItem(itemId, x, y) {
+    const item = itemId === "plantainFan" ? addPlantainFanItem(x, y) : addCloneHairItem(x, y);
+    item.itemId = itemId;
+    return item;
+  }
+
+  function spawnTreasureChoiceItem(itemId, x, y, roomId) {
+    const item = spawnAttackItem(itemId, x, y);
+    item.treasureChoiceRoomId = roomId;
+    return item;
+  }
 
 function rotateDirection(dirX, dirY, angle) {
   const cos = Math.cos(angle);
@@ -1497,6 +1552,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   let doors = [];
   let healPeach = null;
   let attackItem = null;
+  let attackChoices = [];
   let enemiesLeft = enemies.length;
 
   function updateStatusText() {
@@ -1597,9 +1653,16 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       return;
     }
 
-    attackItem = spawnAttackItem("plantainFan", rewardX, rewardY);
-    feedbackText.text = "宝库奖励：芭蕉扇";
-    addRoomCue("芭蕉扇", rewardX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.plantainFan.color, 1.2);
+    const leftChoiceX = rewardX - 42;
+    const rightChoiceX = rewardX + 42;
+    attackChoices = [
+      spawnTreasureChoiceItem("cloneHair", leftChoiceX, rewardY, room.id),
+      spawnTreasureChoiceItem("plantainFan", rightChoiceX, rewardY, room.id),
+    ];
+    attackItem = attackChoices[0];
+    feedbackText.text = "龙宫宝库：二选一道具";
+    addRoomCue("分身毫毛", leftChoiceX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.cloneHair.color, 1.2);
+    addRoomCue("芭蕉扇", rightChoiceX + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), RUN_ITEM_INFO.plantainFan.color, 1.2);
     playTone(880, 0.08, 0.02, "triangle");
   }
 
@@ -1778,6 +1841,14 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const itemId = item.itemId ?? "cloneHair";
     const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
     runItem = itemId;
+    if (item.treasureChoiceRoomId) {
+      attackChoices.forEach((choice) => {
+        if (choice !== item && choice.exists()) {
+          destroy(choice);
+        }
+      });
+      attackChoices = [];
+    }
     destroy(item);
     attackItem = null;
     updateItemText();

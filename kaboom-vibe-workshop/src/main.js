@@ -423,7 +423,7 @@ const ROOMS = [
       { x: 360, y: 58, w: 24, h: 204 },
     ],
     enemies: [
-      { x: 224, y: 144, vx: ENEMY_SPEED * 0.62, vy: ENEMY_SPEED * 0.54, hp: 7, size: ELITE_SIZE + 4, sprite: "yellowBrowBoss" },
+      { x: 224, y: 144, vx: ENEMY_SPEED * 0.62, vy: ENEMY_SPEED * 0.54, hp: 7, size: ELITE_SIZE + 4, sprite: "yellowBrowBoss", phaseCue: "金钹合鸣" },
       { x: 150, y: 56, vx: ENEMY_SPEED * 0.9, vy: ENEMY_SPEED * 0.78 },
       { x: 404, y: 236, vx: -ENEMY_SPEED * 0.86, vy: -ENEMY_SPEED * 0.82 },
     ],
@@ -1150,6 +1150,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       trailTimer: (enemyConfig.x % 3) * 0.04,
       eliteTimer: enemyConfig.hp > 1 ? ELITE_ROAR_INTERVAL * 0.72 : 0,
       eliteState: "idle",
+      phaseCue: enemyConfig.phaseCue,
+      bossPhaseWarned: false,
     };
     enemy.healthBar = addEliteHealthBar(body, enemySize);
     return enemy;
@@ -1857,9 +1859,26 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
           addHitBurst(enemyCenterX, enemyCenterY, room.introColor);
           destroy(bullet);
           if (enemy.hp > 0) {
+            const enemyRecord = enemies.find((entry) => entry.body === enemy);
+            if (
+              enemyRecord?.phaseCue
+              && !enemyRecord.bossPhaseWarned
+              && enemy.hp <= Math.ceil((enemy.maxHp ?? 1) / 2)
+            ) {
+              enemyRecord.bossPhaseWarned = true;
+              feedbackText.text = enemyRecord.phaseCue;
+              feedbackTimer = 1.05;
+              addRoomCue(enemyRecord.phaseCue, enemyCenterX, Math.max(58, enemyCenterY - 24), [255, 232, 118], 1.1);
+              addHitBurst(enemyCenterX, enemyCenterY, [255, 232, 118]);
+              playToneSequence([
+                { frequency: 420, duration: 0.06, volume: 0.024, type: "sawtooth" },
+                { frequency: 720, duration: 0.08, volume: 0.026, type: "triangle" },
+              ]);
+            } else {
+              feedbackText.text = `精英妖怪 ${enemy.hp}/${enemy.maxHp}`;
+              feedbackTimer = 0.45;
+            }
             playTone(560, 0.045, 0.02, "triangle");
-            feedbackText.text = `精英妖怪 ${enemy.hp}/${enemy.maxHp}`;
-            feedbackTimer = 0.45;
           } else {
             const enemyRecord = enemies.find((entry) => entry.body === enemy);
             if (enemyRecord) {

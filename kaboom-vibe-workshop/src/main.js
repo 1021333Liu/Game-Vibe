@@ -139,7 +139,7 @@ const ROOMS = [
     enemyBehavior: "flameRush",
     enemySpeedScale: 1.12,
     player: { x: 40, y: 160 },
-    exits: { right: "bone-cave", down: "daughter-kingdom" },
+    exits: { up: "red-boy-cave", right: "bone-cave", down: "daughter-kingdom" },
     flameZones: [
       { x: 150, y: 142, w: 42, h: 36, phase: 0 },
       { x: 248, y: 26, w: 42, h: 38, phase: 1.25 },
@@ -157,6 +157,51 @@ const ROOMS = [
       { x: 140, y: 40, vx: ENEMY_SPEED, vy: ENEMY_SPEED * 0.6 },
       { x: 244, y: 230, vx: -ENEMY_SPEED * 0.8, vy: ENEMY_SPEED },
       { x: 390, y: 58, vx: -ENEMY_SPEED, vy: ENEMY_SPEED * 0.72 },
+    ],
+  },
+  {
+    id: "red-boy-cave",
+    type: "elite",
+    trialNo: 40,
+    trialName: "火云洞红孩儿",
+    name: "火云洞",
+    lore: "火云压洞，童妖试胆",
+    clearLore: "三昧火退，云洞暂明",
+    enemySprite: "redBoy",
+    background: [50, 22, 28],
+    wallColor: [128, 54, 44],
+    wallOutline: [58, 22, 24],
+    statusColor: [255, 188, 136],
+    introColor: [255, 132, 82],
+    introSubtitle: "红焰绕阵，火尖枪逼近",
+    mechanicHint: "机制：火圈夹击，半血三昧真火 / P 暂停",
+    decor: [
+      { x: 46, y: 44, w: 72, h: 4, color: [255, 96, 46], opacity: 0.18 },
+      { x: 178, y: 258, w: 108, h: 5, color: [255, 164, 64], opacity: 0.16 },
+      { x: 334, y: 62, w: 68, h: 4, color: [255, 96, 46], opacity: 0.15 },
+      { x: 350, y: 236, w: 62, h: 4, color: [255, 204, 86], opacity: 0.14 },
+    ],
+    enemyBehavior: "flameRush",
+    enemySpeedScale: 0.92,
+    player: { x: 230, y: 268 },
+    exits: { down: "flame-mountain" },
+    flameZones: [
+      { x: 72, y: 82, w: 46, h: 42, phase: 0.35 },
+      { x: 362, y: 82, w: 46, h: 42, phase: 1.15 },
+      { x: 72, y: 202, w: 46, h: 42, phase: 1.95 },
+      { x: 362, y: 202, w: 46, h: 42, phase: 2.75 },
+    ],
+    walls: [
+      { x: 132, y: 72, w: 24, h: 80 },
+      { x: 324, y: 72, w: 24, h: 80 },
+      { x: 132, y: 188, w: 24, h: 80 },
+      { x: 324, y: 188, w: 24, h: 80 },
+      { x: 204, y: 142, w: 72, h: 24 },
+    ],
+    enemies: [
+      { x: 226, y: 126, vx: ENEMY_SPEED * 0.76, vy: ENEMY_SPEED * 0.58, hp: 6, size: ELITE_SIZE, sprite: "redBoy", phaseCue: "三昧真火", phaseSpeedScale: 1.22 },
+      { x: 88, y: 154, vx: ENEMY_SPEED * 0.88, vy: ENEMY_SPEED * 0.72, sprite: "flameDemon" },
+      { x: 376, y: 154, vx: -ENEMY_SPEED * 0.88, vy: -ENEMY_SPEED * 0.72, sprite: "flameDemon" },
     ],
   },
   {
@@ -184,7 +229,7 @@ const ROOMS = [
     enemyBehavior: "boneTrack",
     enemyAfterimage: "bone",
     player: { x: 42, y: 42 },
-    exits: { left: "flame-mountain", right: "sand-river", down: "spider-cave" },
+    exits: { left: "flame-mountain", right: "sand-river", up: "black-wind-mountain", down: "spider-cave" },
     walls: [
       { x: 72, y: 96, w: 264, h: 24 },
       { x: 144, y: 168, w: 264, h: 24 },
@@ -196,6 +241,46 @@ const ROOMS = [
       { x: 238, y: 48, vx: -ENEMY_SPEED, vy: ENEMY_SPEED },
       { x: 405, y: 116, vx: -ENEMY_SPEED * 1.16, vy: -ENEMY_SPEED * 0.72 },
       { x: 190, y: 274, vx: ENEMY_SPEED * 0.86, vy: -ENEMY_SPEED },
+    ],
+  },
+  {
+    id: "black-wind-mountain",
+    type: "combat",
+    trialNo: 17,
+    trialName: "黑风山袈裟",
+    name: "黑风山",
+    lore: "黑风卷岭，袈裟藏影",
+    clearLore: "风眼已破，山路复明",
+    enemySprite: "blackWindDemon",
+    background: [24, 30, 34],
+    wallColor: [54, 76, 76],
+    wallOutline: [24, 38, 42],
+    statusColor: [172, 222, 210],
+    introColor: [136, 228, 210],
+    introSubtitle: "黑风卷岭，妖影绕行",
+    mechanicHint: "机制：绕开风眼短墙 / P 暂停",
+    decor: [
+      { x: 38, y: 42, w: 84, h: 3, color: [112, 190, 190], opacity: 0.16 },
+      { x: 322, y: 54, w: 74, h: 3, color: [150, 226, 210], opacity: 0.14 },
+      { x: 70, y: 260, w: 96, h: 3, color: [112, 190, 190], opacity: 0.15 },
+      { x: 314, y: 236, w: 104, h: 3, color: [150, 226, 210], opacity: 0.13 },
+    ],
+    enemyBehavior: "sandDrift",
+    enemySpeedScale: 1.08,
+    player: { x: 42, y: 160 },
+    exits: { down: "bone-cave" },
+    walls: [
+      { x: 108, y: 70, w: 92, h: 20 },
+      { x: 280, y: 70, w: 92, h: 20 },
+      { x: 108, y: 230, w: 92, h: 20 },
+      { x: 280, y: 230, w: 92, h: 20 },
+      { x: 220, y: 128, w: 40, h: 64 },
+    ],
+    enemies: [
+      { x: 130, y: 116, vx: ENEMY_SPEED * 0.92, vy: ENEMY_SPEED },
+      { x: 312, y: 116, vx: -ENEMY_SPEED, vy: ENEMY_SPEED * 0.84 },
+      { x: 128, y: 202, vx: ENEMY_SPEED * 0.86, vy: -ENEMY_SPEED },
+      { x: 322, y: 210, vx: -ENEMY_SPEED * 0.9, vy: -ENEMY_SPEED * 0.92 },
     ],
   },
   {
@@ -222,7 +307,7 @@ const ROOMS = [
     ],
     enemyBehavior: "sandDrift",
     player: { x: 42, y: 272 },
-    exits: { left: "bone-cave", down: "lion-outpost" },
+    exits: { left: "bone-cave", right: "tongtian-river", down: "lion-outpost" },
     exitPositions: { down: { x: 258, y: 290 } },
     entrySpawns: { down: { x: 258, y: 270 } },
     slowZones: [
@@ -244,6 +329,53 @@ const ROOMS = [
       { x: 250, y: 58, vx: ENEMY_SPEED * 1.14, vy: ENEMY_SPEED * 0.74 },
       { x: 322, y: 238, vx: -ENEMY_SPEED * 1.2, vy: -ENEMY_SPEED * 0.86 },
       { x: 406, y: 154, vx: -ENEMY_SPEED, vy: ENEMY_SPEED },
+    ],
+  },
+  {
+    id: "tongtian-river",
+    type: "combat",
+    trialNo: 49,
+    trialName: "通天河冰渡",
+    name: "通天河",
+    lore: "寒河结镜，鱼妖绕桥",
+    clearLore: "冰桥已稳，河雾渐开",
+    enemySprite: "sandDemon",
+    background: [22, 42, 56],
+    wallColor: [56, 92, 116],
+    wallOutline: [22, 48, 66],
+    statusColor: [172, 228, 255],
+    introColor: [156, 232, 255],
+    introSubtitle: "冰桥狭窄，河妖夹击",
+    mechanicHint: "机制：冰面减速，桥上点射 / P 暂停",
+    decor: [
+      { x: 26, y: 44, w: 86, h: 3, color: [152, 226, 255], opacity: 0.18 },
+      { x: 184, y: 88, w: 116, h: 3, color: [210, 244, 255], opacity: 0.16 },
+      { x: 318, y: 246, w: 106, h: 3, color: [152, 226, 255], opacity: 0.18 },
+      { x: 94, y: 270, w: 70, h: 3, color: [210, 244, 255], opacity: 0.14 },
+    ],
+    enemyBehavior: "sandDrift",
+    enemySpeedScale: 1.08,
+    player: { x: 40, y: 160 },
+    exits: { left: "sand-river" },
+    slowZones: [
+      { x: 136, y: 20, w: 208, h: 58 },
+      { x: 136, y: 242, w: 208, h: 58 },
+      { x: 36, y: 110, w: 78, h: 100 },
+      { x: 366, y: 110, w: 78, h: 100 },
+    ],
+    walls: [
+      { x: 120, y: 0, w: 24, h: 112 },
+      { x: 120, y: 208, w: 24, h: 112 },
+      { x: 336, y: 0, w: 24, h: 112 },
+      { x: 336, y: 208, w: 24, h: 112 },
+      { x: 196, y: 112, w: 88, h: 24 },
+      { x: 196, y: 184, w: 88, h: 24 },
+    ],
+    enemies: [
+      { x: 156, y: 42, vx: ENEMY_SPEED * 0.95, vy: ENEMY_SPEED * 1.05 },
+      { x: 300, y: 260, vx: -ENEMY_SPEED, vy: -ENEMY_SPEED * 0.92 },
+      { x: 388, y: 82, vx: -ENEMY_SPEED * 0.86, vy: ENEMY_SPEED * 1.1 },
+      { x: 74, y: 228, vx: ENEMY_SPEED * 0.9, vy: -ENEMY_SPEED },
     ],
   },
   {
@@ -564,7 +696,9 @@ style.textContent = `
   }
 
   #start-panel {
-    width: min(420px, calc(100vw - 32px));
+    width: min(620px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow: auto;
     padding: 24px;
     border: 1px solid rgba(255, 232, 150, 0.42);
     background: rgba(14, 17, 26, 0.82);
@@ -616,6 +750,114 @@ style.textContent = `
     line-height: 1.3;
   }
 
+  .start-dashboard {
+    margin: 0 auto 18px;
+    max-width: 560px;
+    text-align: left;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 10px;
+  }
+
+  .route-preview,
+  .menu-brief {
+    border: 1px solid rgba(255, 232, 150, 0.24);
+    background: rgba(255, 232, 150, 0.07);
+    padding: 10px;
+  }
+
+  .menu-section-title {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: #ffe79a;
+  }
+
+  .route-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .route-preview {
+    min-height: 100%;
+    margin: 0 auto 14px;
+    max-width: 420px;
+  }
+
+  .start-dashboard .route-preview {
+    margin-bottom: 0;
+  }
+
+  .route-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .route-node {
+    min-height: 36px;
+    padding: 5px 7px;
+    border: 1px solid rgba(155, 231, 198, 0.28);
+    background: rgba(9, 13, 20, 0.44);
+    color: #eaf6ee;
+    font-size: 11px;
+    line-height: 1.3;
+    display: grid;
+    align-content: center;
+    gap: 2px;
+  }
+
+  .route-node em {
+    font-style: normal;
+    font-size: 9px;
+    color: rgba(244, 237, 220, 0.58);
+  }
+
+  .route-node.is-branch {
+    border-color: rgba(136, 228, 210, 0.42);
+    color: #bdf6ed;
+  }
+
+  .route-node.is-treasure {
+    border-color: rgba(255, 216, 116, 0.46);
+    color: #ffe39a;
+  }
+
+  .route-node.is-elite,
+  .route-node.is-final {
+    border-color: rgba(255, 139, 116, 0.48);
+    color: #ffc1ad;
+  }
+
+  .route-node.is-final {
+    border-color: rgba(255, 236, 142, 0.7);
+    color: #fff0a6;
+    box-shadow: inset 0 0 18px rgba(255, 236, 142, 0.08);
+  }
+
+  .menu-brief p {
+    margin: 0 0 7px;
+    color: #efe7d3;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .menu-brief p:last-child {
+    margin-bottom: 0;
+  }
+
+  .menu-brief strong {
+    color: #ffe79a;
+    font-weight: 700;
+  }
+
+  .start-version {
+    margin: -6px 0 14px;
+    color: #aeb8c8;
+    font-size: 11px;
+  }
+
   #start-button {
     min-width: 132px;
     height: 38px;
@@ -631,6 +873,40 @@ style.textContent = `
     cursor: default;
     opacity: 0.72;
   }
+
+  @media (max-width: 620px) {
+    #start-panel {
+      padding: 18px;
+    }
+
+    #start-panel h1 {
+      font-size: 28px;
+    }
+
+    #start-panel p {
+      margin-bottom: 14px;
+      font-size: 12px;
+    }
+
+    .start-loadout {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .route-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .start-dashboard {
+      grid-template-columns: 1fr;
+    }
+
+    #game-brand,
+    #game-ui-note {
+      left: 12px;
+      right: 12px;
+    }
+  }
 `;
 document.head.appendChild(style);
 
@@ -644,6 +920,18 @@ function initGsapShell() {
   const canvas = document.querySelector("canvas");
   if (!shell || !brand || !note || !menu || !panel || !button) return;
 
+  const roomTypeLabel = {
+    combat: "战斗",
+    treasure: "奖励",
+    elite: "精英",
+    final: "终点",
+  };
+  const roomTypeClass = {
+    treasure: "is-treasure",
+    elite: "is-elite",
+    final: "is-final",
+  };
+
   if (!panel.querySelector(".start-loadout")) {
     const loadout = document.createElement("div");
     loadout.className = "start-loadout";
@@ -655,17 +943,71 @@ function initGsapShell() {
     panel.insertBefore(loadout, button);
   }
 
+  if (!panel.querySelector(".start-dashboard")) {
+    const dashboard = document.createElement("div");
+    dashboard.className = "start-dashboard";
+    const routeNodes = ROOMS.map((room) => {
+      const isBranch = Object.keys(room.exits ?? {}).length > 2;
+      const className = ["route-node", roomTypeClass[room.type] ?? "", isBranch ? "is-branch" : ""]
+        .filter(Boolean)
+        .join(" ");
+      const typeLabel = roomTypeLabel[room.type] ?? "房间";
+      return `<span class="${className}">${room.name}<em>${typeLabel}</em></span>`;
+    }).join("");
+    dashboard.innerHTML = `
+      <div class="route-preview">
+        <span class="menu-section-title">取经路线</span>
+        <div class="route-grid">
+          ${routeNodes}
+        </div>
+      </div>
+      <div class="menu-brief">
+        <span class="menu-section-title">探索情报</span>
+        <p><strong>清房开门</strong>，多出口会通向不同劫难。</p>
+        <p><strong>奖励房</strong>给攻击道具，精英房通向终点。</p>
+        <p>按 P 暂停看地图，按 M 切换静音。</p>
+      </div>
+    `;
+    panel.insertBefore(dashboard, button);
+  }
+
+  if (!panel.querySelector(".start-version")) {
+    const version = document.createElement("div");
+    version.className = "start-version";
+    version.textContent = "当前体验：多房间探索 / 道具分支 / 黄眉 Boss 阶段反馈";
+    panel.insertBefore(version, button);
+  }
+
   if (canvas) {
     gsap.set(canvas, { scale: 0.985, filter: "saturate(0.78) brightness(0.82)" });
   }
   gsap.set([brand, note], { autoAlpha: 0, y: -10 });
   gsap.set(panel, { autoAlpha: 0, y: 18, scale: 0.98 });
   gsap.set(".start-loadout span", { autoAlpha: 0, y: 8 });
+  gsap.set([".route-preview", ".menu-brief", ".start-version"], { autoAlpha: 0, y: 10 });
   gsap.timeline({ defaults: { ease: "power3.out" } })
     .to(panel, { autoAlpha: 1, y: 0, scale: 1, duration: 0.62 })
     .to(".start-loadout span", { autoAlpha: 1, y: 0, duration: 0.34, stagger: 0.06 }, "-=0.22")
+    .to([".route-preview", ".menu-brief", ".start-version"], { autoAlpha: 1, y: 0, duration: 0.34, stagger: 0.07 }, "-=0.18")
     .to(brand, { autoAlpha: 1, y: 0, duration: 0.45 }, "-=0.3")
     .to(note, { autoAlpha: 0.9, y: 0, duration: 0.45 }, "-=0.22");
+
+  const menuLoopTweens = [
+    gsap.to(".route-node.is-final", {
+    y: -2,
+    duration: 1.6,
+    repeat: -1,
+    yoyo: true,
+    ease: "sine.inOut",
+    }),
+    gsap.to(".menu-brief", {
+      autoAlpha: 0.84,
+      duration: 2.2,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+    }),
+  ];
 
   button.addEventListener("mouseenter", () => {
     gsap.to(button, { scale: 1.04, duration: 0.18, ease: "power2.out" });
@@ -676,6 +1018,7 @@ function initGsapShell() {
   button.addEventListener("click", () => {
     if (gameStarted) return;
     gameStarted = true;
+    menuLoopTweens.forEach((tween) => tween.kill());
     button.disabled = true;
     button.textContent = "进入劫难...";
     shell.classList.add("is-playing");
@@ -696,7 +1039,9 @@ initGsapShell();
 loadSprite("wukong", "/sprites/wukong.svg");
 loadSprite("demon", "/sprites/demon.svg");
 loadSprite("flameDemon", "/sprites/flame-demon.svg");
+loadSprite("redBoy", "/sprites/red-boy.svg");
 loadSprite("boneDemon", "/sprites/bone-demon.svg");
+loadSprite("blackWindDemon", "/sprites/black-wind-demon.svg");
 loadSprite("sandDemon", "/sprites/sand-demon.svg");
 loadSprite("spiderDemon", "/sprites/spider-demon.svg");
 loadSprite("taoistDemon", "/sprites/taoist-demon.svg");

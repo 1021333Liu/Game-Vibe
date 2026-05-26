@@ -1,4 +1,5 @@
 import kaboom from "kaboom";
+import { gsap } from "gsap";
 
 const MOVE_SPEED = 150;
 const ENEMY_SPEED = 85;
@@ -480,6 +481,88 @@ const {
   global: false,
   background: [30, 31, 42],
 });
+
+const style = document.createElement("style");
+style.textContent = `
+  html,
+  body {
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+    background: #10131c;
+    color: #f4eddc;
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  body {
+    display: grid;
+    place-items: center;
+  }
+
+  canvas {
+    display: block;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.46);
+    image-rendering: pixelated;
+  }
+
+  #game-shell {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  #game-brand,
+  #game-ui-note {
+    position: fixed;
+    left: 24px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 232, 150, 0.28);
+    background: rgba(15, 18, 28, 0.68);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(6px);
+  }
+
+  #game-brand {
+    top: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+
+  #game-brand span {
+    font-size: 12px;
+    color: #9be7c6;
+  }
+
+  #game-brand strong {
+    font-size: 15px;
+    letter-spacing: 0;
+    color: #ffe79a;
+  }
+
+  #game-ui-note {
+    bottom: 20px;
+    font-size: 12px;
+    color: #e8dfca;
+  }
+`;
+document.head.appendChild(style);
+
+function initGsapShell() {
+  const brand = document.querySelector("#game-brand");
+  const note = document.querySelector("#game-ui-note");
+  if (!brand || !note) return;
+
+  gsap.set([brand, note], { autoAlpha: 0, y: -10 });
+  gsap.timeline({ defaults: { ease: "power3.out" } })
+    .to(brand, { autoAlpha: 1, y: 0, duration: 0.55 })
+    .to(note, { autoAlpha: 1, y: 0, duration: 0.45 }, "-=0.22")
+    .to(note, { autoAlpha: 0.62, duration: 0.8, delay: 2.2, ease: "power1.out" });
+}
+
+initGsapShell();
 
 loadSprite("wukong", "/sprites/wukong.svg");
 loadSprite("demon", "/sprites/demon.svg");

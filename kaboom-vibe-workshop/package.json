@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "gsap": "^3.15.0",
     "kaboom": "3000.1.17"
   },
   "devDependencies": {

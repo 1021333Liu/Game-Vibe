@@ -974,6 +974,14 @@ function rebuildRoomLookup() {
   ROOM_MAP_POSITIONS = buildRoomMapPositions();
 }
 
+function getTrialPoolPreview(limit = 5) {
+  return TRIAL_POOL
+    .filter((trial) => trial.trialNo >= 60)
+    .slice(0, limit)
+    .map((trial) => `第${trial.trialNo}难 ${trial.name}`)
+    .join(" / ");
+}
+
 const {
   add,
   rect,
@@ -1282,6 +1290,19 @@ style.textContent = `
     font-weight: 700;
   }
 
+  .trial-teaser {
+    margin: 10px 0 0;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 232, 150, 0.14);
+    color: #cdd8e6;
+    font-size: 10px;
+    line-height: 1.45;
+  }
+
+  .trial-teaser span {
+    color: #ffe79a;
+  }
+
   .start-version {
     margin: -6px 0 14px;
     color: #aeb8c8;
@@ -1415,6 +1436,7 @@ function initGsapShell() {
         <p><strong>清房开门</strong>，多出口会通向不同劫难。</p>
         <p><strong>奖励房</strong>给攻击道具，精英房通向终点。</p>
         <p>按 P 暂停看地图，按 M 切换静音。</p>
+        <div class="trial-teaser"><span>81 难题材池</span>：${getTrialPoolPreview()}</div>
       </div>
     `;
     panel.insertBefore(dashboard, button);

@@ -116,6 +116,8 @@ const ROOMS = [
   {
     id: "flame-mountain",
     type: "combat",
+    trialNo: 47,
+    trialName: "火焰山借扇",
     name: "火焰山",
     lore: "芭蕉难借，烈焰拦路",
     clearLore: "火势稍退，借扇之路仍远",
@@ -159,6 +161,8 @@ const ROOMS = [
   {
     id: "bone-cave",
     type: "combat",
+    trialNo: 27,
+    trialName: "三打白骨",
     name: "白骨洞",
     lore: "三打白骨，阴风入骨",
     clearLore: "三变皆破，阴风散去",
@@ -196,6 +200,8 @@ const ROOMS = [
   {
     id: "sand-river",
     type: "combat",
+    trialNo: 22,
+    trialName: "流沙河收徒",
     name: "流沙河",
     lore: "八百流沙，水路难行",
     clearLore: "沙浪暂平，彼岸仍远",
@@ -242,6 +248,8 @@ const ROOMS = [
   {
     id: "daughter-kingdom",
     type: "combat",
+    trialNo: 54,
+    trialName: "女儿国情关",
     name: "女儿国",
     lore: "子母河畔，花影迷阵",
     clearLore: "花影渐散，情关未尽",
@@ -277,6 +285,8 @@ const ROOMS = [
   {
     id: "dragon-treasure",
     type: "treasure",
+    trialNo: 31,
+    trialName: "龙宫取宝",
     name: "龙宫宝库",
     lore: "海藏微光，宝物待取",
     enemySprite: "taoistDemon",
@@ -306,6 +316,8 @@ const ROOMS = [
   {
     id: "spider-cave",
     type: "combat",
+    trialNo: 72,
+    trialName: "盘丝洞蛛网",
     name: "盘丝洞",
     lore: "蛛丝结网，七情缠路",
     clearLore: "丝网已断，去路复明",
@@ -343,6 +355,8 @@ const ROOMS = [
   {
     id: "lion-outpost",
     type: "elite",
+    trialNo: 76,
+    trialName: "狮驼岭妖军",
     name: "狮驼岭前哨",
     lore: "狮吼压岭，妖军列阵",
     clearLore: "狮吼渐远，大岭在前",
@@ -379,6 +393,8 @@ const ROOMS = [
   {
     id: "lesser-thunder",
     type: "final",
+    trialNo: 81,
+    trialName: "小雷音黄眉",
     name: "小雷音寺前庭",
     lore: "假佛金光，终点在前",
     clearLore: "黄眉金钹已破，雷音幻境散去",
@@ -581,6 +597,10 @@ function getRoomIndex(roomId) {
 
 function getRoomProgressLabel(room) {
   return `${getRoomIndex(room.id) + 1}/${ROOMS.length}`;
+}
+
+function getRoomTrialLabel(room) {
+  return room.trialNo ? `第 ${room.trialNo} 难 · ${room.trialName ?? room.name}` : room.name;
 }
 
 function getEntrySpawn(room, fromDirection) {
@@ -1140,7 +1160,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   addHudPanel(HUD_FEEDBACK_PANEL, [16, 18, 28], room.wallOutline);
 
   add([
-    text(`${room.name} ${roomProgress}：方向键射击，清敌开门`, { size: 13 }),
+    text(`${getRoomTrialLabel(room)} ${roomProgress}：方向键射击`, { size: 13 }),
     pos(HUD_LEFT_PANEL.x + HUD_MARGIN, HUD_LEFT_PANEL.y + 7),
     color(230, 230, 238),
     z(HUD_TEXT_Z),
@@ -1242,7 +1262,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   ]);
 
   const roomIntroTitle = add([
-    text(room.name, { size: 24 }),
+    text(getRoomTrialLabel(room), { size: 20 }),
     pos(width() / 2, 78),
     anchor("center"),
     color(...room.introColor),

@@ -1889,7 +1889,7 @@ function getSuggestedExitText(roomExits) {
   if (!suggestedExit) return "";
   const directionLabel = DIRECTION_LABELS[suggestedExit.direction] ?? suggestedExit.direction;
   const targetRoom = getRoomById(suggestedExit.targetId);
-  return `建议：${directionLabel}->${targetRoom.name}`;
+  return `建议：${directionLabel}->${getDoorLabelText(targetRoom, true)}`;
 }
 
 function getOpenExitPreviewText(roomExits) {
@@ -1913,9 +1913,18 @@ function getDoorLabelAnchor(exit) {
   return "center";
 }
 
-function getDoorLabelText(room) {
+function getRoomVisitStateLabel(room) {
+  if (clearedRoomIds.has(room.id)) return "已清";
+  if (exploredRoomIds.has(room.id)) return "已探";
+  return "未探";
+}
+
+function getDoorLabelText(room, compact = false) {
   const typeMark = ROOM_TYPE_MAP_STYLE[room.type]?.mark;
-  return typeMark ? `${typeMark} ${room.name}` : room.name;
+  const visitState = getRoomVisitStateLabel(room);
+  const typePrefix = typeMark ? `${typeMark} ` : "";
+  if (compact) return `${typePrefix}${visitState} ${room.name}`;
+  return `${typePrefix}${visitState}\n${room.name}`;
 }
 
 function getDoorAccentColor(room) {
@@ -2992,7 +3001,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       const labelPos = getDoorLabelPosition(exit);
       const targetRoom = getRoomById(exit.targetId);
       const label = add([
-        text(getDoorLabelText(targetRoom), { size: 9 }),
+        text(getDoorLabelText(targetRoom), { size: 9, align: getDoorLabelAnchor(exit) }),
         pos(labelPos.x, labelPos.y),
         anchor(getDoorLabelAnchor(exit)),
         color(...getDoorAccentColor(targetRoom)),

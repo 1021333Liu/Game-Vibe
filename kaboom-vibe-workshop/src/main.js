@@ -2615,6 +2615,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     return enemy;
   }
   const enemies = (roomAlreadyCleared ? [] : room.enemies).map(addRoomEnemy);
+  const hasPressureEnemy = !roomAlreadyCleared && (room.enemies ?? []).some((enemy) => enemy.pressure);
 
   addHudPanel(HUD_LEFT_PANEL, [12, 14, 22], room.wallOutline);
   addHudPanel(HUD_RIGHT_PANEL, [12, 14, 22], room.wallOutline);
@@ -2740,6 +2741,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   if (room.id === currentStartRoomId && shouldResetRun) {
     addRoomCue("清掉妖怪，探索四周门 / P 暂停 / M 静音", width() / 2, height() - 36, [255, 235, 190], 2);
+  }
+  if (hasPressureEnemy) {
+    addRoomObjectiveBanner("侧翼来袭", "边角妖怪会压缩走位空间", room.introColor, 2.2);
   }
 
   const lowHealthOverlay = add([

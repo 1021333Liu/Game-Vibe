@@ -3931,7 +3931,7 @@ scene("lose", (roomId = START_ROOM_ID) => {
   addResultStatCard(width() / 2 + 6, 218, 64, 30, "用时", formatRunTime(runStats.time), [255, 190, 160]);
   addResultStatCard(width() / 2 + 76, 218, 64, 30, "清房", getClearedProgressLabel(), [210, 228, 198]);
   addResultStatCard(width() / 2 + 6, 254, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
-  addResultStatCard(width() / 2 + 76, 254, 64, 30, "节点", `${roomIndex + 1}/${ROOMS.length}`, [236, 204, 198]);
+  addResultStatCard(width() / 2 + 76, 254, 64, 30, "路线", currentRunLayoutName || "随机", [236, 204, 198]);
   add([
     text(`道具 ${getCompactRunItemName()} / ${getCompactBossAmbushLabel()}`, { size: 9 }),
     pos(width() / 2, 288),

@@ -1805,6 +1805,21 @@ function getExitPreviewText(roomExits, doorsOpened) {
   return `出口：${rows.join("\n")}`;
 }
 
+function getSuggestedExit(roomExits) {
+  return roomExits.find((exit) => !exploredRoomIds.has(exit.targetId))
+    ?? roomExits.find((exit) => !clearedRoomIds.has(exit.targetId))
+    ?? roomExits[0]
+    ?? null;
+}
+
+function getSuggestedExitText(roomExits) {
+  const suggestedExit = getSuggestedExit(roomExits);
+  if (!suggestedExit) return "";
+  const directionLabel = DIRECTION_LABELS[suggestedExit.direction] ?? suggestedExit.direction;
+  const targetRoom = getRoomById(suggestedExit.targetId);
+  return `建议：${directionLabel}->${targetRoom.name}`;
+}
+
 function getDoorLabelPosition(exit) {
   const centerX = exit.x + DOOR_SIZE / 2;
   const centerY = exit.y + DOOR_SIZE / 2;
@@ -2621,7 +2636,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const doorStatus = doorsOpened ? "已开" : "未开";
     statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌 ${enemiesLeft} / 门 ${doorStatus}`;
     clearProgressText.text = `清房 ${getClearedProgressLabel()}`;
-    exitPreviewText.text = getExitPreviewText(roomExits, doorsOpened);
+    const suggestedExitText = doorsOpened ? getSuggestedExitText(roomExits) : "";
+    exitPreviewText.text = [getExitPreviewText(roomExits, doorsOpened), suggestedExitText].filter(Boolean).join("\n");
     exitPreviewText.color = doorsOpened ? [156, 244, 176] : [198, 226, 210];
   }
 
@@ -2802,8 +2818,11 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     if (!roomAlreadyCleared && room.clearNote) {
       addRoomCue(room.clearNote, width() / 2, Math.max(58, height() / 2 - 52), room.introColor, 1.8);
     }
+    const suggestedExit = getSuggestedExit(roomExits);
     roomExits.forEach((exit) => {
-      addRoomCue(doorCue, exit.x + DOOR_SIZE / 2, Math.max(58, exit.y - 14), [120, 255, 150]);
+      const isSuggested = suggestedExit && exit.targetId === suggestedExit.targetId;
+      const cueText = isSuggested ? `推荐 ${DIRECTION_LABELS[exit.direction] ?? exit.direction}` : doorCue;
+      addRoomCue(cueText, exit.x + DOOR_SIZE / 2, Math.max(58, exit.y - 14), isSuggested ? [255, 232, 118] : [120, 255, 150]);
       addHitBurst(exit.x + DOOR_SIZE / 2, exit.y + DOOR_SIZE / 2, [118, 255, 142]);
       const labelPos = getDoorLabelPosition(exit);
       const targetRoom = getRoomById(exit.targetId);

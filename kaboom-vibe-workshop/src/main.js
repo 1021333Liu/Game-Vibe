@@ -1262,8 +1262,15 @@ function getUnexploredExitCount(room) {
     .length;
 }
 
+function getRoomTypeLabel(room) {
+  if (room.type === "treasure") return "宝物房";
+  if (room.type === "elite") return "精英房";
+  if (room.type === "final") return "Boss房";
+  return "战斗房";
+}
+
 function getRouteHudLabel(room) {
-  return `路线：${currentRunLayoutName || "随机"} / 未探门 ${getUnexploredExitCount(room)}`;
+  return `${getRoomTypeLabel(room)} / 未探门 ${getUnexploredExitCount(room)}`;
 }
 
 const {

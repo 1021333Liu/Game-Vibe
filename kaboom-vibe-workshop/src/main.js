@@ -2170,6 +2170,15 @@ function getRunItemInfo(itemId = runItem) {
   return RUN_ITEM_INFO[itemId] ?? null;
 }
 
+function getItemEffectLabel(itemInfo) {
+  if (!itemInfo) return "未知";
+  if (itemInfo.effect === "double") return "双发";
+  if (itemInfo.effect === "fan") return "扇形";
+  if (itemInfo.effect === "shield") return "护身";
+  if (itemInfo.effect === "speed") return "移速";
+  return "特殊";
+}
+
 function getTreasureChoiceItemIds(roomId) {
   const seed = [...roomId].reduce((total, char) => total + char.charCodeAt(0), 0) + runStats.defeats;
   const effects = TREASURE_CHOICE_EFFECTS
@@ -2900,7 +2909,13 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     addRoomObjectiveBanner("宝物房", "选一个道具，改变本局打法", [255, 214, 104], 2.8);
     choiceIds.forEach((itemId, index) => {
       const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
-      addRoomCue(itemInfo.name, choiceX[index] + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), itemInfo.color, 1.2);
+      addRoomCue(
+        `${itemInfo.name} / ${getItemEffectLabel(itemInfo)}`,
+        choiceX[index] + ATTACK_ITEM_SIZE / 2,
+        Math.max(58, rewardY - 12),
+        itemInfo.color,
+        1.6,
+      );
     });
     playTone(880, 0.08, 0.02, "triangle");
   }

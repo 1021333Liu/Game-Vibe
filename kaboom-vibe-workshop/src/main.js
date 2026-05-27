@@ -3,16 +3,18 @@ import { gsap } from "gsap";
 
 const MOVE_SPEED = 220;
 const ENEMY_SPEED = 120;
-const PLAYER_SIZE = 16;
-const ENEMY_SIZE = 18;
-const ELITE_SIZE = 28;
-const DOOR_SIZE = 22;
-const HEAL_PEACH_SIZE = 16;
-const ATTACK_ITEM_SIZE = 16;
-const ELITE_HEALTH_TICK_WIDTH = 5;
-const ELITE_HEALTH_TICK_HEIGHT = 3;
-const ELITE_HEALTH_TICK_GAP = 2;
-const BULLET_SIZE = 6;
+const PLAYER_SIZE = 24;
+const ENEMY_SIZE = 26;
+const ELITE_SIZE = 40;
+const DOOR_SIZE = 34;
+const HEAL_PEACH_SIZE = 24;
+const ATTACK_ITEM_SIZE = 24;
+const ELITE_HEALTH_TICK_WIDTH = 7;
+const ELITE_HEALTH_TICK_HEIGHT = 4;
+const ELITE_HEALTH_TICK_GAP = 3;
+const BULLET_SIZE = 8;
+const STAFF_BULLET_LONG = 24;
+const STAFF_BULLET_SHORT = 8;
 const BULLET_SPEED = 9000;
 const SHOT_COOLDOWN = 0.75;
 const BULLET_STEP = 6;
@@ -2039,6 +2041,21 @@ function moveOnAxis(body, dx, dy, bodySize) {
   return moveByAmount(body, dx * dt(), dy * dt(), bodySize);
 }
 
+function getNormalizedMoveVector(speed) {
+  let dx = 0;
+  let dy = 0;
+  if (isKeyDown("a")) dx -= 1;
+  if (isKeyDown("d")) dx += 1;
+  if (isKeyDown("w")) dy -= 1;
+  if (isKeyDown("s")) dy += 1;
+  if (dx !== 0 && dy !== 0) {
+    const diagonalScale = Math.SQRT1_2;
+    dx *= diagonalScale;
+    dy *= diagonalScale;
+  }
+  return { dx: dx * speed, dy: dy * speed };
+}
+
 function moveByAmount(body, amountX, amountY, bodySize) {
   const nextX = Math.max(0, Math.min(body.pos.x + amountX, width() - bodySize));
   const nextY = Math.max(0, Math.min(body.pos.y + amountY, height() - bodySize));
@@ -2197,8 +2214,8 @@ function addStaffBullet(x, y, dirX, dirY, options = {}) {
   const horizontal = dirX !== 0;
   const body = add([
     sprite("staff", {
-      width: horizontal ? 16 : 6,
-      height: horizontal ? 6 : 16,
+      width: horizontal ? STAFF_BULLET_LONG : STAFF_BULLET_SHORT,
+      height: horizontal ? STAFF_BULLET_SHORT : STAFF_BULLET_LONG,
       flipX: dirX < 0,
       flipY: dirY < 0,
     }),
@@ -2213,7 +2230,9 @@ function addStaffBullet(x, y, dirX, dirY, options = {}) {
     y: dirY * BULLET_SPEED + (horizontal ? sideDrift * BULLET_SPEED : 0),
   };
   body.life = 0;
-  body.hitSize = horizontal ? { w: 16, h: 6 } : { w: 6, h: 16 };
+  body.hitSize = horizontal
+    ? { w: STAFF_BULLET_LONG, h: STAFF_BULLET_SHORT }
+    : { w: STAFF_BULLET_SHORT, h: STAFF_BULLET_LONG };
   return body;
 }
 
@@ -3217,12 +3236,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const inSlowZone = (room.slowZones ?? []).some((zone) => rectsOverlap(playerRect, zone));
     const speedItemScale = getRunItemInfo()?.effect === "speed" ? 1.18 : 1;
     const sp = (inSlowZone ? MOVE_SPEED * QUICKSAND_SPEED_SCALE : MOVE_SPEED) * speedItemScale;
-    let dx = 0;
-    let dy = 0;
-    if (isKeyDown("a")) dx -= sp;
-    if (isKeyDown("d")) dx += sp;
-    if (isKeyDown("w")) dy -= sp;
-    if (isKeyDown("s")) dy += sp;
+    const { dx, dy } = getNormalizedMoveVector(sp);
     if (dx !== 0) moveOnAxis(player, dx, 0, PLAYER_SIZE);
     if (dy !== 0) moveOnAxis(player, 0, dy, PLAYER_SIZE);
 

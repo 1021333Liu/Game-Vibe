@@ -2879,6 +2879,12 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   if (hasPressureEnemy) {
     addRoomObjectiveBanner("侧翼来袭", "边角妖怪会压缩走位空间", room.introColor, 2.2);
   }
+  if (!roomAlreadyCleared && room.type === "elite") {
+    addRoomObjectiveBanner("精英房", "多段血量，稳住点射节奏", room.introColor, 2.2);
+  }
+  if (!roomAlreadyCleared && room.type === "final") {
+    addRoomObjectiveBanner("Boss 房", "黄眉半血会进入二阶段", room.introColor, 2.4);
+  }
 
   const lowHealthOverlay = add([
     rect(width(), height()),

@@ -27,6 +27,7 @@ const LOW_HEALTH_PULSE_SPEED = 5;
 const ROOM_INTRO_DURATION = 1.6;
 const ROOM_INTRO_FADE_TIME = 0.55;
 const HIT_SPARK_LIFETIME = 0.28;
+const ROOM_OBJECTIVE_LIFETIME = 2.4;
 const BONE_TRACKING_STRENGTH = 18;
 const SAND_DRIFT_STRENGTH = 24;
 const ENEMY_TRAIL_INTERVAL = 0.16;
@@ -2316,6 +2317,45 @@ function addRoomCue(cueText, x, y, cueColor, maxLife = ROOM_CUE_LIFETIME) {
   cue.maxLife = maxLife;
 }
 
+function addRoomObjectiveBanner(title, subtitle, bannerColor, maxLife = ROOM_OBJECTIVE_LIFETIME) {
+  const banner = add([
+    rect(300, 58),
+    pos(width() / 2, height() / 2 - 76),
+    anchor("center"),
+    color(12, 15, 22),
+    opacity(0.74),
+    outline(2, bannerColor),
+    z(80),
+    "roomObjective",
+  ]);
+  banner.life = 0;
+  banner.maxLife = maxLife;
+
+  const titleText = add([
+    text(title, { size: 15 }),
+    pos(width() / 2, height() / 2 - 88),
+    anchor("center"),
+    color(...bannerColor),
+    opacity(1),
+    z(81),
+    "roomObjective",
+  ]);
+  titleText.life = 0;
+  titleText.maxLife = maxLife;
+
+  const subtitleText = add([
+    text(subtitle, { size: 10 }),
+    pos(width() / 2, height() / 2 - 66),
+    anchor("center"),
+    color(226, 230, 218),
+    opacity(1),
+    z(81),
+    "roomObjective",
+  ]);
+  subtitleText.life = 0;
+  subtitleText.maxLife = maxLife;
+}
+
 function fadeAndDestroy(entity, startOpacity) {
   entity.life += dt();
   entity.opacity = Math.max(0, startOpacity * (1 - entity.life / entity.maxLife));
@@ -2857,6 +2897,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     attackChoices = choiceIds.map((itemId, index) => spawnTreasureChoiceItem(itemId, choiceX[index], rewardY, room.id));
     attackItem = attackChoices[0];
     feedbackText.text = "龙宫宝库：三选一道具";
+    addRoomObjectiveBanner("宝物房", "选一个道具，改变本局打法", [255, 214, 104], 2.8);
     choiceIds.forEach((itemId, index) => {
       const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
       addRoomCue(itemInfo.name, choiceX[index] + ATTACK_ITEM_SIZE / 2, Math.max(58, rewardY - 12), itemInfo.color, 1.2);
@@ -2916,6 +2957,16 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       addRoomCue(room.clearNote, width() / 2, Math.max(58, height() / 2 - 52), room.introColor, 1.8);
     }
     const suggestedExit = getSuggestedExit(roomExits);
+    if (suggestedExit) {
+      const targetRoom = getRoomById(suggestedExit.targetId);
+      addRoomObjectiveBanner(
+        `推荐出口：${DIRECTION_LABELS[suggestedExit.direction] ?? suggestedExit.direction}`,
+        `通往 ${getDoorLabelText(targetRoom)}`,
+        [255, 232, 118],
+      );
+    } else if (roomExits.length > 0) {
+      addRoomObjectiveBanner("传送门开启", "看门名选择下一间房", [120, 255, 150]);
+    }
     roomExits.forEach((exit) => {
       const isSuggested = suggestedExit && exit.targetId === suggestedExit.targetId;
       const cueText = isSuggested ? `推荐 ${DIRECTION_LABELS[exit.direction] ?? exit.direction}` : doorCue;
@@ -3166,6 +3217,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     get("roomCue").forEach((cue) => {
       cue.pos.y -= 12 * dt();
       fadeAndDestroy(cue, 1);
+    });
+
+    get("roomObjective").forEach((objective) => {
+      fadeAndDestroy(objective, 0.9);
     });
 
     get("boneAfterimage").forEach((ghost) => {

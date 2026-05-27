@@ -60,6 +60,9 @@ const HUD_PANEL_OPACITY = 0.46;
 const HUD_LEFT_PANEL = { x: 14, y: 12, w: 420, h: 92 };
 const HUD_RIGHT_PANEL = { x: SCREEN_WIDTH - 182, y: 12, w: 168, h: 136 };
 const HUD_FEEDBACK_PANEL = { x: 276, y: SCREEN_HEIGHT - 38, w: 408, h: 28 };
+const DOOR_LABEL_FONT_SIZE = 11;
+const DOOR_LABEL_BOX_WIDTH = 106;
+const DOOR_LABEL_BOX_HEIGHT = 34;
 
 const RUN_ITEM_INFO = {
   cloneHair: {
@@ -1900,10 +1903,10 @@ function getOpenExitPreviewText(roomExits) {
 function getDoorLabelPosition(exit) {
   const centerX = exit.x + DOOR_SIZE / 2;
   const centerY = exit.y + DOOR_SIZE / 2;
-  if (exit.direction === "up") return { x: centerX, y: exit.y + DOOR_SIZE + 10 };
-  if (exit.direction === "down") return { x: centerX, y: exit.y - 8 };
-  if (exit.direction === "left") return { x: exit.x + DOOR_SIZE + 30, y: centerY };
-  if (exit.direction === "right") return { x: exit.x - 30, y: centerY };
+  if (exit.direction === "up") return { x: centerX, y: exit.y + DOOR_SIZE + 16 };
+  if (exit.direction === "down") return { x: centerX, y: exit.y - 14 };
+  if (exit.direction === "left") return { x: exit.x + DOOR_SIZE + 42, y: centerY };
+  if (exit.direction === "right") return { x: exit.x - 42, y: centerY };
   return { x: centerX, y: Math.max(58, exit.y - 10) };
 }
 
@@ -1911,6 +1914,12 @@ function getDoorLabelAnchor(exit) {
   if (exit.direction === "left") return "left";
   if (exit.direction === "right") return "right";
   return "center";
+}
+
+function getDoorLabelBoxPosition(exit, labelPos) {
+  if (exit.direction === "left") return { x: labelPos.x - 8, y: labelPos.y - DOOR_LABEL_BOX_HEIGHT / 2 };
+  if (exit.direction === "right") return { x: labelPos.x - DOOR_LABEL_BOX_WIDTH + 8, y: labelPos.y - DOOR_LABEL_BOX_HEIGHT / 2 };
+  return { x: labelPos.x - DOOR_LABEL_BOX_WIDTH / 2, y: labelPos.y - DOOR_LABEL_BOX_HEIGHT / 2 };
 }
 
 function getRoomVisitStateLabel(room) {
@@ -3000,8 +3009,18 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       addHitBurst(exit.x + DOOR_SIZE / 2, exit.y + DOOR_SIZE / 2, [118, 255, 142]);
       const labelPos = getDoorLabelPosition(exit);
       const targetRoom = getRoomById(exit.targetId);
+      const labelBoxPos = getDoorLabelBoxPosition(exit, labelPos);
+      const labelBox = add([
+        rect(DOOR_LABEL_BOX_WIDTH, DOOR_LABEL_BOX_HEIGHT),
+        pos(labelBoxPos.x, labelBoxPos.y),
+        color(12, 14, 22),
+        opacity(0.54),
+        outline(isSuggested ? 2 : 1, isSuggested ? [255, 232, 118] : getDoorAccentColor(targetRoom)),
+        "doorLabelBox",
+      ]);
+      labelBox.phase = (exit.x + exit.y) * 0.02;
       const label = add([
-        text(getDoorLabelText(targetRoom), { size: 9, align: getDoorLabelAnchor(exit) }),
+        text(getDoorLabelText(targetRoom), { size: DOOR_LABEL_FONT_SIZE, align: getDoorLabelAnchor(exit) }),
         pos(labelPos.x, labelPos.y),
         anchor(getDoorLabelAnchor(exit)),
         color(...getDoorAccentColor(targetRoom)),
@@ -3270,8 +3289,12 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       door.opacity = 0.84 + Math.sin(runStats.time * 4.4 + door.phase) * 0.12;
     });
 
+    get("doorLabelBox").forEach((box) => {
+      box.opacity = 0.48 + Math.sin(runStats.time * 3.2 + box.phase) * 0.06;
+    });
+
     get("doorLabel").forEach((label) => {
-      label.opacity = 0.78 + Math.sin(runStats.time * 3.2 + label.phase) * 0.14;
+      label.opacity = 0.86 + Math.sin(runStats.time * 3.2 + label.phase) * 0.1;
     });
 
     if (isKeyDown("left") || isKeyDown("j")) shoot(-1, 0);

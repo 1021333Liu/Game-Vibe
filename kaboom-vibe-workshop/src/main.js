@@ -2000,9 +2000,12 @@ function getOpenExitPreviewText(roomExits) {
   return suggestedExitText ? `${suggestedExitText} / 其余看门名` : getExitPreviewText(roomExits, true);
 }
 
-function getObjectiveTitle(room, enemiesLeft, doorsOpened) {
+function getObjectiveTitle(room, enemiesLeft, doorsOpened, isBossAmbushActive = false) {
   if (room.type === "treasure") return "当前目标：选择宝物";
   if (doorsOpened) return room.type === "final" ? "当前目标：通关" : "当前目标：进入下一房";
+  if (room.type === "final") {
+    return isBossAmbushActive ? `当前目标：清掉黄眉护法 ${enemiesLeft}` : "当前目标：击破黄眉";
+  }
   if (enemiesLeft > 0) return `当前目标：清掉妖怪 ${enemiesLeft}`;
   return "当前目标：等待开门";
 }
@@ -2967,7 +2970,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const doorStatus = doorsOpened ? "已开" : "未开";
     statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌 ${enemiesLeft} / 门 ${doorStatus}`;
     clearProgressText.text = `清房 ${getClearedProgressLabel()}`;
-    objectiveTitleText.text = getObjectiveTitle(room, enemiesLeft, doorsOpened);
+    objectiveTitleText.text = getObjectiveTitle(room, enemiesLeft, doorsOpened, room.type === "final" && ambushTriggered);
     objectiveTitleText.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
     exitPreviewText.text = doorsOpened ? getOpenExitPreviewText(roomExits) : getExitPreviewText(roomExits, false);
     exitPreviewText.color = doorsOpened ? [156, 244, 176] : [198, 226, 210];

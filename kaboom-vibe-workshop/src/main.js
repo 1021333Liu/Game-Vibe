@@ -328,10 +328,28 @@ const RUN_ITEM_INFO = {
     effect: "shield",
     sprite: "windPearl",
   },
+  demonNeedle: {
+    name: "破妖针",
+    hud: "破妖针 / 穿透一名",
+    cue: "破妖穿刺",
+    pickup: "拾取破妖针：子弹可穿透一名妖怪",
+    color: [255, 196, 132],
+    effect: "pierce",
+    sprite: "cloneHair",
+  },
+  vajraShard: {
+    name: "金刚碎片",
+    hud: "金刚碎片 / 穿透一名",
+    cue: "金刚穿刺",
+    pickup: "拾取金刚碎片：子弹可穿透一名妖怪",
+    color: [255, 226, 150],
+    effect: "pierce",
+    sprite: "cloneHair",
+  },
 };
 
 const RUN_ITEM_IDS = Object.keys(RUN_ITEM_INFO);
-const TREASURE_CHOICE_EFFECTS = ["double", "shield", "fan", "speed"];
+const TREASURE_CHOICE_EFFECTS = ["double", "shield", "fan", "speed", "pierce"];
 
 const DOOR_POSITIONS = {
   up: { x: SCREEN_WIDTH / 2 - DOOR_SIZE / 2, y: 8 },
@@ -2305,6 +2323,7 @@ function getItemEffectLabel(itemInfo) {
   if (itemInfo.effect === "fan") return "扇形";
   if (itemInfo.effect === "shield") return "护身";
   if (itemInfo.effect === "speed") return "移速";
+  if (itemInfo.effect === "pierce") return "穿透";
   return "特殊";
 }
 
@@ -2369,6 +2388,8 @@ function addStaffBullet(x, y, dirX, dirY, options = {}) {
     y: dirY * BULLET_SPEED + (horizontal ? sideDrift * BULLET_SPEED : 0),
   };
   body.life = 0;
+  body.pierceLeft = options.pierceLeft ?? 0;
+  body.hitEnemies = new Set();
   body.hitSize = horizontal
     ? { w: STAFF_BULLET_LONG, h: STAFF_BULLET_SHORT }
     : { w: STAFF_BULLET_SHORT, h: STAFF_BULLET_LONG };
@@ -3181,13 +3202,15 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     playTone(520, 0.035, 0.018, "square");
     const bulletX = player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2;
     const bulletY = player.pos.y + PLAYER_SIZE / 2 - BULLET_SIZE / 2;
+    const itemEffect = getRunItemInfo()?.effect;
+    const bulletOptions = itemEffect === "pierce" ? { pierceLeft: 1, opacity: 0.9 } : {};
     addStaffBullet(
       bulletX,
       bulletY,
       dirX,
       dirY,
+      bulletOptions,
     );
-    const itemEffect = getRunItemInfo()?.effect;
     if (itemEffect === "double") {
       cloneHairShotSide *= -1;
       const spreadOffset = dirX !== 0
@@ -3565,15 +3588,25 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         if (!bullet.exists()) break;
         bullet.move(stepX, stepY);
 
-        const enemy = get("enemy").find((enemyBody) => bulletOverlapsTarget(bullet, enemyBody, enemyBody.enemySize ?? ENEMY_SIZE));
+        const enemy = get("enemy").find((enemyBody) => (
+          !bullet.hitEnemies.has(enemyBody)
+          && bulletOverlapsTarget(bullet, enemyBody, enemyBody.enemySize ?? ENEMY_SIZE)
+        ));
         if (enemy) {
+          bullet.hitEnemies.add(enemy);
           const enemySize = enemy.enemySize ?? ENEMY_SIZE;
           const enemyCenterX = enemy.pos.x + enemySize / 2;
           const enemyCenterY = enemy.pos.y + enemySize / 2;
           const enemyRecord = enemies.find((entry) => entry.body === enemy);
           enemy.hp = Math.max(0, (enemy.hp ?? 1) - 1);
           addHitBurst(enemyCenterX, enemyCenterY, room.introColor);
-          destroy(bullet);
+          if (bullet.pierceLeft > 0) {
+            bullet.pierceLeft -= 1;
+            bullet.opacity = Math.max(0.58, bullet.opacity - 0.22);
+            addRoomCue("穿透", enemyCenterX, Math.max(58, enemyCenterY - 18), [255, 218, 150], 0.45);
+          } else {
+            destroy(bullet);
+          }
           if (enemy.hp > 0) {
             if (room.enemyHitReaction === "counterRush" && enemyRecord) {
               enemyRecord.velocity.x *= -1;

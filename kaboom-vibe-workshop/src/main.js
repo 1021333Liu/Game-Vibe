@@ -2544,6 +2544,11 @@ function getClearedProgressLabel() {
   return `${clearedRoomIds.size}/${ROOMS.length}`;
 }
 
+function getClearedPercentLabel() {
+  const percent = ROOMS.length > 0 ? Math.round((clearedRoomIds.size / ROOMS.length) * 100) : 0;
+  return `${getClearedProgressLabel()} ${percent}%`;
+}
+
 function resetRunStats() {
   runStats = {
     defeats: 0,
@@ -3866,7 +3871,7 @@ scene("complete", () => {
   addResultStatCard(width() / 2 + 6, 220, 64, 30, "用时", formatRunTime(runStats.time), [255, 232, 150]);
   addResultStatCard(width() / 2 + 76, 220, 64, 30, "最快", bestLabel, bestResult.isNewBest ? [152, 238, 190] : [210, 228, 198]);
   addResultStatCard(width() / 2 + 6, 256, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
-  addResultStatCard(width() / 2 + 76, 256, 64, 30, "清房", getClearedProgressLabel(), [190, 216, 190]);
+  addResultStatCard(width() / 2 + 76, 256, 64, 30, "清房", getClearedPercentLabel(), [190, 216, 190]);
   add([
     text(`道具 ${getCompactRunItemName()} / ${getCompactBossAmbushLabel()}`, { size: 9 }),
     pos(width() / 2, 290),
@@ -3929,7 +3934,7 @@ scene("lose", (roomId = START_ROOM_ID) => {
     color(236, 204, 198),
   ]);
   addResultStatCard(width() / 2 + 6, 218, 64, 30, "用时", formatRunTime(runStats.time), [255, 190, 160]);
-  addResultStatCard(width() / 2 + 76, 218, 64, 30, "清房", getClearedProgressLabel(), [210, 228, 198]);
+  addResultStatCard(width() / 2 + 76, 218, 64, 30, "清房", getClearedPercentLabel(), [210, 228, 198]);
   addResultStatCard(width() / 2 + 6, 254, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 254, 64, 30, "路线", currentRunLayoutName || "随机", [236, 204, 198]);
   add([

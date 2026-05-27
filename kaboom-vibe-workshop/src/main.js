@@ -2834,6 +2834,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     healPeach = addHealPeach(rewardX, rewardY);
     feedbackText.text = "清房奖励：回血桃出现";
     feedbackTimer = 1.25;
+    addRoomObjectiveBanner("回血桃出现", "先补生命，再进下一间房", [255, 198, 144], 2.4);
     addRoomCue("+1 生命", rewardX + HEAL_PEACH_SIZE / 2, Math.max(58, rewardY - 12), [255, 198, 144], 1.2);
     playTone(720, 0.08, 0.02, "triangle");
   }
@@ -2896,6 +2897,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       }
       healPeach = addHealPeach(rewardX, rewardY);
       feedbackText.text = "宝库奖励：回血桃";
+      addRoomObjectiveBanner("宝库回血", "先补生命，再继续取经", [255, 198, 144], 2.4);
       addRoomCue("+1 生命", rewardX + HEAL_PEACH_SIZE / 2, Math.max(58, rewardY - 12), [255, 198, 144], 1.2);
       playTone(720, 0.08, 0.02, "triangle");
       return;
@@ -3117,6 +3119,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     updateStatusText();
     feedbackText.text = "回血桃 +1 生命";
     feedbackTimer = 1.05;
+    addRoomObjectiveBanner("生命恢复", `当前生命 ${getHealthLabel(runHealth)}`, [255, 198, 144], 1.6);
     addRoomCue("+1 生命", player.pos.x + PLAYER_SIZE / 2, Math.max(58, player.pos.y - 12), [255, 198, 144], 1);
     playToneSequence([
       { frequency: 640, duration: 0.055, volume: 0.02, type: "triangle" },

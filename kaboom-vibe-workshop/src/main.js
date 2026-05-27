@@ -59,6 +59,7 @@ const HUD_MARGIN = 8;
 const HUD_PANEL_OPACITY = 0.46;
 const HUD_LEFT_PANEL = { x: 14, y: 12, w: 420, h: 92 };
 const HUD_RIGHT_PANEL = { x: SCREEN_WIDTH - 182, y: 12, w: 168, h: 136 };
+const HUD_OBJECTIVE_PANEL = { x: 14, y: 112, w: 420, h: 48 };
 const HUD_FEEDBACK_PANEL = { x: 276, y: SCREEN_HEIGHT - 38, w: 408, h: 28 };
 const DOOR_LABEL_FONT_SIZE = 11;
 const DOOR_LABEL_BOX_WIDTH = 106;
@@ -2619,6 +2620,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   addHudPanel(HUD_LEFT_PANEL, [12, 14, 22], room.wallOutline);
   addHudPanel(HUD_RIGHT_PANEL, [12, 14, 22], room.wallOutline);
+  addHudPanel(HUD_OBJECTIVE_PANEL, [12, 16, 22], room.wallOutline);
   addHudPanel(HUD_FEEDBACK_PANEL, [16, 18, 28], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 24, 92, 18, [80, 26, 32], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 106, HUD_LEFT_PANEL.y + 24, 54, 18, [28, 48, 72], room.wallOutline);
@@ -2710,9 +2712,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   ]);
 
   const exitPreviewText = add([
-    text(getExitPreviewText(roomExits, false), { size: 9 }),
-    pos(width() / 2, HUD_FEEDBACK_PANEL.y - 12),
-    anchor("center"),
+    text(getExitPreviewText(roomExits, false), { size: 10 }),
+    pos(HUD_OBJECTIVE_PANEL.x + HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 8),
     color(198, 226, 210),
     opacity(0.82),
     z(HUD_TEXT_Z),
@@ -2755,8 +2756,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const lowHealthText = add([
     text("危险：生命仅剩 1", { size: 11 }),
-    pos(width() / 2, HUD_FEEDBACK_PANEL.y - 16),
-    anchor("center"),
+    pos(HUD_OBJECTIVE_PANEL.x + HUD_OBJECTIVE_PANEL.w - HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 26),
+    anchor("topright"),
     color(255, 150, 140),
     opacity(0),
     z(HUD_TEXT_Z),

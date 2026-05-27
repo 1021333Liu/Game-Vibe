@@ -63,6 +63,7 @@ const HUD_FEEDBACK_PANEL = { x: 276, y: SCREEN_HEIGHT - 38, w: 408, h: 28 };
 const DOOR_LABEL_FONT_SIZE = 11;
 const DOOR_LABEL_BOX_WIDTH = 106;
 const DOOR_LABEL_BOX_HEIGHT = 34;
+const WIDESCREEN_PRESSURE_ENEMY_SIZE = ENEMY_SIZE;
 
 const RUN_ITEM_INFO = {
   cloneHair: {
@@ -1074,6 +1075,26 @@ function getRandomItemId(seedOffset = 0) {
   return RUN_ITEM_IDS[(currentRunSeed + seedOffset) % RUN_ITEM_IDS.length] ?? "cloneHair";
 }
 
+function addWidescreenPressureEnemy(room, slotIndex) {
+  if (room.type !== "combat" || slotIndex === 0 || slotIndex % 2 === 0) return;
+  const sideSpawns = [
+    { x: 52, y: 78, vx: ENEMY_SPEED * 1.04, vy: ENEMY_SPEED * 0.78 },
+    { x: SCREEN_WIDTH - 86, y: 94, vx: -ENEMY_SPEED * 1.02, vy: ENEMY_SPEED * 0.82 },
+    { x: 64, y: SCREEN_HEIGHT - 104, vx: ENEMY_SPEED * 0.96, vy: -ENEMY_SPEED },
+    { x: SCREEN_WIDTH - 92, y: SCREEN_HEIGHT - 118, vx: -ENEMY_SPEED * 1.08, vy: -ENEMY_SPEED * 0.72 },
+  ];
+  const startIndex = (currentRunSeed + slotIndex) % sideSpawns.length;
+  const spawn = sideSpawns
+    .map((_, offset) => sideSpawns[(startIndex + offset) % sideSpawns.length])
+    .find((candidate) => !isSpawnBlocked(room, candidate));
+  if (!spawn) return;
+  room.enemies.push({
+    ...spawn,
+    sprite: room.enemySprite,
+    pressure: true,
+  });
+}
+
 function resetStartMenuRoutePreview() {
   const dashboard = document.querySelector(".start-dashboard");
   if (dashboard) dashboard.remove();
@@ -1138,6 +1159,7 @@ function generateRunMap() {
       room.mechanicHint = "机制：Boss 房，击破首领即可通关 / P 暂停";
       room.clearLore = `${trial.name}首领已破，本轮取经完成`;
     }
+    addWidescreenPressureEnemy(room, slotIndex);
     return room;
   });
 
@@ -1797,6 +1819,15 @@ function rectsOverlap(a, b) {
     && a.y < b.y + b.h
     && a.y + a.h > b.y
   );
+}
+
+function isSpawnBlocked(room, enemyConfig, size = WIDESCREEN_PRESSURE_ENEMY_SIZE) {
+  const spawnRect = { x: enemyConfig.x, y: enemyConfig.y, w: size, h: size };
+  return (room.walls ?? []).some((wall) => rectsOverlap(spawnRect, wall))
+    || (room.enemies ?? []).some((enemy) => rectsOverlap(
+      spawnRect,
+      { x: enemy.x, y: enemy.y, w: enemy.size ?? ENEMY_SIZE, h: enemy.size ?? ENEMY_SIZE },
+    ));
 }
 
 function bulletOverlapsTarget(bullet, target, targetSize) {

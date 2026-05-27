@@ -3376,6 +3376,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         }
       });
       attackChoices = [];
+      addRoomObjectiveBanner("已选择宝物", "其余宝物消散", itemInfo.color, 1.9);
     }
     destroy(item);
     attackItem = null;

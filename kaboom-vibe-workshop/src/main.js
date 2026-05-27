@@ -1253,10 +1253,7 @@ function getRunRouteSummary() {
 }
 
 function getCompactRunRouteSummary() {
-  const compactRoute = currentRunRouteName
-    ? currentRunRouteName.split(" / ").slice(0, 2).join(" / ")
-    : "随机路线";
-  return `种子 ${currentRunSeed} / ${compactRoute}`;
+  return `路线 ${currentRunLayoutName || "随机路线"} / 种子 ${currentRunSeed}`;
 }
 
 const {

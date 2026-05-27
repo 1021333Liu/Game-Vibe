@@ -2389,7 +2389,10 @@ function addStaffBullet(x, y, dirX, dirY, options = {}) {
   };
   body.life = 0;
   body.pierceLeft = options.pierceLeft ?? 0;
+  body.isPiercing = options.isPiercing ?? false;
+  body.trailTimer = 0;
   body.hitEnemies = new Set();
+  if (options.tint) body.color = options.tint;
   body.hitSize = horizontal
     ? { w: STAFF_BULLET_LONG, h: STAFF_BULLET_SHORT }
     : { w: STAFF_BULLET_SHORT, h: STAFF_BULLET_LONG };
@@ -3206,7 +3209,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const bulletX = player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2;
     const bulletY = player.pos.y + PLAYER_SIZE / 2 - BULLET_SIZE / 2;
     const itemEffect = getRunItemInfo()?.effect;
-    const bulletOptions = itemEffect === "pierce" ? { pierceLeft: 1, opacity: 0.9 } : {};
+    const bulletOptions = itemEffect === "pierce"
+      ? { pierceLeft: 1, opacity: 0.92, tint: [255, 220, 132], isPiercing: true }
+      : {};
     addStaffBullet(
       bulletX,
       bulletY,
@@ -3586,6 +3591,19 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       const steps = Math.max(1, Math.ceil(distance / BULLET_STEP));
       const stepX = bullet.velocity.x * dt() / steps;
       const stepY = bullet.velocity.y * dt() / steps;
+      if (bullet.isPiercing) {
+        bullet.trailTimer -= dt();
+        if (bullet.trailTimer <= 0) {
+          addHitSpark(
+            bullet.pos.x + bullet.hitSize.w / 2,
+            bullet.pos.y + bullet.hitSize.h / 2,
+            { x: -bullet.velocity.x * 0.002, y: -bullet.velocity.y * 0.002 },
+            [255, 218, 150],
+            3,
+          );
+          bullet.trailTimer = 0.035;
+        }
+      }
 
       for (let i = 0; i < steps; i += 1) {
         if (!bullet.exists()) break;

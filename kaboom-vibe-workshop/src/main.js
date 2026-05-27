@@ -1273,6 +1273,10 @@ function getRouteHudLabel(room) {
   return `${getRoomTypeLabel(room)} / 未探门 ${getUnexploredExitCount(room)}`;
 }
 
+function getRouteHudColor(room) {
+  return getUnexploredExitCount(room) > 0 ? [255, 232, 150] : [176, 204, 238];
+}
+
 const {
   add,
   rect,
@@ -2866,7 +2870,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     text(getRouteHudLabel(room), { size: 9 }),
     pos(HUD_OBJECTIVE_PANEL.x + HUD_OBJECTIVE_PANEL.w - HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 9),
     anchor("topright"),
-    color(176, 204, 238),
+    color(...getRouteHudColor(room)),
     opacity(0.86),
     z(HUD_TEXT_Z),
   ]);
@@ -3006,6 +3010,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     objectiveTitleText.text = getObjectiveTitle(room, enemiesLeft, doorsOpened, room.type === "final" && ambushTriggered);
     objectiveTitleText.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
     routeTypeText.text = getRouteHudLabel(room);
+    routeTypeText.color = getRouteHudColor(room);
     exitPreviewText.text = doorsOpened ? getOpenExitPreviewText(roomExits) : getExitPreviewText(roomExits, false);
     exitPreviewText.color = doorsOpened ? [156, 244, 176] : [198, 226, 210];
   }

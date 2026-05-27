@@ -2971,14 +2971,14 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   function updateAttackReadyText() {
     const itemInfo = getRunItemInfo();
     const attackTag = itemInfo ? `${getItemEffectLabel(itemInfo)}` : "";
-    const attackPrefix = attackTag ? `攻击：${attackTag}` : "攻击";
+    const attackPrefix = attackTag ? `攻:${attackTag}` : "攻";
     if (shotTimer <= 0) {
-      attackReadyText.text = `${attackPrefix}就绪`;
+      attackReadyText.text = `${attackPrefix} OK`;
       attackReadyText.color = [170, 238, 190];
       attackReadyText.opacity = 0.78 + Math.sin(runStats.time * 5) * 0.12;
       return;
     }
-    attackReadyText.text = `${attackPrefix}蓄力 ${Math.ceil(shotTimer * 10) / 10}s`;
+    attackReadyText.text = `${attackPrefix} ${Math.ceil(shotTimer * 10) / 10}s`;
     attackReadyText.color = [255, 214, 128];
     attackReadyText.opacity = 0.66;
   }

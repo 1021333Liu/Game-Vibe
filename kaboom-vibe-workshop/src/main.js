@@ -1256,6 +1256,16 @@ function getCompactRunRouteSummary() {
   return `路线 ${currentRunLayoutName || "随机路线"} / 种子 ${currentRunSeed}`;
 }
 
+function getUnexploredExitCount(room) {
+  return Object.values(room.exits ?? {})
+    .filter((targetId) => !exploredRoomIds.has(targetId))
+    .length;
+}
+
+function getRouteHudLabel(room) {
+  return `路线：${currentRunLayoutName || "随机"} / 未探门 ${getUnexploredExitCount(room)}`;
+}
+
 const {
   add,
   rect,
@@ -2546,7 +2556,7 @@ function getClearedProgressLabel() {
 
 function getClearedPercentLabel() {
   const percent = ROOMS.length > 0 ? Math.round((clearedRoomIds.size / ROOMS.length) * 100) : 0;
-  return `${getClearedProgressLabel()} ${percent}%`;
+  return `${getClearedProgressLabel()}·${percent}%`;
 }
 
 function resetRunStats() {
@@ -2846,7 +2856,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   ]);
 
   const routeTypeText = add([
-    text(`路线：${currentRunLayoutName || "随机路线"}`, { size: 9 }),
+    text(getRouteHudLabel(room), { size: 9 }),
     pos(HUD_OBJECTIVE_PANEL.x + HUD_OBJECTIVE_PANEL.w - HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 9),
     anchor("topright"),
     color(176, 204, 238),
@@ -2988,6 +2998,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     clearProgressText.text = `清房 ${getClearedProgressLabel()}`;
     objectiveTitleText.text = getObjectiveTitle(room, enemiesLeft, doorsOpened, room.type === "final" && ambushTriggered);
     objectiveTitleText.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
+    routeTypeText.text = getRouteHudLabel(room);
     exitPreviewText.text = doorsOpened ? getOpenExitPreviewText(roomExits) : getExitPreviewText(roomExits, false);
     exitPreviewText.color = doorsOpened ? [156, 244, 176] : [198, 226, 210];
   }

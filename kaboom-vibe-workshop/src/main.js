@@ -876,6 +876,60 @@ const ROOM_TEMPLATES = [
   },
 ];
 
+const RUN_LAYOUTS = [
+  {
+    name: "双宝分岔",
+    slots: [
+      { id: START_ROOM_ID, role: "combat", exits: { right: "trial-east-1", down: "trial-south-1", left: "trial-west-2" } },
+      { id: "trial-east-1", role: "combat", exits: { left: START_ROOM_ID, right: "trial-east-2", up: "trial-treasure-1", down: "trial-center-1" } },
+      { id: "trial-east-2", role: "combat", exits: { left: "trial-east-1", down: "trial-elite-1" } },
+      { id: "trial-elite-1", role: "elite", exits: { up: "trial-east-2", left: "trial-center-1", right: "trial-final" } },
+      { id: "trial-center-1", role: "combat", exits: { up: "trial-east-1", right: "trial-elite-1", left: "trial-south-1", down: "trial-treasure-2" } },
+      { id: "trial-south-1", role: "combat", exits: { up: START_ROOM_ID, right: "trial-center-1", left: "trial-elite-2" } },
+      { id: "trial-elite-2", role: "elite", exits: { right: "trial-south-1", up: "trial-west-2" } },
+      { id: "trial-west-2", role: "combat", exits: { down: "trial-elite-2", right: START_ROOM_ID } },
+      { id: "trial-treasure-1", role: "treasure", exits: { down: "trial-east-1" } },
+      { id: "trial-treasure-2", role: "treasure", exits: { up: "trial-center-1", right: "trial-elite-3" } },
+      { id: "trial-elite-3", role: "elite", exits: { left: "trial-treasure-2" } },
+      { id: "trial-final", role: "final", exits: { left: "trial-elite-1" } },
+    ],
+  },
+  {
+    name: "宝库提前",
+    slots: [
+      { id: START_ROOM_ID, role: "combat", exits: { up: "trial-treasure-1", right: "trial-east-1", down: "trial-south-1" } },
+      { id: "trial-treasure-1", role: "treasure", exits: { down: START_ROOM_ID, right: "trial-elite-2" } },
+      { id: "trial-elite-2", role: "elite", exits: { left: "trial-treasure-1", down: "trial-east-1" } },
+      { id: "trial-east-1", role: "combat", exits: { left: START_ROOM_ID, up: "trial-elite-2", right: "trial-east-2", down: "trial-center-1" } },
+      { id: "trial-east-2", role: "combat", exits: { left: "trial-east-1", down: "trial-elite-1" } },
+      { id: "trial-elite-1", role: "elite", exits: { up: "trial-east-2", left: "trial-center-1", right: "trial-final" } },
+      { id: "trial-center-1", role: "combat", exits: { up: "trial-east-1", right: "trial-elite-1", left: "trial-south-1", down: "trial-treasure-2" } },
+      { id: "trial-south-1", role: "combat", exits: { up: START_ROOM_ID, right: "trial-center-1", left: "trial-west-2" } },
+      { id: "trial-west-2", role: "combat", exits: { right: "trial-south-1", up: "trial-elite-3" } },
+      { id: "trial-elite-3", role: "elite", exits: { down: "trial-west-2" } },
+      { id: "trial-treasure-2", role: "treasure", exits: { up: "trial-center-1" } },
+      { id: "trial-final", role: "final", exits: { left: "trial-elite-1" } },
+    ],
+  },
+  {
+    name: "精英长廊",
+    slots: [
+      { id: START_ROOM_ID, role: "combat", exits: { right: "trial-center-1", left: "trial-west-2", down: "trial-treasure-1" } },
+      { id: "trial-center-1", role: "combat", exits: { left: START_ROOM_ID, right: "trial-east-1", down: "trial-south-1" } },
+      { id: "trial-east-1", role: "combat", exits: { left: "trial-center-1", right: "trial-elite-1", up: "trial-treasure-2" } },
+      { id: "trial-elite-1", role: "elite", exits: { left: "trial-east-1", right: "trial-elite-2" } },
+      { id: "trial-elite-2", role: "elite", exits: { left: "trial-elite-1", right: "trial-final", down: "trial-elite-3" } },
+      { id: "trial-elite-3", role: "elite", exits: { up: "trial-elite-2" } },
+      { id: "trial-final", role: "final", exits: { left: "trial-elite-2" } },
+      { id: "trial-south-1", role: "combat", exits: { up: "trial-center-1", left: "trial-west-2", right: "trial-east-2" } },
+      { id: "trial-west-2", role: "combat", exits: { right: START_ROOM_ID, down: "trial-south-1" } },
+      { id: "trial-east-2", role: "combat", exits: { left: "trial-south-1", up: "trial-treasure-2" } },
+      { id: "trial-treasure-1", role: "treasure", exits: { up: START_ROOM_ID } },
+      { id: "trial-treasure-2", role: "treasure", exits: { down: "trial-east-1" } },
+    ],
+  },
+];
+
 const TRIAL_POOL = [
   { trialNo: 1, trialName: "金蝉遭贬", name: "金蝉旧梦", type: "combat" },
   { trialNo: 2, trialName: "出胎几杀", name: "江流渡口", type: "combat" },
@@ -1106,21 +1160,8 @@ function resetStartMenuRoutePreview() {
 function generateRunMap() {
   currentRunSeed = Math.floor(Math.random() * 1000000);
   currentStartRoomId = START_ROOM_ID;
-
-  const layout = [
-    { id: currentStartRoomId, role: "combat", exits: { right: "trial-east-1", down: "trial-south-1", left: "trial-west-2" } },
-    { id: "trial-east-1", role: "combat", exits: { left: currentStartRoomId, right: "trial-east-2", up: "trial-treasure-1", down: "trial-center-1" } },
-    { id: "trial-east-2", role: "combat", exits: { left: "trial-east-1", down: "trial-elite-1" } },
-    { id: "trial-elite-1", role: "elite", exits: { up: "trial-east-2", left: "trial-center-1", right: "trial-final" } },
-    { id: "trial-center-1", role: "combat", exits: { up: "trial-east-1", right: "trial-elite-1", left: "trial-south-1", down: "trial-treasure-2" } },
-    { id: "trial-south-1", role: "combat", exits: { up: currentStartRoomId, right: "trial-center-1", left: "trial-elite-2" } },
-    { id: "trial-elite-2", role: "elite", exits: { right: "trial-south-1", up: "trial-west-2" } },
-    { id: "trial-west-2", role: "combat", exits: { down: "trial-elite-2", right: currentStartRoomId } },
-    { id: "trial-treasure-1", role: "treasure", exits: { down: "trial-east-1" } },
-    { id: "trial-treasure-2", role: "treasure", exits: { up: "trial-center-1", right: "trial-elite-3" } },
-    { id: "trial-elite-3", role: "elite", exits: { left: "trial-treasure-2" } },
-    { id: "trial-final", role: "final", exits: { left: "trial-elite-1" } },
-  ];
+  const selectedLayout = RUN_LAYOUTS[currentRunSeed % RUN_LAYOUTS.length] ?? RUN_LAYOUTS[0];
+  const layout = selectedLayout.slots;
   const roleCounts = layout.reduce((counts, slot) => {
     counts[slot.role] = (counts[slot.role] ?? 0) + 1;
     return counts;
@@ -1170,6 +1211,7 @@ function generateRunMap() {
     .slice(0, 4)
     .map((room) => `第${room.trialNo}难`)
     .join(" / ");
+  currentRunRouteName = `${selectedLayout.name} / ${currentRunRouteName}`;
 }
 
 function getTrialPoolPreview(limit = 5) {
@@ -1846,8 +1888,8 @@ function wallContainsBullet(bullet) {
 }
 
 function buildRoomMapPositions() {
-  const positions = { [START_ROOM_ID]: { x: 0, y: 0 } };
-  const queue = [START_ROOM_ID];
+  const positions = { [currentStartRoomId]: { x: 0, y: 0 } };
+  const queue = [currentStartRoomId];
   while (queue.length > 0) {
     const roomId = queue.shift();
     const room = ROOM_BY_ID[roomId];

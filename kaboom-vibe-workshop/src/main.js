@@ -1020,6 +1020,7 @@ let ROOM_MAP_POSITIONS = {};
 let currentStartRoomId = START_ROOM_ID;
 let currentRunSeed = 0;
 let currentRunRouteName = "";
+let currentRunLayoutName = "";
 
 let activeWalls = [];
 let gameStarted = false;
@@ -1207,11 +1208,12 @@ function generateRunMap() {
 
   ROOM_BY_ID = Object.fromEntries(ROOMS.map((room) => [room.id, room]));
   ROOM_MAP_POSITIONS = buildRoomMapPositions();
+  currentRunLayoutName = selectedLayout.name;
   currentRunRouteName = ROOMS
     .slice(0, 4)
     .map((room) => `第${room.trialNo}难`)
     .join(" / ");
-  currentRunRouteName = `${selectedLayout.name} / ${currentRunRouteName}`;
+  currentRunRouteName = `${currentRunLayoutName} / ${currentRunRouteName}`;
 }
 
 function getTrialPoolPreview(limit = 5) {
@@ -2764,6 +2766,15 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     text("", { size: 11 }),
     pos(HUD_OBJECTIVE_PANEL.x + HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 7),
     color(255, 232, 168),
+    z(HUD_TEXT_Z),
+  ]);
+
+  const routeTypeText = add([
+    text(`路线：${currentRunLayoutName || "随机路线"}`, { size: 9 }),
+    pos(HUD_OBJECTIVE_PANEL.x + HUD_OBJECTIVE_PANEL.w - HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 9),
+    anchor("topright"),
+    color(176, 204, 238),
+    opacity(0.86),
     z(HUD_TEXT_Z),
   ]);
 

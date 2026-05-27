@@ -1052,6 +1052,7 @@ let runStats = {
   defeats: 0,
   hitsTaken: 0,
   time: 0,
+  bossAmbushes: 0,
 };
 let exploredRoomIds = new Set();
 let clearedRoomIds = new Set();
@@ -2544,6 +2545,7 @@ function resetRunStats() {
     defeats: 0,
     hitsTaken: 0,
     time: 0,
+    bossAmbushes: 0,
   };
   exploredRoomIds = new Set();
   clearedRoomIds = new Set();
@@ -2576,6 +2578,10 @@ function getRunItemName() {
 function getCompactRunItemName(maxLength = 5) {
   const itemName = getRunItemName();
   return itemName.length > maxLength ? `${itemName.slice(0, maxLength)}...` : itemName;
+}
+
+function getBossAmbushLabel() {
+  return runStats.bossAmbushes > 0 ? "Boss伏击 已触发" : "Boss伏击 未触发";
 }
 
 function readBestTime() {
@@ -2997,7 +3003,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     pauseHelp.opacity = paused ? 1 : 0;
     pauseStatus.opacity = paused ? 1 : 0;
     const itemInfo = getRunItemInfo();
-    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / 攻击间隔 ${SHOT_COOLDOWN}s / ${itemInfo ? itemInfo.name : "无道具"}\n${getRunRouteSummary()}`;
+    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / ${getBossAmbushLabel()} / ${itemInfo ? itemInfo.name : "无道具"}\n${getRunRouteSummary()}`;
   }
 
   updateMuteText();
@@ -3065,6 +3071,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     if (room.type !== "final") return;
     if (ambushTriggered || roomAlreadyCleared || !(room.ambushEnemies?.length > 0)) return;
     ambushTriggered = true;
+    runStats.bossAmbushes += 1;
     room.ambushEnemies.forEach((enemyConfig) => {
       enemies.push(addRoomEnemy(enemyConfig));
     });
@@ -3847,7 +3854,7 @@ scene("complete", () => {
   addResultStatCard(width() / 2 + 6, 256, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 256, 64, 30, "清房", getClearedProgressLabel(), [190, 216, 190]);
   add([
-    text(`道具 ${getCompactRunItemName()} / ${bestPrefix} ${bestLabel}`, { size: 9 }),
+    text(`道具 ${getCompactRunItemName()} / ${getBossAmbushLabel()}`, { size: 9 }),
     pos(width() / 2, 290),
     anchor("center"),
     color(255, 235, 190),
@@ -3912,7 +3919,7 @@ scene("lose", (roomId = START_ROOM_ID) => {
   addResultStatCard(width() / 2 + 6, 254, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 254, 64, 30, "节点", `${roomIndex + 1}/${ROOMS.length}`, [236, 204, 198]);
   add([
-    text(`道具 ${getCompactRunItemName()} / R 新一轮`, { size: 9 }),
+    text(`道具 ${getCompactRunItemName()} / ${getBossAmbushLabel()}`, { size: 9 }),
     pos(width() / 2, 288),
     anchor("center"),
     color(255, 220, 190),

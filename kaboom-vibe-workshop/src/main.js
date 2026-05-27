@@ -2046,7 +2046,12 @@ function addHudChip(x, y, w, h, chipColor, outlineColor) {
 }
 
 function addMiniMap(currentRoom) {
+  const adjacentRoomIds = new Set(Object.values(currentRoom.exits ?? {}));
   const mapEntries = ROOMS
+    .filter((room) => room.id === currentRoom.id
+      || exploredRoomIds.has(room.id)
+      || clearedRoomIds.has(room.id)
+      || adjacentRoomIds.has(room.id))
     .map((room) => ({ room, mapPos: ROOM_MAP_POSITIONS[room.id] }))
     .filter((entry) => entry.mapPos);
   if (mapEntries.length === 0) return;
@@ -2073,6 +2078,8 @@ function addMiniMap(currentRoom) {
     const isCurrent = room.id === currentRoom.id;
     const isCleared = clearedRoomIds.has(room.id);
     const isExplored = exploredRoomIds.has(room.id);
+    const isAdjacent = adjacentRoomIds.has(room.id);
+    const isHiddenNeighbor = isAdjacent && !isExplored && !isCleared;
     const typeStyle = ROOM_TYPE_MAP_STYLE[room.type] ?? ROOM_TYPE_MAP_STYLE.combat;
     const tileX = originX + (mapPos.x - minX) * (tileSize + gap) - centerOffsetX;
     const tileY = originY + (mapPos.y - minY) * (tileSize + gap);
@@ -2087,11 +2094,20 @@ function addMiniMap(currentRoom) {
       rect(tileSize, tileSize),
       pos(tileX, tileY),
       color(...fill),
-      opacity(isExplored || isCurrent || isCleared ? 0.92 : 0.42),
+      opacity(isExplored || isCurrent || isCleared ? 0.92 : 0.52),
       outline(isCurrent ? 2 : 1, isCurrent ? [255, 250, 210] : typeStyle.border),
       z(HUD_TEXT_Z),
     ]);
-    if (typeStyle.mark) {
+    if (isHiddenNeighbor) {
+      add([
+        text("?", { size: 7 }),
+        pos(tileX + tileSize / 2, tileY + tileSize / 2),
+        anchor("center"),
+        color(232, 232, 210),
+        opacity(0.78),
+        z(HUD_TEXT_Z + 1),
+      ]);
+    } else if (typeStyle.mark) {
       add([
         text(typeStyle.mark, { size: 6 }),
         pos(tileX + tileSize / 2, tileY + tileSize / 2),
@@ -2112,7 +2128,7 @@ function addMiniMap(currentRoom) {
     z(HUD_TEXT_Z),
   ]);
   add([
-    text("宝=奖励 精=精英 终=终点", { size: 8 }),
+    text("?=相邻未知  宝/精/终=已识别", { size: 8 }),
     pos(HUD_RIGHT_PANEL.x + HUD_RIGHT_PANEL.w - HUD_MARGIN, footerY + 12),
     anchor("topright"),
     color(196, 198, 190),

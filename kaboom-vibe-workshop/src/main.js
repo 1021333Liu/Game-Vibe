@@ -878,6 +878,11 @@ const ROOM_TEMPLATES = [
     ],
     enemyBehavior: "flameRush",
     enemySpeedScale: 1.04,
+    ambushCue: "黄眉唤妖",
+    ambushEnemies: [
+      { x: 126, y: 248, vx: ENEMY_SPEED * 0.94, vy: -ENEMY_SPEED * 0.74 },
+      { x: 384, y: 72, vx: -ENEMY_SPEED * 0.9, vy: ENEMY_SPEED * 0.78 },
+    ],
     player: { x: 42, y: 160 },
     exits: { left: "lion-outpost" },
     walls: [
@@ -3036,6 +3041,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
 
   function triggerAmbushIfNeeded() {
+    if (room.type === "final") return false;
     if (ambushTriggered || roomAlreadyCleared || !(room.ambushEnemies?.length > 0)) return false;
 
     ambushTriggered = true;
@@ -3053,6 +3059,25 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       { frequency: 420, duration: 0.09, volume: 0.026, type: "triangle" },
     ]);
     return true;
+  }
+
+  function triggerBossAmbushIfNeeded() {
+    if (room.type !== "final") return;
+    if (ambushTriggered || roomAlreadyCleared || !(room.ambushEnemies?.length > 0)) return;
+    ambushTriggered = true;
+    room.ambushEnemies.forEach((enemyConfig) => {
+      enemies.push(addRoomEnemy(enemyConfig));
+    });
+    enemiesLeft += room.ambushEnemies.length;
+    updateStatusText();
+    feedbackText.text = room.ambushCue ?? "Boss 召唤";
+    feedbackTimer = 1.25;
+    addRoomObjectiveBanner("Boss 二阶段", "黄眉召来护法小妖", room.introColor, 2.2);
+    addScreenFlash(room.introColor, 0.18);
+    playToneSequence([
+      { frequency: 260, duration: 0.07, volume: 0.024, type: "sawtooth" },
+      { frequency: 620, duration: 0.09, volume: 0.026, type: "triangle" },
+    ]);
   }
 
   function dropTreasureRoomRewardIfNeeded() {
@@ -3644,6 +3669,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
               enemyRecord.bossPhaseWarned = true;
               enemyRecord.velocity.x *= enemyRecord.phaseSpeedScale;
               enemyRecord.velocity.y *= enemyRecord.phaseSpeedScale;
+              triggerBossAmbushIfNeeded();
               feedbackText.text = enemyRecord.phaseCue;
               feedbackTimer = 1.05;
               addRoomCue(enemyRecord.phaseCue, enemyCenterX, Math.max(58, enemyCenterY - 24), [255, 232, 118], 1.1);

@@ -2090,6 +2090,18 @@ function addMiniMap(currentRoom) {
         : isExplored
           ? [150, 176, 210]
           : [60, 64, 74];
+    if (isCurrent) {
+      const pulse = add([
+        rect(tileSize + 6, tileSize + 6),
+        pos(tileX - 3, tileY - 3),
+        color(255, 232, 150),
+        opacity(0.18),
+        outline(1, [255, 250, 210]),
+        z(HUD_TEXT_Z - 1),
+        "miniMapCurrentPulse",
+      ]);
+      pulse.phase = (tileX + tileY) * 0.03;
+    }
     add([
       rect(tileSize, tileSize),
       pos(tileX, tileY),
@@ -3388,6 +3400,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
     get("roomObjective").forEach((objective) => {
       fadeAndDestroy(objective, 0.9);
+    });
+
+    get("miniMapCurrentPulse").forEach((pulse) => {
+      pulse.opacity = 0.12 + Math.sin(runStats.time * 4 + pulse.phase) * 0.08;
     });
 
     get("boneAfterimage").forEach((ghost) => {

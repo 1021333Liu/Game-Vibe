@@ -2336,6 +2336,10 @@ function getItemEffectLabel(itemInfo) {
   return "特殊";
 }
 
+function getRunItemSummary(itemInfo = getRunItemInfo()) {
+  return itemInfo ? `${itemInfo.name}/${getItemEffectLabel(itemInfo)}` : "无道具";
+}
+
 function getTreasureChoiceItemIds(roomId) {
   const seed = [...roomId].reduce((total, char) => total + char.charCodeAt(0), 0) + runStats.defeats;
   const effects = TREASURE_CHOICE_EFFECTS
@@ -2575,7 +2579,7 @@ function getClearRank(stats) {
 }
 
 function getRunItemName() {
-  return getRunItemInfo()?.name ?? "无道具";
+  return getRunItemSummary();
 }
 
 function getCompactRunItemName(maxLength = 5) {
@@ -3015,8 +3019,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     pauseTitle.opacity = paused ? 1 : 0;
     pauseHelp.opacity = paused ? 1 : 0;
     pauseStatus.opacity = paused ? 1 : 0;
-    const itemInfo = getRunItemInfo();
-    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / ${getBossAmbushLabel()} / ${itemInfo ? itemInfo.name : "无道具"}\n${getRunRouteSummary()}`;
+    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / ${getBossAmbushLabel()} / ${getRunItemSummary()}\n${getRunRouteSummary()}`;
   }
 
   updateMuteText();

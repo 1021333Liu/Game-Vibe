@@ -2001,7 +2001,7 @@ function getOpenExitPreviewText(roomExits) {
 }
 
 function getObjectiveTitle(room, enemiesLeft, doorsOpened, isBossAmbushActive = false) {
-  if (room.type === "treasure") return "当前目标：选择宝物";
+  if (room.type === "treasure") return "当前目标：三选一宝物";
   if (doorsOpened) return room.type === "final" ? "当前目标：通关" : "当前目标：进入下一房";
   if (room.type === "final") {
     return isBossAmbushActive ? `当前目标：清掉黄眉护法 ${enemiesLeft}` : "当前目标：击破黄眉";
@@ -3127,7 +3127,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     attackChoices = choiceIds.map((itemId, index) => spawnTreasureChoiceItem(itemId, choiceX[index], rewardY, room.id));
     attackItem = attackChoices[0];
     feedbackText.text = "龙宫宝库：三选一道具";
-    addRoomObjectiveBanner("宝物房", "选一个道具，改变本局打法", [255, 214, 104], 2.8);
+    addRoomObjectiveBanner("宝物房", "三选一，只能带走一个", [255, 214, 104], 2.8);
     choiceIds.forEach((itemId, index) => {
       const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
       addRoomCue(

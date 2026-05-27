@@ -1,8 +1,8 @@
 import kaboom from "kaboom";
 import { gsap } from "gsap";
 
-const MOVE_SPEED = 150;
-const ENEMY_SPEED = 85;
+const MOVE_SPEED = 220;
+const ENEMY_SPEED = 120;
 const PLAYER_SIZE = 16;
 const ENEMY_SIZE = 18;
 const ELITE_SIZE = 28;
@@ -43,16 +43,20 @@ const FLAME_ACTIVE_TIME = 0.72;
 const FLAME_REST_TIME = 2.15;
 const BONE_AFTERIMAGE_LIFETIME = 0.9;
 const BEST_TIME_KEY = "game-vibe-best-time";
-const SCREEN_WIDTH = 480;
-const SCREEN_HEIGHT = 320;
+const TEMPLATE_WIDTH = 480;
+const TEMPLATE_HEIGHT = 320;
+const SCREEN_WIDTH = 960;
+const SCREEN_HEIGHT = 540;
+const ROOM_SCALE_X = SCREEN_WIDTH / TEMPLATE_WIDTH;
+const ROOM_SCALE_Y = SCREEN_HEIGHT / TEMPLATE_HEIGHT;
 const START_ROOM_ID = "flame-mountain";
 const HUD_Z = 900;
 const HUD_TEXT_Z = HUD_Z + 1;
 const HUD_MARGIN = 8;
 const HUD_PANEL_OPACITY = 0.46;
-const HUD_LEFT_PANEL = { x: 8, y: 8, w: 300, h: 84 };
-const HUD_RIGHT_PANEL = { x: 328, y: 8, w: 144, h: 120 };
-const HUD_FEEDBACK_PANEL = { x: 104, y: 288, w: 272, h: 24 };
+const HUD_LEFT_PANEL = { x: 14, y: 12, w: 420, h: 92 };
+const HUD_RIGHT_PANEL = { x: SCREEN_WIDTH - 182, y: 12, w: 168, h: 136 };
+const HUD_FEEDBACK_PANEL = { x: 276, y: SCREEN_HEIGHT - 38, w: 408, h: 28 };
 
 const RUN_ITEM_INFO = {
   cloneHair: {
@@ -120,11 +124,11 @@ const RUN_ITEM_INFO = {
   },
   cloudBoots: {
     name: "踏云履",
-    hud: "踏云履 / 抵挡一次",
-    cue: "踏云避劫",
-    pickup: "拾取踏云履：抵挡一次伤害",
+    hud: "踏云履 / 移速提升",
+    cue: "步履生云",
+    pickup: "拾取踏云履：移动更快",
     color: [182, 232, 255],
-    effect: "shield",
+    effect: "speed",
     sprite: "windPearl",
   },
   moonMirror: {
@@ -319,7 +323,7 @@ const RUN_ITEM_INFO = {
 };
 
 const RUN_ITEM_IDS = Object.keys(RUN_ITEM_INFO);
-const TREASURE_CHOICE_EFFECTS = ["double", "shield", "fan"];
+const TREASURE_CHOICE_EFFECTS = ["double", "shield", "fan", "speed"];
 
 const DOOR_POSITIONS = {
   up: { x: SCREEN_WIDTH / 2 - DOOR_SIZE / 2, y: 8 },
@@ -972,7 +976,67 @@ let audioContext = null;
 let isMuted = false;
 
 function cloneRoomConfig(room) {
-  return JSON.parse(JSON.stringify(room));
+  return scaleRoomConfig(JSON.parse(JSON.stringify(room)));
+}
+
+function scaleX(value) {
+  return Math.round(value * ROOM_SCALE_X);
+}
+
+function scaleY(value) {
+  return Math.round(value * ROOM_SCALE_Y);
+}
+
+function scaleW(value) {
+  return Math.max(1, Math.round(value * ROOM_SCALE_X));
+}
+
+function scaleH(value) {
+  return Math.max(1, Math.round(value * ROOM_SCALE_Y));
+}
+
+function scalePoint(point) {
+  return point ? { ...point, x: scaleX(point.x), y: scaleY(point.y) } : point;
+}
+
+function scaleRectLike(shape) {
+  return shape
+    ? {
+        ...shape,
+        x: scaleX(shape.x),
+        y: scaleY(shape.y),
+        w: scaleW(shape.w),
+        h: scaleH(shape.h),
+      }
+    : shape;
+}
+
+function scaleEnemyConfig(enemy) {
+  return {
+    ...enemy,
+    x: scaleX(enemy.x),
+    y: scaleY(enemy.y),
+  };
+}
+
+function scalePointMap(pointMap) {
+  if (!pointMap) return pointMap;
+  return Object.fromEntries(
+    Object.entries(pointMap).map(([key, point]) => [key, scalePoint(point)]),
+  );
+}
+
+function scaleRoomConfig(room) {
+  room.player = scalePoint(room.player);
+  room.decor = (room.decor ?? []).map(scaleRectLike);
+  room.walls = (room.walls ?? []).map(scaleRectLike);
+  room.slowZones = (room.slowZones ?? []).map(scaleRectLike);
+  room.flameZones = (room.flameZones ?? []).map(scaleRectLike);
+  room.enemies = (room.enemies ?? []).map(scaleEnemyConfig);
+  room.ambushEnemies = (room.ambushEnemies ?? []).map(scaleEnemyConfig);
+  room.exitPositions = scalePointMap(room.exitPositions);
+  room.entrySpawns = scalePointMap(room.entrySpawns);
+  return room;
 }
 
 function shuffled(items) {
@@ -1123,8 +1187,8 @@ const {
   isKeyDown,
   loadSprite,
 } = kaboom({
-  width: 480,
-  height: 320,
+  width: SCREEN_WIDTH,
+  height: SCREEN_HEIGHT,
   scale: 2,
   crisp: true,
   global: false,
@@ -1151,6 +1215,11 @@ style.textContent = `
 
   canvas {
     display: block;
+    width: min(100vw, 1920px);
+    height: min(100vh, 1080px);
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
     box-shadow: 0 18px 42px rgba(0, 0, 0, 0.46);
     image-rendering: pixelated;
   }
@@ -1820,6 +1889,11 @@ function getSuggestedExitText(roomExits) {
   return `建议：${directionLabel}->${targetRoom.name}`;
 }
 
+function getOpenExitPreviewText(roomExits) {
+  const suggestedExitText = getSuggestedExitText(roomExits);
+  return suggestedExitText ? `${suggestedExitText} / 其余看门名` : getExitPreviewText(roomExits, true);
+}
+
 function getDoorLabelPosition(exit) {
   const centerX = exit.x + DOOR_SIZE / 2;
   const centerY = exit.y + DOOR_SIZE / 2;
@@ -1874,9 +1948,9 @@ function addMiniMap(currentRoom) {
   if (mapEntries.length === 0) return;
 
   const originX = HUD_RIGHT_PANEL.x + HUD_RIGHT_PANEL.w / 2;
-  const originY = HUD_RIGHT_PANEL.y + 48;
-  const tileSize = 9;
-  const gap = 4;
+  const originY = HUD_RIGHT_PANEL.y + 54;
+  const tileSize = 10;
+  const gap = 5;
   const minX = Math.min(...mapEntries.map((entry) => entry.mapPos.x));
   const maxX = Math.max(...mapEntries.map((entry) => entry.mapPos.x));
   const minY = Math.min(...mapEntries.map((entry) => entry.mapPos.y));
@@ -2080,7 +2154,12 @@ function getRunItemInfo(itemId = runItem) {
 
 function getTreasureChoiceItemIds(roomId) {
   const seed = [...roomId].reduce((total, char) => total + char.charCodeAt(0), 0) + runStats.defeats;
-  return TREASURE_CHOICE_EFFECTS.map((effect, effectIndex) => {
+  const effects = TREASURE_CHOICE_EFFECTS
+    .map((effect, index) => ({ effect, sortKey: (seed + index * 17) % 97 }))
+    .sort((a, b) => a.sortKey - b.sortKey)
+    .slice(0, 3)
+    .map((entry) => entry.effect);
+  return effects.map((effect, effectIndex) => {
     const candidates = RUN_ITEM_IDS.filter((itemId) => RUN_ITEM_INFO[itemId].effect === effect);
     return candidates[(seed + effectIndex * 3) % candidates.length] ?? candidates[0];
   });
@@ -2427,8 +2506,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   addHudChip(HUD_LEFT_PANEL.x + 106, HUD_LEFT_PANEL.y + 24, 54, 18, [28, 48, 72], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 166, HUD_LEFT_PANEL.y + 24, 54, 18, [42, 72, 48], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 226, HUD_LEFT_PANEL.y + 24, 66, 18, [72, 58, 28], room.wallOutline);
-  addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 48, 92, 18, [54, 48, 78], room.wallOutline);
-  addHudChip(HUD_LEFT_PANEL.x + 106, HUD_LEFT_PANEL.y + 48, 186, 18, [42, 50, 52], room.wallOutline);
+  addHudChip(HUD_LEFT_PANEL.x + 298, HUD_LEFT_PANEL.y + 24, 104, 18, [54, 48, 78], room.wallOutline);
+  addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 50, 394, 18, [42, 50, 52], room.wallOutline);
 
   add([
     text(`${getRoomTrialLabel(room)} ${roomProgress}：方向键射击`, { size: 13 }),
@@ -2474,7 +2553,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   add([
     text(room.mechanicHint, { size: 10 }),
-    pos(HUD_LEFT_PANEL.x + 112, HUD_LEFT_PANEL.y + 53),
+    pos(HUD_LEFT_PANEL.x + 122, HUD_LEFT_PANEL.y + 55),
     color(214, 210, 198),
     z(HUD_TEXT_Z),
   ]);
@@ -2507,7 +2586,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const itemText = add([
     text("", { size: 10 }),
-    pos(HUD_LEFT_PANEL.x + 14, HUD_LEFT_PANEL.y + 53),
+    pos(HUD_LEFT_PANEL.x + 14, HUD_LEFT_PANEL.y + 55),
     color(214, 210, 198),
     z(HUD_TEXT_Z),
   ]);
@@ -2636,8 +2715,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const doorStatus = doorsOpened ? "已开" : "未开";
     statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌 ${enemiesLeft} / 门 ${doorStatus}`;
     clearProgressText.text = `清房 ${getClearedProgressLabel()}`;
-    const suggestedExitText = doorsOpened ? getSuggestedExitText(roomExits) : "";
-    exitPreviewText.text = [getExitPreviewText(roomExits, doorsOpened), suggestedExitText].filter(Boolean).join("\n");
+    exitPreviewText.text = doorsOpened ? getOpenExitPreviewText(roomExits) : getExitPreviewText(roomExits, false);
     exitPreviewText.color = doorsOpened ? [156, 244, 176] : [198, 226, 210];
   }
 
@@ -3137,7 +3215,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     if (ended) return;
 
     const inSlowZone = (room.slowZones ?? []).some((zone) => rectsOverlap(playerRect, zone));
-    const sp = inSlowZone ? MOVE_SPEED * QUICKSAND_SPEED_SCALE : MOVE_SPEED;
+    const speedItemScale = getRunItemInfo()?.effect === "speed" ? 1.18 : 1;
+    const sp = (inSlowZone ? MOVE_SPEED * QUICKSAND_SPEED_SCALE : MOVE_SPEED) * speedItemScale;
     let dx = 0;
     let dy = 0;
     if (isKeyDown("a")) dx -= sp;

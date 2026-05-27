@@ -1932,6 +1932,13 @@ function getOpenExitPreviewText(roomExits) {
   return suggestedExitText ? `${suggestedExitText} / 其余看门名` : getExitPreviewText(roomExits, true);
 }
 
+function getObjectiveTitle(room, enemiesLeft, doorsOpened) {
+  if (room.type === "treasure") return "当前目标：选择宝物";
+  if (doorsOpened) return room.type === "final" ? "当前目标：通关" : "当前目标：进入下一房";
+  if (enemiesLeft > 0) return `当前目标：清掉妖怪 ${enemiesLeft}`;
+  return "当前目标：等待开门";
+}
+
 function getDoorLabelPosition(exit) {
   const centerX = exit.x + DOOR_SIZE / 2;
   const centerY = exit.y + DOOR_SIZE / 2;
@@ -2711,9 +2718,16 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     z(HUD_TEXT_Z),
   ]);
 
+  const objectiveTitleText = add([
+    text("", { size: 11 }),
+    pos(HUD_OBJECTIVE_PANEL.x + HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 7),
+    color(255, 232, 168),
+    z(HUD_TEXT_Z),
+  ]);
+
   const exitPreviewText = add([
     text(getExitPreviewText(roomExits, false), { size: 10 }),
-    pos(HUD_OBJECTIVE_PANEL.x + HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 8),
+    pos(HUD_OBJECTIVE_PANEL.x + HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 26),
     color(198, 226, 210),
     opacity(0.82),
     z(HUD_TEXT_Z),
@@ -2837,6 +2851,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const doorStatus = doorsOpened ? "已开" : "未开";
     statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌 ${enemiesLeft} / 门 ${doorStatus}`;
     clearProgressText.text = `清房 ${getClearedProgressLabel()}`;
+    objectiveTitleText.text = getObjectiveTitle(room, enemiesLeft, doorsOpened);
+    objectiveTitleText.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
     exitPreviewText.text = doorsOpened ? getOpenExitPreviewText(roomExits) : getExitPreviewText(roomExits, false);
     exitPreviewText.color = doorsOpened ? [156, 244, 176] : [198, 226, 210];
   }

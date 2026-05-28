@@ -38,6 +38,8 @@ const ELITE_ROAR_SPEED_SCALE = 1.28;
 const PLAYER_HIT_FLASH_LIFETIME = 0.32;
 const ROOM_CUE_LIFETIME = 1.25;
 const QUICKSAND_SPEED_SCALE = 0.58;
+const ENEMY_BIND_TIME = 0.42;
+const ENEMY_BIND_SPEED_SCALE = 0.24;
 const SEALED_DOOR_HINT_DISTANCE = 42;
 const SEALED_DOOR_HINT_COOLDOWN = 0.9;
 const SEALED_DOOR_FADE_TIME = 0.55;
@@ -347,10 +349,19 @@ const RUN_ITEM_INFO = {
     effect: "pierce",
     sprite: "cloneHair",
   },
+  bindingHoop: {
+    name: "紧箍咒",
+    hud: "紧箍咒 / 命中缓速",
+    cue: "定身咒起",
+    pickup: "拾取紧箍咒：命中精英会短暂压住身形",
+    color: [255, 232, 126],
+    effect: "bind",
+    sprite: "windPearl",
+  },
 };
 
 const RUN_ITEM_IDS = Object.keys(RUN_ITEM_INFO);
-const TREASURE_CHOICE_EFFECTS = ["double", "shield", "fan", "speed", "pierce"];
+const TREASURE_CHOICE_EFFECTS = ["double", "shield", "fan", "speed", "pierce", "bind"];
 
 const DOOR_POSITIONS = {
   up: { x: SCREEN_WIDTH / 2 - DOOR_SIZE / 2, y: 8 },
@@ -1054,11 +1065,13 @@ let runStats = {
   hitsTaken: 0,
   time: 0,
   bossAmbushes: 0,
+  eliteAffixes: 0,
 };
 let exploredRoomIds = new Set();
 let clearedRoomIds = new Set();
 let rewardedRoomIds = new Set();
 let itemRewardedRoomIds = new Set();
+let countedEliteAffixRoomIds = new Set();
 let runItem = null;
 let audioContext = null;
 let isMuted = false;
@@ -1196,6 +1209,8 @@ function addRouteEliteAffix(room, slotIndex, eliteIndex) {
     if (ambushEnemies.length > 0) {
       room.ambushEnemies = [...(room.ambushEnemies ?? []), ...ambushEnemies];
       room.ambushCue = room.ambushCue ?? "劫难伏兵";
+      room.eliteAffixLabel = "伏兵";
+      room.eliteAffixText = "精英倒下后会追加小妖伏击";
       room.mechanicHint = "机制：精英倒下后有一次伏兵 / P 暂停";
       room.clearNote = "伏兵已破，劫难留痕";
     }
@@ -1206,6 +1221,8 @@ function addRouteEliteAffix(room, slotIndex, eliteIndex) {
     room.enemyHitReaction = "counterRush";
     room.hitBoostTime = room.hitBoostTime ?? 0.52;
     room.hitBoostScale = room.hitBoostScale ?? 1.32;
+    room.eliteAffixLabel = "反冲";
+    room.eliteAffixText = "击中精英后会短暂提高压迫速度";
     room.mechanicHint = "机制：击中精英会短暂反冲 / P 暂停";
     room.clearNote = "反冲已止，去路复开";
     return;
@@ -1220,6 +1237,8 @@ function addRouteEliteAffix(room, slotIndex, eliteIndex) {
         }
       : enemy
   ));
+  room.eliteAffixLabel = "半血急袭";
+  room.eliteAffixText = "首个精英半血后会进入加速阶段";
   room.mechanicHint = "机制：首个精英半血会加速 / P 暂停";
   room.clearNote = "精英阶段已压住";
 }
@@ -1327,6 +1346,12 @@ function getRouteHudLabel(room) {
 
 function getRouteHudColor(room) {
   return getUnexploredExitCount(room) > 0 ? [255, 232, 150] : [176, 204, 238];
+}
+
+function getRoomAffixLabel(room) {
+  if (room.eliteAffixLabel) return `词缀 ${room.eliteAffixLabel}`;
+  if ((room.enemies ?? []).some((enemy) => enemy.pressure)) return "词缀 压迫";
+  return "";
 }
 
 const {
@@ -2424,6 +2449,7 @@ function getItemEffectLabel(itemInfo) {
   if (itemInfo.effect === "shield") return "护身";
   if (itemInfo.effect === "speed") return "移速";
   if (itemInfo.effect === "pierce") return "穿透";
+  if (itemInfo.effect === "bind") return "缓速";
   return "特殊";
 }
 
@@ -2649,11 +2675,13 @@ function resetRunStats() {
     hitsTaken: 0,
     time: 0,
     bossAmbushes: 0,
+    eliteAffixes: 0,
   };
   exploredRoomIds = new Set();
   clearedRoomIds = new Set();
   rewardedRoomIds = new Set();
   itemRewardedRoomIds = new Set();
+  countedEliteAffixRoomIds = new Set();
   runItem = null;
 }
 
@@ -2689,6 +2717,14 @@ function getBossAmbushLabel() {
 
 function getCompactBossAmbushLabel() {
   return runStats.bossAmbushes > 0 ? "伏击已触发" : "伏击未触发";
+}
+
+function getEliteAffixLabel() {
+  return runStats.eliteAffixes > 0 ? `精英词缀 ${runStats.eliteAffixes}` : "精英词缀 0";
+}
+
+function getCompactEliteAffixLabel() {
+  return runStats.eliteAffixes > 0 ? `词缀${runStats.eliteAffixes}` : "词缀0";
 }
 
 function readBestTime() {
@@ -2827,6 +2863,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       trailTimer: (enemyConfig.x % 3) * 0.04,
       hitBoostTimer: 0,
       hitBoostScale: 1,
+      bindTimer: 0,
       eliteTimer: enemyConfig.hp > 1 ? ELITE_ROAR_INTERVAL * 0.72 : 0,
       eliteState: "idle",
       phaseCue: enemyConfig.phaseCue,
@@ -2858,7 +2895,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     z(HUD_Z),
   ]);
   add([
-    rect(86, 16),
+    rect(86, 32),
     pos(HUD_OBJECTIVE_PANEL.x + HUD_OBJECTIVE_PANEL.w - 98, HUD_OBJECTIVE_PANEL.y + 5),
     color(24, 28, 34),
     opacity(0.5),
@@ -2970,6 +3007,15 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     z(HUD_TEXT_Z),
   ]);
 
+  const affixText = add([
+    text(getRoomAffixLabel(room), { size: 8 }),
+    pos(HUD_OBJECTIVE_PANEL.x + HUD_OBJECTIVE_PANEL.w - HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 24),
+    anchor("topright"),
+    color(255, 204, 150),
+    opacity(getRoomAffixLabel(room) ? 0.88 : 0),
+    z(HUD_TEXT_Z),
+  ]);
+
   const exitPreviewText = add([
     text(getExitPreviewText(roomExits, false), { size: 10 }),
     pos(HUD_OBJECTIVE_PANEL.x + HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 26),
@@ -3006,7 +3052,13 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     addRoomObjectiveBanner("侧翼来袭", "边角妖怪会压缩走位空间", room.introColor, 2.2);
   }
   if (!roomAlreadyCleared && room.type === "elite") {
-    addRoomObjectiveBanner("精英房", "多段血量，稳住点射节奏", room.introColor, 2.2);
+    const affixTitle = room.eliteAffixLabel ? `精英房：${room.eliteAffixLabel}` : "精英房";
+    const affixDescription = room.eliteAffixText ?? "多段血量，稳住点射节奏";
+    if (room.eliteAffixLabel && !countedEliteAffixRoomIds.has(room.id)) {
+      countedEliteAffixRoomIds.add(room.id);
+      runStats.eliteAffixes += 1;
+    }
+    addRoomObjectiveBanner(affixTitle, affixDescription, room.introColor, 2.2);
   }
   if (!roomAlreadyCleared && room.type === "final") {
     addRoomObjectiveBanner("Boss 房", "黄眉半血会进入二阶段", room.introColor, 2.4);
@@ -3106,6 +3158,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     objectiveTitleText.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
     routeTypeText.text = getRouteHudLabel(room);
     routeTypeText.color = getRouteHudColor(room);
+    affixText.text = getRoomAffixLabel(room);
+    affixText.opacity = affixText.text ? 0.88 : 0;
     exitPreviewText.text = doorsOpened ? getOpenExitPreviewText(roomExits) : getExitPreviewText(roomExits, false);
     exitPreviewText.color = doorsOpened ? [156, 244, 176] : [198, 226, 210];
   }
@@ -3139,7 +3193,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     pauseTitle.opacity = paused ? 1 : 0;
     pauseHelp.opacity = paused ? 1 : 0;
     pauseStatus.opacity = paused ? 1 : 0;
-    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / ${getBossAmbushLabel()} / ${getRunItemSummary()}\n${getRunRouteSummary()}`;
+    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / ${getBossAmbushLabel()} / ${getEliteAffixLabel()} / ${getRunItemSummary()}\n${getRunRouteSummary()}`;
   }
 
   updateMuteText();
@@ -3692,6 +3746,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       const enemySize = enemy.size ?? ENEMY_SIZE;
       enemy.trailTimer = Math.max(0, enemy.trailTimer - dt());
       enemy.hitBoostTimer = Math.max(0, enemy.hitBoostTimer - dt());
+      enemy.bindTimer = Math.max(0, enemy.bindTimer - dt());
       if ((enemy.body.maxHp ?? 1) > 1) {
         enemy.eliteTimer -= dt();
         if (enemy.eliteState === "idle" && enemy.eliteTimer <= 0) {
@@ -3740,6 +3795,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       if (enemy.hitBoostTimer > 0) {
         moveX *= enemy.hitBoostScale;
         moveY *= enemy.hitBoostScale;
+      }
+      if (enemy.bindTimer > 0) {
+        moveX *= ENEMY_BIND_SPEED_SCALE;
+        moveY *= ENEMY_BIND_SPEED_SCALE;
       }
 
       const hitX = moveOnAxis(enemy.body, moveX, 0, enemySize);
@@ -3800,6 +3859,12 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
             destroy(bullet);
           }
           if (enemy.hp > 0) {
+            if (getRunItemInfo()?.effect === "bind" && enemyRecord && enemy.maxHp > 1) {
+              enemyRecord.bindTimer = ENEMY_BIND_TIME;
+              feedbackText.text = "紧箍咒：精英缓速";
+              feedbackTimer = 0.8;
+              addRoomCue("定身", enemyCenterX, Math.max(58, enemyCenterY - 18), [255, 232, 126], 0.5);
+            }
             if (room.enemyHitReaction === "counterRush" && enemyRecord) {
               enemyRecord.velocity.x *= -1;
               enemyRecord.velocity.y *= -1;
@@ -3993,7 +4058,7 @@ scene("complete", () => {
   addResultStatCard(width() / 2 + 6, 256, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 256, 64, 30, "清房", getClearedPercentLabel(), [190, 216, 190]);
   add([
-    text(`道具 ${getCompactRunItemName()} / ${getCompactBossAmbushLabel()}`, { size: 9 }),
+    text(`道具 ${getCompactRunItemName()} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}`, { size: 9 }),
     pos(width() / 2, 290),
     anchor("center"),
     color(255, 235, 190),
@@ -4058,7 +4123,7 @@ scene("lose", (roomId = START_ROOM_ID) => {
   addResultStatCard(width() / 2 + 6, 254, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 254, 64, 30, "路线", currentRunLayoutName || "随机", [236, 204, 198]);
   add([
-    text(`道具 ${getCompactRunItemName()} / ${getCompactBossAmbushLabel()}`, { size: 9 }),
+    text(`道具 ${getCompactRunItemName()} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}`, { size: 9 }),
     pos(width() / 2, 288),
     anchor("center"),
     color(255, 220, 190),

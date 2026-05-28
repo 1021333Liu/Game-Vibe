@@ -2959,6 +2959,14 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       outline(1, [255, 116, 58]),
       "flameHazard",
     ]);
+    const warningLabel = add([
+      text("避火", { size: 10 }),
+      pos(zone.x + zone.w / 2, zone.y + zone.h / 2),
+      anchor("center"),
+      color(255, 238, 170),
+      opacity(0),
+      "flameHazard",
+    ]);
     const fireMarker = add([
       rect(zone.w, zone.h),
       pos(zone.x, zone.y),
@@ -2970,6 +2978,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     return {
       ...zone,
       warningMarker,
+      warningLabel,
       fireMarker,
       timer: zone.phase,
       active: false,
@@ -3889,16 +3898,20 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       hazard.timer = (hazard.timer + dt()) % cycleLength;
       hazard.active = hazard.timer >= FLAME_WARNING_TIME && hazard.timer < FLAME_WARNING_TIME + FLAME_ACTIVE_TIME;
       if (hazard.timer < FLAME_WARNING_TIME) {
-        hazard.warningMarker.opacity = 0.18 + Math.floor(hazard.timer * 8) % 2 * 0.18;
+        const warningPulse = 0.18 + Math.floor(hazard.timer * 8) % 2 * 0.18;
+        hazard.warningMarker.opacity = warningPulse;
+        hazard.warningLabel.opacity = 0.58 + warningPulse;
         hazard.fireMarker.opacity = 0;
       } else if (hazard.active) {
         hazard.warningMarker.opacity = 0;
+        hazard.warningLabel.opacity = 0;
         hazard.fireMarker.opacity = 0.64;
         if (rectsOverlap(playerRect, hazard)) {
           hurtPlayer(hazard.x + hazard.w / 2, hazard.y + hazard.h / 2, "灼伤 -1");
         }
       } else {
         hazard.warningMarker.opacity = 0;
+        hazard.warningLabel.opacity = 0;
         hazard.fireMarker.opacity = 0;
       }
     });

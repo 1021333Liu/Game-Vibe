@@ -3472,16 +3472,6 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     attackItem = attackChoices[0];
     feedbackText.text = "龙宫宝库：三选一道具";
     addRoomObjectiveBanner("宝物房", "三选一，只能带走一个", [255, 214, 104], 2.8);
-    choiceIds.forEach((itemId, index) => {
-      const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
-      addRoomCue(
-        `${itemInfo.name} / ${getItemEffectLabel(itemInfo)}`,
-        choiceX[index] + ATTACK_ITEM_SIZE / 2,
-        Math.max(58, rewardY - 12),
-        itemInfo.color,
-        1.6,
-      );
-    });
     playTone(880, 0.08, 0.02, "triangle");
   }
 
@@ -3537,7 +3527,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       addRoomCue(room.clearNote, width() / 2, Math.max(58, height() / 2 - 52), room.introColor, 1.8);
     }
     const suggestedExit = getSuggestedExit(roomExits);
-    if (suggestedExit) {
+    if (isTreasureRoom) {
+      feedbackText.text = "宝物房：选宝后看门离开";
+      feedbackTimer = 1.2;
+    } else if (suggestedExit) {
       const targetRoom = getRoomById(suggestedExit.targetId);
       addRoomObjectiveBanner(
         `推荐出口：${DIRECTION_LABELS[suggestedExit.direction] ?? suggestedExit.direction}`,
@@ -3550,8 +3543,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     roomExits.forEach((exit) => {
       const isSuggested = suggestedExit && exit.targetId === suggestedExit.targetId;
       const cueText = isSuggested ? `推荐 ${DIRECTION_LABELS[exit.direction] ?? exit.direction}` : doorCue;
-      addRoomCue(cueText, exit.x + DOOR_SIZE / 2, Math.max(58, exit.y - 14), isSuggested ? [255, 232, 118] : [120, 255, 150]);
-      addHitBurst(exit.x + DOOR_SIZE / 2, exit.y + DOOR_SIZE / 2, [118, 255, 142]);
+      if (!isTreasureRoom) {
+        addRoomCue(cueText, exit.x + DOOR_SIZE / 2, Math.max(58, exit.y - 14), isSuggested ? [255, 232, 118] : [120, 255, 150]);
+        addHitBurst(exit.x + DOOR_SIZE / 2, exit.y + DOOR_SIZE / 2, [118, 255, 142]);
+      }
       const labelPos = getDoorLabelPosition(exit);
       const targetRoom = getRoomById(exit.targetId);
       const labelBoxPos = getDoorLabelBoxPosition(exit, labelPos);

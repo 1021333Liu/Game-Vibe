@@ -31,6 +31,7 @@ const ROOM_OBJECTIVE_LIFETIME = 2.4;
 const BONE_TRACKING_STRENGTH = 18;
 const SAND_DRIFT_STRENGTH = 24;
 const ENEMY_TRAIL_INTERVAL = 0.16;
+const SAND_DRIFT_TRAIL_INTERVAL = 0.34;
 const ELITE_ROAR_INTERVAL = 3.4;
 const ELITE_ROAR_WARN_TIME = 0.55;
 const ELITE_ROAR_RUSH_TIME = 0.95;
@@ -40,6 +41,7 @@ const ROOM_CUE_LIFETIME = 1.25;
 const QUICKSAND_SPEED_SCALE = 0.58;
 const ENEMY_BIND_TIME = 0.42;
 const ENEMY_BIND_SPEED_SCALE = 0.24;
+const ENEMY_BIND_SPARK_INTERVAL = 0.18;
 const SEALED_DOOR_HINT_DISTANCE = 42;
 const SEALED_DOOR_HINT_COOLDOWN = 0.9;
 const SEALED_DOOR_FADE_TIME = 0.55;
@@ -2630,8 +2632,7 @@ function addEnemyMotionCue(enemy, room) {
     return;
   }
   if (room.enemyBehavior === "sandDrift") {
-    addHitSpark(centerX - 9, centerY + Math.sin(enemy.phase) * 4, { x: -18, y: 4 }, [210, 176, 104], 4);
-    addHitSpark(centerX + 9, centerY - Math.sin(enemy.phase) * 4, { x: 18, y: -4 }, [236, 204, 130], 3);
+    addHitSpark(centerX - 7, centerY + Math.sin(enemy.phase) * 4, { x: -12, y: 3 }, [210, 176, 104], 3);
   }
 }
 
@@ -3879,7 +3880,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
             [255, 232, 126],
             5,
           );
-          enemy.bindSparkTimer = 0.08;
+          enemy.bindSparkTimer = ENEMY_BIND_SPARK_INTERVAL;
         }
       }
 
@@ -3893,7 +3894,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       }
       if (enemy.trailTimer <= 0) {
         addEnemyMotionCue(enemy, room);
-        enemy.trailTimer = ENEMY_TRAIL_INTERVAL;
+        enemy.trailTimer = room.enemyBehavior === "sandDrift" ? SAND_DRIFT_TRAIL_INTERVAL : ENEMY_TRAIL_INTERVAL;
       }
       updateEliteHealthBar(enemy);
     });

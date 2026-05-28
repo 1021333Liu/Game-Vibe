@@ -65,6 +65,7 @@ const DOOR_LABEL_FONT_SIZE = 11;
 const DOOR_LABEL_BOX_WIDTH = 106;
 const DOOR_LABEL_BOX_HEIGHT = 34;
 const WIDESCREEN_PRESSURE_ENEMY_SIZE = ENEMY_SIZE;
+const ROUTE_ELITE_AFFIX_AMBUSH_SIZE = ELITE_SIZE - 4;
 
 const RUN_ITEM_INFO = {
   cloneHair: {
@@ -1175,6 +1176,54 @@ function addWidescreenPressureEnemy(room, slotIndex) {
   });
 }
 
+function addRouteEliteAffix(room, slotIndex, eliteIndex) {
+  if (room.type !== "elite" || eliteIndex === 0) return;
+
+  const affixIndex = (currentRunSeed + slotIndex + eliteIndex * 5) % 3;
+  if (affixIndex === 0) {
+    const ambushSpawns = [
+      { x: 74, y: 82, vx: ENEMY_SPEED * 0.9, vy: ENEMY_SPEED * 0.72 },
+      { x: SCREEN_WIDTH - 110, y: SCREEN_HEIGHT - 112, vx: -ENEMY_SPEED * 0.88, vy: -ENEMY_SPEED * 0.74 },
+    ];
+    const ambushEnemies = ambushSpawns
+      .filter((spawn) => !isSpawnBlocked(room, spawn, ROUTE_ELITE_AFFIX_AMBUSH_SIZE))
+      .map((spawn) => ({
+        ...spawn,
+        hp: 2,
+        size: ROUTE_ELITE_AFFIX_AMBUSH_SIZE,
+        sprite: room.enemySprite,
+      }));
+    if (ambushEnemies.length > 0) {
+      room.ambushEnemies = [...(room.ambushEnemies ?? []), ...ambushEnemies];
+      room.ambushCue = room.ambushCue ?? "劫难伏兵";
+      room.mechanicHint = "机制：精英倒下后有一次伏兵 / P 暂停";
+      room.clearNote = "伏兵已破，劫难留痕";
+    }
+    return;
+  }
+
+  if (affixIndex === 1) {
+    room.enemyHitReaction = "counterRush";
+    room.hitBoostTime = room.hitBoostTime ?? 0.52;
+    room.hitBoostScale = room.hitBoostScale ?? 1.32;
+    room.mechanicHint = "机制：击中精英会短暂反冲 / P 暂停";
+    room.clearNote = "反冲已止，去路复开";
+    return;
+  }
+
+  room.enemies = (room.enemies ?? []).map((enemy, enemyIndex) => (
+    enemy.hp > 1 && enemyIndex === 0
+      ? {
+          ...enemy,
+          phaseCue: enemy.phaseCue ?? "劫火转急",
+          phaseSpeedScale: Math.max(enemy.phaseSpeedScale ?? 1, 1.16),
+        }
+      : enemy
+  ));
+  room.mechanicHint = "机制：首个精英半血会加速 / P 暂停";
+  room.clearNote = "精英阶段已压住";
+}
+
 function resetStartMenuRoutePreview() {
   const dashboard = document.querySelector(".start-dashboard");
   if (dashboard) dashboard.remove();
@@ -1198,6 +1247,7 @@ function generateRunMap() {
     Object.entries(roleCounts).map(([role, count]) => [role, takeCycling(getTrialPool(role), count)]),
   );
   const roleIndex = {};
+  let eliteIndex = 0;
 
   ROOMS = layout.map((slot, slotIndex) => {
     const index = roleIndex[slot.role] ?? 0;
@@ -1221,6 +1271,8 @@ function generateRunMap() {
     }
     if (slot.role === "elite") {
       room.rewardItemId = getRandomItemId(slotIndex * 7 + trial.trialNo);
+      addRouteEliteAffix(room, slotIndex, eliteIndex);
+      eliteIndex += 1;
     }
     if (slot.role === "final") {
       room.mechanicHint = "机制：Boss 房，击破首领即可通关 / P 暂停";
@@ -2080,13 +2132,30 @@ function addHudPanel(panel, panelColor = [12, 14, 22], outlineColor = [82, 88, 1
 }
 
 function addHudChip(x, y, w, h, chipColor, outlineColor) {
-  add([
+  const objectiveAccent = add([
     rect(w, h),
     pos(x, y),
     color(...chipColor),
     opacity(0.34),
     outline(1, outlineColor),
     z(HUD_Z),
+  ]);
+}
+
+function addMiniMapLegendItem(x, y, swatchColor, outlineColor, label) {
+  add([
+    rect(7, 7),
+    pos(x, y + 1),
+    color(...swatchColor),
+    opacity(0.9),
+    outline(1, outlineColor),
+    z(HUD_TEXT_Z),
+  ]);
+  add([
+    text(label, { size: 7 }),
+    pos(x + 11, y),
+    color(202, 204, 196),
+    z(HUD_TEXT_Z),
   ]);
 }
 
@@ -2176,7 +2245,12 @@ function addMiniMap(currentRoom) {
     }
   });
 
-  const footerY = originY + (maxY - minY + 1) * (tileSize + gap) + 6;
+  const legendX = HUD_RIGHT_PANEL.x + 12;
+  const legendY = HUD_RIGHT_PANEL.y + HUD_RIGHT_PANEL.h - 35;
+  const footerY = Math.min(
+    originY + (maxY - minY + 1) * (tileSize + gap) + 6,
+    legendY - 14,
+  );
   add([
     text(`出口 ${getExitLabel(currentRoom)}`, { size: 9 }),
     pos(HUD_RIGHT_PANEL.x + HUD_RIGHT_PANEL.w - HUD_MARGIN, footerY),
@@ -2184,13 +2258,12 @@ function addMiniMap(currentRoom) {
     color(204, 206, 198),
     z(HUD_TEXT_Z),
   ]);
-  add([
-    text("?=相邻未知  宝/精/终=已识别", { size: 8 }),
-    pos(HUD_RIGHT_PANEL.x + HUD_RIGHT_PANEL.w - HUD_MARGIN, footerY + 12),
-    anchor("topright"),
-    color(196, 198, 190),
-    z(HUD_TEXT_Z),
-  ]);
+  addMiniMapLegendItem(legendX, legendY, [255, 232, 150], [255, 250, 210], "当前");
+  addMiniMapLegendItem(legendX + 58, legendY, [104, 216, 128], [146, 244, 164], "已清");
+  addMiniMapLegendItem(legendX + 110, legendY, [60, 64, 74], [104, 116, 128], "未知");
+  addMiniMapLegendItem(legendX, legendY + 14, [255, 214, 104], ROOM_TYPE_MAP_STYLE.treasure.border, "宝物");
+  addMiniMapLegendItem(legendX + 58, legendY + 14, [255, 132, 84], ROOM_TYPE_MAP_STYLE.elite.border, "精英");
+  addMiniMapLegendItem(legendX + 110, legendY + 14, [255, 244, 164], ROOM_TYPE_MAP_STYLE.final.border, "Boss");
 }
 
 function drawRoomDecor(room) {
@@ -2770,6 +2843,28 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   addHudPanel(HUD_RIGHT_PANEL, [12, 14, 22], room.wallOutline);
   addHudPanel(HUD_OBJECTIVE_PANEL, [12, 16, 22], room.wallOutline);
   addHudPanel(HUD_FEEDBACK_PANEL, [16, 18, 28], room.wallOutline);
+  add([
+    rect(4, HUD_OBJECTIVE_PANEL.h - 12),
+    pos(HUD_OBJECTIVE_PANEL.x + 6, HUD_OBJECTIVE_PANEL.y + 6),
+    color(255, 232, 168),
+    opacity(0.82),
+    z(HUD_Z),
+  ]);
+  add([
+    rect(HUD_OBJECTIVE_PANEL.w - 22, 1),
+    pos(HUD_OBJECTIVE_PANEL.x + 14, HUD_OBJECTIVE_PANEL.y + 24),
+    color(...room.wallOutline),
+    opacity(0.7),
+    z(HUD_Z),
+  ]);
+  add([
+    rect(86, 16),
+    pos(HUD_OBJECTIVE_PANEL.x + HUD_OBJECTIVE_PANEL.w - 98, HUD_OBJECTIVE_PANEL.y + 5),
+    color(24, 28, 34),
+    opacity(0.5),
+    outline(1, room.wallOutline),
+    z(HUD_Z),
+  ]);
   addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 24, 92, 18, [80, 26, 32], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 106, HUD_LEFT_PANEL.y + 24, 54, 18, [28, 48, 72], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 166, HUD_LEFT_PANEL.y + 24, 54, 18, [42, 72, 48], room.wallOutline);
@@ -3452,6 +3547,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     runStats.time += dt();
     const compactDoorStatus = doorsOpened ? "开" : "封";
     statusText.opacity = 0;
+    objectiveAccent.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
+    objectiveAccent.opacity = doorsOpened ? 0.95 : 0.82;
     compactStatusText.text = `HP ${getHealthLabel(runHealth)}`;
     enemyText.text = `妖 ${enemiesLeft}`;
     doorText.text = `门 ${compactDoorStatus}`;

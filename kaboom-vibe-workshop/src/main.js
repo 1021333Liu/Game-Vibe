@@ -4346,13 +4346,13 @@ scene("lose", (roomId = START_ROOM_ID) => {
   addResultStatCard(width() / 2 + 6, 254, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 254, 64, 30, "路线", currentRunLayoutName || "随机", [236, 204, 198]);
   add([
-    text(`道具 ${getCompactRunItemName()} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}`, { size: 9 }),
+    text(`生命 ${getHealthLabel(runHealth)} / 道具 ${getCompactRunItemName()} / 房间 ${roomName}`, { size: 9 }),
     pos(width() / 2, 288),
     anchor("center"),
     color(255, 220, 190),
   ]);
   add([
-    text(getCompactRunRouteSummary(), { size: 8 }),
+    text(`${getCompactRunRouteSummary()} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}`, { size: 8 }),
     pos(width() / 2, 302),
     anchor("center"),
     color(220, 204, 198),

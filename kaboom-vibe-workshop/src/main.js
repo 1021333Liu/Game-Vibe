@@ -2194,7 +2194,7 @@ function addHudPanel(panel, panelColor = [12, 14, 22], outlineColor = [82, 88, 1
 }
 
 function addHudChip(x, y, w, h, chipColor, outlineColor) {
-  const objectiveAccent = add([
+  add([
     rect(w, h),
     pos(x, y),
     color(...chipColor),
@@ -2943,7 +2943,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   addHudPanel(HUD_RIGHT_PANEL, [12, 14, 22], room.wallOutline);
   addHudPanel(HUD_OBJECTIVE_PANEL, [12, 16, 22], room.wallOutline);
   addHudPanel(HUD_FEEDBACK_PANEL, [16, 18, 28], room.wallOutline);
-  add([
+  const objectiveAccent = add([
     rect(4, HUD_OBJECTIVE_PANEL.h - 12),
     pos(HUD_OBJECTIVE_PANEL.x + 6, HUD_OBJECTIVE_PANEL.y + 6),
     color(255, 232, 168),

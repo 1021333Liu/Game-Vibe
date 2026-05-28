@@ -1368,6 +1368,11 @@ function getCompactRunRouteSummary() {
   return `路线 ${currentRunLayoutName || "随机路线"} / 种子 ${currentRunSeed}`;
 }
 
+function getShortText(value, maxLength = 10) {
+  const textValue = String(value ?? "");
+  return textValue.length > maxLength ? `${textValue.slice(0, maxLength)}...` : textValue;
+}
+
 function getUnexploredExitCount(room) {
   return Object.values(room.exits ?? {})
     .filter((targetId) => !exploredRoomIds.has(targetId))
@@ -4302,6 +4307,8 @@ scene("lose", (roomId = START_ROOM_ID) => {
   const room = getRoomById(roomId);
   const roomIndex = getRoomIndex(room.id);
   const roomName = room.name ?? "当前房间";
+  const compactRoomName = getShortText(roomName, 8);
+  const compactLoseRoute = getShortText(getCompactRunRouteSummary(), 18);
   addResultScreen({
     title: "取经受阻",
     subtitle: `${roomName} 的妖气仍未散尽`,
@@ -4336,7 +4343,7 @@ scene("lose", (roomId = START_ROOM_ID) => {
     color(255, 156, 132),
   ]);
   add([
-    text(roomName, { size: 10 }),
+    text(compactRoomName, { size: 10 }),
     pos(width() / 2 - 104, 242),
     anchor("center"),
     color(236, 204, 198),
@@ -4346,13 +4353,13 @@ scene("lose", (roomId = START_ROOM_ID) => {
   addResultStatCard(width() / 2 + 6, 254, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 254, 64, 30, "路线", currentRunLayoutName || "随机", [236, 204, 198]);
   add([
-    text(`生命 ${getHealthLabel(runHealth)} / 道具 ${getCompactRunItemName()} / 房间 ${roomName}`, { size: 9 }),
+    text(`生命 ${getHealthLabel(runHealth)} / 道具 ${getCompactRunItemName()} / 房间 ${compactRoomName}`, { size: 9 }),
     pos(width() / 2, 288),
     anchor("center"),
     color(255, 220, 190),
   ]);
   add([
-    text(`${getCompactRunRouteSummary()} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}`, { size: 8 }),
+    text(`${compactLoseRoute} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}`, { size: 8 }),
     pos(width() / 2, 302),
     anchor("center"),
     color(220, 204, 198),

@@ -70,6 +70,7 @@ const DOOR_LABEL_FONT_SIZE = 11;
 const DOOR_LABEL_BOX_WIDTH = 106;
 const DOOR_LABEL_BOX_HEIGHT = 34;
 const ATTACK_CHARGE_TICKS = 6;
+const PICKUP_MAGNET_DISTANCE = 34;
 const WIDESCREEN_PRESSURE_ENEMY_SIZE = ENEMY_SIZE;
 const ROUTE_ELITE_AFFIX_AMBUSH_SIZE = ELITE_SIZE - 4;
 
@@ -2426,6 +2427,14 @@ function getNormalizedMoveVector(speed) {
   return { dx: dx * speed, dy: dy * speed };
 }
 
+function centersWithinDistance(firstBody, firstSize, secondBody, secondSize, maxDistance) {
+  const firstCenterX = firstBody.pos.x + firstSize / 2;
+  const firstCenterY = firstBody.pos.y + firstSize / 2;
+  const secondCenterX = secondBody.pos.x + secondSize / 2;
+  const secondCenterY = secondBody.pos.y + secondSize / 2;
+  return Math.hypot(firstCenterX - secondCenterX, firstCenterY - secondCenterY) <= maxDistance;
+}
+
 function moveByAmount(body, amountX, amountY, bodySize) {
   const nextX = Math.max(0, Math.min(body.pos.x + amountX, width() - bodySize));
   const nextY = Math.max(0, Math.min(body.pos.y + amountY, height() - bodySize));
@@ -3692,7 +3701,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     go("game", doorBody.targetId, false, OPPOSITE_DIRECTIONS[doorBody.direction] ?? null);
   });
 
-  player.onCollide("healPeach", (peach) => {
+  function collectHealPeach(peach) {
     if (ended || paused || runHealth >= PLAYER_MAX_HEALTH) return;
     runHealth = Math.min(PLAYER_MAX_HEALTH, runHealth + 1);
     destroy(peach);
@@ -3706,9 +3715,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       { frequency: 640, duration: 0.055, volume: 0.02, type: "triangle" },
       { frequency: 820, duration: 0.07, volume: 0.022, type: "triangle" },
     ]);
-  });
+  }
 
-  player.onCollide("attackItem", (item) => {
+  function collectAttackItem(item) {
     if (ended || paused) return;
     const itemId = item.itemId ?? "cloneHair";
     const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
@@ -3738,7 +3747,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       { frequency: 720, duration: 0.055, volume: 0.02, type: "triangle" },
       { frequency: 960, duration: 0.07, volume: 0.022, type: "triangle" },
     ]);
-  });
+  }
+
+  player.onCollide("healPeach", collectHealPeach);
+  player.onCollide("attackItem", collectAttackItem);
 
   onKeyPress("p", () => {
     if (!gameStarted) return;
@@ -3850,10 +3862,23 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
     get("healPeach").forEach((peach) => {
       peach.opacity = 0.74 + Math.sin(runStats.time * 8) * 0.18;
+      if (
+        peach.exists()
+        && runHealth < PLAYER_MAX_HEALTH
+        && centersWithinDistance(player, PLAYER_SIZE, peach, HEAL_PEACH_SIZE, PICKUP_MAGNET_DISTANCE)
+      ) {
+        collectHealPeach(peach);
+      }
     });
 
     get("attackItem").forEach((item) => {
       item.opacity = isTreasureRoom ? 0.9 : 0.76 + Math.sin(runStats.time * 7) * 0.16;
+      if (
+        item.exists()
+        && centersWithinDistance(player, PLAYER_SIZE, item, ATTACK_ITEM_SIZE, PICKUP_MAGNET_DISTANCE)
+      ) {
+        collectAttackItem(item);
+      }
     });
 
     get("doorGlow").forEach((glow) => {

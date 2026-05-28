@@ -2864,6 +2864,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       hitBoostTimer: 0,
       hitBoostScale: 1,
       bindTimer: 0,
+      bindSparkTimer: 0,
       eliteTimer: enemyConfig.hp > 1 ? ELITE_ROAR_INTERVAL * 0.72 : 0,
       eliteState: "idle",
       phaseCue: enemyConfig.phaseCue,
@@ -3747,6 +3748,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       enemy.trailTimer = Math.max(0, enemy.trailTimer - dt());
       enemy.hitBoostTimer = Math.max(0, enemy.hitBoostTimer - dt());
       enemy.bindTimer = Math.max(0, enemy.bindTimer - dt());
+      enemy.bindSparkTimer = Math.max(0, enemy.bindSparkTimer - dt());
       if ((enemy.body.maxHp ?? 1) > 1) {
         enemy.eliteTimer -= dt();
         if (enemy.eliteState === "idle" && enemy.eliteTimer <= 0) {
@@ -3799,6 +3801,16 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       if (enemy.bindTimer > 0) {
         moveX *= ENEMY_BIND_SPEED_SCALE;
         moveY *= ENEMY_BIND_SPEED_SCALE;
+        if (enemy.bindSparkTimer <= 0) {
+          addHitSpark(
+            enemy.body.pos.x + enemySize / 2,
+            enemy.body.pos.y + enemySize / 2,
+            { x: 0, y: -18 },
+            [255, 232, 126],
+            5,
+          );
+          enemy.bindSparkTimer = 0.08;
+        }
       }
 
       const hitX = moveOnAxis(enemy.body, moveX, 0, enemySize);

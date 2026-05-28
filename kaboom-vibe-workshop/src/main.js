@@ -2954,6 +2954,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
   const enemies = (roomAlreadyCleared ? [] : room.enemies).map(addRoomEnemy);
   const hasPressureEnemy = !roomAlreadyCleared && (room.enemies ?? []).some((enemy) => enemy.pressure);
+  const isTreasureRoom = room.type === "treasure";
 
   addHudPanel(HUD_LEFT_PANEL, [12, 14, 22], room.wallOutline);
   addHudPanel(HUD_RIGHT_PANEL, [12, 14, 22], room.wallOutline);
@@ -3768,7 +3769,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     });
 
     get("attackItem").forEach((item) => {
-      item.opacity = 0.76 + Math.sin(runStats.time * 7) * 0.16;
+      item.opacity = isTreasureRoom ? 0.9 : 0.76 + Math.sin(runStats.time * 7) * 0.16;
     });
 
     get("doorGlow").forEach((glow) => {
@@ -3780,11 +3781,11 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     });
 
     get("doorLabelBox").forEach((box) => {
-      box.opacity = 0.48 + Math.sin(runStats.time * 3.2 + box.phase) * 0.06;
+      box.opacity = isTreasureRoom ? 0.5 : 0.48 + Math.sin(runStats.time * 3.2 + box.phase) * 0.06;
     });
 
     get("doorLabel").forEach((label) => {
-      label.opacity = 0.86 + Math.sin(runStats.time * 3.2 + label.phase) * 0.1;
+      label.opacity = isTreasureRoom ? 0.92 : 0.86 + Math.sin(runStats.time * 3.2 + label.phase) * 0.1;
     });
 
     if (isKeyDown("left") || isKeyDown("j")) shoot(-1, 0);

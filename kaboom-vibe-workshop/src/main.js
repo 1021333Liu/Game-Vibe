@@ -49,6 +49,7 @@ const FLAME_WARNING_TIME = 1.05;
 const FLAME_ACTIVE_TIME = 0.72;
 const FLAME_REST_TIME = 2.15;
 const BONE_AFTERIMAGE_LIFETIME = 0.9;
+const PLAYER_GUARD_RING_PADDING = 7;
 const BEST_TIME_KEY = "game-vibe-best-time";
 const TEMPLATE_WIDTH = 480;
 const TEMPLATE_HEIGHT = 320;
@@ -2196,7 +2197,7 @@ function addHudPanel(panel, panelColor = [12, 14, 22], outlineColor = [82, 88, 1
 }
 
 function addHudChip(x, y, w, h, chipColor, outlineColor) {
-  add([
+  return add([
     rect(w, h),
     pos(x, y),
     color(...chipColor),
@@ -2387,6 +2388,19 @@ function addMonkeyHero(x, y) {
     area(),
     opacity(1),
     "player",
+  ]);
+}
+
+function addPlayerGuardRing(player) {
+  const ringSize = PLAYER_SIZE + PLAYER_GUARD_RING_PADDING * 2;
+  return add([
+    rect(ringSize, ringSize),
+    pos(player.pos.x - PLAYER_GUARD_RING_PADDING, player.pos.y - PLAYER_GUARD_RING_PADDING),
+    color(255, 232, 126),
+    opacity(0),
+    outline(2, [255, 248, 190]),
+    z(-1),
+    "playerGuardRing",
   ]);
 }
 
@@ -2906,6 +2920,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   });
 
   const player = addMonkeyHero(entrySpawn.x, entrySpawn.y);
+  const playerGuardRing = addPlayerGuardRing(player);
 
   const roomAlreadyCleared = clearedRoomIds.has(room.id);
   const speedScale = room.enemySpeedScale ?? 1;
@@ -2966,7 +2981,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     outline(1, room.wallOutline),
     z(HUD_Z),
   ]);
-  addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 24, 92, 18, [80, 26, 32], room.wallOutline);
+  const healthChip = addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 24, 92, 18, [80, 26, 32], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 106, HUD_LEFT_PANEL.y + 24, 54, 18, [28, 48, 72], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 166, HUD_LEFT_PANEL.y + 24, 54, 18, [42, 72, 48], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 226, HUD_LEFT_PANEL.y + 24, 66, 18, [72, 58, 28], room.wallOutline);
@@ -3218,6 +3233,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   function updateStatusText() {
     const doorStatus = doorsOpened ? "已开" : "未开";
     statusText.text = `生命 ${getHealthLabel(runHealth)} / 敌 ${enemiesLeft} / 门 ${doorStatus}`;
+    statusText.color = runHealth === 1 ? [255, 160, 146] : room.statusColor;
     clearProgressText.text = `清房 ${getClearedProgressLabel()}`;
     objectiveTitleText.text = getObjectiveTitle(room, enemiesLeft, doorsOpened, room.type === "final" && ambushTriggered);
     objectiveTitleText.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
@@ -3672,10 +3688,15 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
     runStats.time += dt();
     const compactDoorStatus = doorsOpened ? "开" : "封";
+    const isLowHealth = runHealth === 1;
+    const hasGuardWindow = entrySafeTimer > 0 || invincibleTimer > 0;
     statusText.opacity = 0;
     objectiveAccent.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
     objectiveAccent.opacity = doorsOpened ? 0.95 : 0.82;
-    compactStatusText.text = `HP ${getHealthLabel(runHealth)}`;
+    compactStatusText.text = isLowHealth ? `危 ${getHealthLabel(runHealth)}` : `HP ${getHealthLabel(runHealth)}`;
+    compactStatusText.color = isLowHealth ? [255, 158, 142] : room.statusColor;
+    healthChip.color = isLowHealth ? [120, 22, 34] : [80, 26, 32];
+    healthChip.opacity = isLowHealth ? 0.48 : 0.34;
     enemyText.text = `妖 ${enemiesLeft}`;
     doorText.text = `门 ${compactDoorStatus}`;
     clearProgressText.text = `清 ${getClearedProgressLabel()}`;
@@ -3696,8 +3717,12 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     } else {
       player.opacity = 1;
     }
+    playerGuardRing.pos.x = player.pos.x - PLAYER_GUARD_RING_PADDING;
+    playerGuardRing.pos.y = player.pos.y - PLAYER_GUARD_RING_PADDING;
+    playerGuardRing.opacity = hasGuardWindow ? 0.22 + Math.sin(runStats.time * 16) * 0.1 : 0;
+    playerGuardRing.color = entrySafeTimer > 0 ? [255, 232, 126] : [166, 226, 255];
 
-    if (runHealth === 1) {
+    if (isLowHealth) {
       const pulse = (Math.sin(lowHealthPulseTimer * LOW_HEALTH_PULSE_SPEED) + 1) / 2;
       lowHealthOverlay.opacity = 0.04 + pulse * 0.035;
       lowHealthText.opacity = 0.62 + pulse * 0.38;

@@ -69,6 +69,7 @@ const HUD_FEEDBACK_PANEL = { x: 276, y: SCREEN_HEIGHT - 38, w: 408, h: 28 };
 const DOOR_LABEL_FONT_SIZE = 11;
 const DOOR_LABEL_BOX_WIDTH = 106;
 const DOOR_LABEL_BOX_HEIGHT = 34;
+const ATTACK_CHARGE_TICKS = 6;
 const WIDESCREEN_PRESSURE_ENEMY_SIZE = ENEMY_SIZE;
 const ROUTE_ELITE_AFFIX_AMBUSH_SIZE = ELITE_SIZE - 4;
 
@@ -2034,6 +2035,50 @@ function isSpawnBlocked(room, enemyConfig, size = WIDESCREEN_PRESSURE_ENEMY_SIZE
     ));
 }
 
+function isRuntimeSpawnBlocked(enemyConfig, size, existingEnemies = []) {
+  const spawnRect = { x: enemyConfig.x, y: enemyConfig.y, w: size, h: size };
+  return activeWalls.some((wall) => rectsOverlap(spawnRect, wall))
+    || existingEnemies.some((enemy) => {
+      if (!enemy.body?.exists()) return false;
+      const enemySize = enemy.size ?? ENEMY_SIZE;
+      return rectsOverlap(spawnRect, { x: enemy.body.pos.x, y: enemy.body.pos.y, w: enemySize, h: enemySize });
+    });
+}
+
+function getSafeEnemySpawnConfig(enemyConfig, existingEnemies = []) {
+  const enemySize = enemyConfig.size ?? ENEMY_SIZE;
+  if (!isRuntimeSpawnBlocked(enemyConfig, enemySize, existingEnemies)) return enemyConfig;
+
+  const offsets = [
+    { x: -72, y: 0 },
+    { x: 72, y: 0 },
+    { x: 0, y: -72 },
+    { x: 0, y: 72 },
+    { x: -72, y: -72 },
+    { x: 72, y: -72 },
+    { x: -72, y: 72 },
+    { x: 72, y: 72 },
+    { x: -120, y: 0 },
+    { x: 120, y: 0 },
+    { x: 0, y: -120 },
+    { x: 0, y: 120 },
+  ];
+
+  const safeSpawn = offsets
+    .map((offset) => ({
+      ...enemyConfig,
+      x: Math.max(18, Math.min(width() - enemySize - 18, enemyConfig.x + offset.x)),
+      y: Math.max(58, Math.min(height() - enemySize - 18, enemyConfig.y + offset.y)),
+    }))
+    .find((candidate) => !isRuntimeSpawnBlocked(candidate, enemySize, existingEnemies));
+
+  return safeSpawn ?? {
+    ...enemyConfig,
+    x: Math.max(18, Math.min(width() - enemySize - 18, enemyConfig.x)),
+    y: Math.max(58, Math.min(height() - enemySize - 18, enemyConfig.y)),
+  };
+}
+
 function bulletOverlapsTarget(bullet, target, targetSize) {
   return rectsOverlap(
     { x: bullet.pos.x, y: bullet.pos.y, w: bullet.hitSize.w, h: bullet.hitSize.h },
@@ -2205,6 +2250,18 @@ function addHudChip(x, y, w, h, chipColor, outlineColor) {
     outline(1, outlineColor),
     z(HUD_Z),
   ]);
+}
+
+function addAttackChargeTicks(x, y, tickCount, outlineColor) {
+  return Array.from({ length: tickCount }, (_, index) => add([
+    rect(8, 10),
+    pos(x + index * 11, y),
+    color(76, 78, 88),
+    opacity(0.38),
+    outline(1, outlineColor),
+    z(HUD_Z),
+    "attackChargeTick",
+  ]));
 }
 
 function addMiniMapLegendItem(x, y, swatchColor, outlineColor, label) {
@@ -3112,6 +3169,12 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     opacity(0.86),
     z(HUD_TEXT_Z),
   ]);
+  const attackChargeTicks = addAttackChargeTicks(
+    HUD_FEEDBACK_PANEL.x + HUD_FEEDBACK_PANEL.w - 138,
+    HUD_FEEDBACK_PANEL.y + 8,
+    ATTACK_CHARGE_TICKS,
+    room.wallOutline,
+  );
 
   const sealedDoorMarkers = roomExits.map((exit) => {
     const marker = add([
@@ -3259,6 +3322,21 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const itemInfo = getRunItemInfo();
     const attackTag = itemInfo ? `${getItemEffectLabel(itemInfo)}` : "";
     const attackPrefix = attackTag ? `攻:${attackTag}` : "攻";
+    const readyRatio = 1 - Math.min(1, shotTimer / SHOT_COOLDOWN);
+    const filledTicks = shotTimer <= 0 ? ATTACK_CHARGE_TICKS : Math.floor(readyRatio * ATTACK_CHARGE_TICKS);
+    attackChargeTicks.forEach((tick, index) => {
+      const isFilled = index < filledTicks;
+      tick.color = shotTimer <= 0
+        ? [92, 210, 128]
+        : isFilled
+          ? [255, 214, 128]
+          : [76, 78, 88];
+      tick.opacity = shotTimer <= 0
+        ? 0.82 + Math.sin(runStats.time * 6 + index) * 0.08
+        : isFilled
+          ? 0.7
+          : 0.34;
+    });
     if (shotTimer <= 0) {
       attackReadyText.text = `${attackPrefix} OK`;
       attackReadyText.color = [170, 238, 190];
@@ -3324,7 +3402,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
     ambushTriggered = true;
     room.ambushEnemies.forEach((enemyConfig) => {
-      enemies.push(addRoomEnemy(enemyConfig));
+      const safeEnemyConfig = getSafeEnemySpawnConfig(enemyConfig, enemies);
+      enemies.push(addRoomEnemy(safeEnemyConfig));
     });
     enemiesLeft += room.ambushEnemies.length;
     updateStatusText();
@@ -3345,7 +3424,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     ambushTriggered = true;
     runStats.bossAmbushes += 1;
     room.ambushEnemies.forEach((enemyConfig) => {
-      enemies.push(addRoomEnemy(enemyConfig));
+      const safeEnemyConfig = getSafeEnemySpawnConfig(enemyConfig, enemies);
+      enemies.push(addRoomEnemy(safeEnemyConfig));
     });
     enemiesLeft += room.ambushEnemies.length;
     updateStatusText();

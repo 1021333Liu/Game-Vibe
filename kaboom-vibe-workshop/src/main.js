@@ -1243,6 +1243,41 @@ function addRouteEliteAffix(room, slotIndex, eliteIndex) {
   room.clearNote = "精英阶段已压住";
 }
 
+function addBossPhaseVariant(room, slotIndex, trial) {
+  if (room.type !== "final") return;
+
+  const bossEnemy = (room.enemies ?? []).find((enemy) => enemy.hp > 1);
+  const variantIndex = (currentRunSeed + slotIndex + trial.trialNo) % 3;
+  if (variantIndex === 0) {
+    room.ambushEnemies = [
+      ...(room.ambushEnemies ?? []),
+      { x: SCREEN_WIDTH / 2 - 108, y: SCREEN_HEIGHT - 96, vx: ENEMY_SPEED * 0.86, vy: -ENEMY_SPEED * 0.72, sprite: room.enemySprite },
+    ];
+    room.bossVariantLabel = "追加护法";
+    room.ambushCue = "黄眉再唤护法";
+    room.mechanicHint = "机制：Boss 半血会追加护法 / P 暂停";
+    return;
+  }
+
+  if (variantIndex === 1) {
+    room.enemyHitReaction = "counterRush";
+    room.hitBoostTime = 0.42;
+    room.hitBoostScale = 1.22;
+    room.bossVariantLabel = "金钹反冲";
+    room.ambushCue = "金钹回震";
+    room.mechanicHint = "机制：Boss 受击会短暂反冲 / P 暂停";
+    return;
+  }
+
+  if (bossEnemy) {
+    bossEnemy.phaseCue = "金钹急转";
+    bossEnemy.phaseSpeedScale = Math.max(bossEnemy.phaseSpeedScale ?? 1, 1.28);
+  }
+  room.bossVariantLabel = "半血急转";
+  room.ambushCue = "金钹急转";
+  room.mechanicHint = "机制：Boss 半血后速度提升 / P 暂停";
+}
+
 function resetStartMenuRoutePreview() {
   const dashboard = document.querySelector(".start-dashboard");
   if (dashboard) dashboard.remove();
@@ -1296,6 +1331,7 @@ function generateRunMap() {
     if (slot.role === "final") {
       room.mechanicHint = "机制：Boss 房，击破首领即可通关 / P 暂停";
       room.clearLore = `${trial.name}首领已破，本轮取经完成`;
+      addBossPhaseVariant(room, slotIndex, trial);
     }
     addWidescreenPressureEnemy(room, slotIndex);
     return room;
@@ -1350,6 +1386,7 @@ function getRouteHudColor(room) {
 
 function getRoomAffixLabel(room) {
   if (room.eliteAffixLabel) return `词缀 ${room.eliteAffixLabel}`;
+  if (room.bossVariantLabel) return `变体 ${room.bossVariantLabel}`;
   if ((room.enemies ?? []).some((enemy) => enemy.pressure)) return "词缀 压迫";
   return "";
 }
@@ -2489,6 +2526,31 @@ function spawnTreasureChoiceItem(itemId, x, y, roomId) {
   return item;
 }
 
+function addTreasureChoiceLabel(itemId, x, y) {
+  const itemInfo = getRunItemInfo(itemId) ?? RUN_ITEM_INFO.cloneHair;
+  const labelText = `${itemInfo.name}\n${getItemEffectLabel(itemInfo)}`;
+  const labelY = Math.max(62, y - 42);
+  const box = add([
+    rect(52, 25),
+    pos(x + ATTACK_ITEM_SIZE / 2, labelY),
+    anchor("center"),
+    color(18, 20, 28),
+    opacity(0.78),
+    outline(1, itemInfo.color),
+    z(HUD_Z - 1),
+    "treasureChoiceLabel",
+  ]);
+  const label = add([
+    text(labelText, { size: 8 }),
+    pos(x + ATTACK_ITEM_SIZE / 2, labelY - 8),
+    anchor("top"),
+    color(...itemInfo.color),
+    z(HUD_Z),
+    "treasureChoiceLabel",
+  ]);
+  return [box, label];
+}
+
 function rotateDirection(dirX, dirY, angle) {
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -3148,6 +3210,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   let healPeach = null;
   let attackItem = null;
   let attackChoices = [];
+  let attackChoiceLabels = [];
   let enemiesLeft = enemies.length;
   let ambushTriggered = false;
 
@@ -3307,6 +3370,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const choiceIds = getTreasureChoiceItemIds(room.id);
     const choiceX = [rewardX - 56, rewardX, rewardX + 56];
     attackChoices = choiceIds.map((itemId, index) => spawnTreasureChoiceItem(itemId, choiceX[index], rewardY, room.id));
+    attackChoiceLabels = choiceIds.flatMap((itemId, index) => addTreasureChoiceLabel(itemId, choiceX[index], rewardY));
     attackItem = attackChoices[0];
     feedbackText.text = "龙宫宝库：三选一道具";
     addRoomObjectiveBanner("宝物房", "三选一，只能带走一个", [255, 214, 104], 2.8);
@@ -3553,7 +3617,13 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
           destroy(choice);
         }
       });
+      attackChoiceLabels.forEach((label) => {
+        if (label.exists()) {
+          destroy(label);
+        }
+      });
       attackChoices = [];
+      attackChoiceLabels = [];
       addRoomObjectiveBanner("已选择宝物", "其余宝物消散", itemInfo.color, 1.9);
     }
     destroy(item);

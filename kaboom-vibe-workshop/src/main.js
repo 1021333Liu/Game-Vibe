@@ -3875,6 +3875,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       item.opacity = isTreasureRoom ? 0.9 : 0.76 + Math.sin(runStats.time * 7) * 0.16;
       if (
         item.exists()
+        && !item.treasureChoiceRoomId
         && centersWithinDistance(player, PLAYER_SIZE, item, ATTACK_ITEM_SIZE, PICKUP_MAGNET_DISTANCE)
       ) {
         collectAttackItem(item);

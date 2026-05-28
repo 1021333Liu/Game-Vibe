@@ -4219,6 +4219,8 @@ scene("complete", () => {
   const bestLabel = bestResult.bestTime === null ? "暂无记录" : formatRunTime(bestResult.bestTime);
   const bestPrefix = bestResult.isNewBest ? "新最快" : "最快";
   const clearRank = getClearRank(runStats);
+  const compactCompleteItem = getShortText(getCompactRunItemName(), 6);
+  const compactCompleteRoute = getShortText(getCompactRunRouteSummary(), 22);
   playToneSequence([
     { frequency: 520, duration: 0.08, volume: 0.022, type: "triangle" },
     { frequency: 660, duration: 0.08, volume: 0.022, type: "triangle" },
@@ -4286,13 +4288,13 @@ scene("complete", () => {
   addResultStatCard(width() / 2 + 6, 256, 64, 30, "击/伤", `${runStats.defeats}/${runStats.hitsTaken}`, [230, 226, 194]);
   addResultStatCard(width() / 2 + 76, 256, 64, 30, "清房", getClearedPercentLabel(), [190, 216, 190]);
   add([
-    text(`道具 ${getCompactRunItemName()} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}`, { size: 9 }),
+    text(`道具 ${compactCompleteItem} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}`, { size: 9 }),
     pos(width() / 2, 290),
     anchor("center"),
     color(255, 235, 190),
   ]);
   add([
-    text(getCompactRunRouteSummary(), { size: 8 }),
+    text(compactCompleteRoute, { size: 8 }),
     pos(width() / 2, 304),
     anchor("center"),
     color(206, 214, 190),

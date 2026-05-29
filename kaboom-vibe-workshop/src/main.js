@@ -3841,6 +3841,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     healthChip.color = isLowHealth ? [120, 22, 34] : [80, 26, 32];
     healthChip.opacity = isLowHealth ? 0.48 : 0.34;
     enemyText.text = `妖 ${enemiesLeft}`;
+    enemyText.color = doorsOpened ? [156, 244, 176] : enemiesLeft === 1 ? [255, 214, 128] : [255, 170, 150];
     doorText.text = `门 ${compactDoorStatus}`;
     clearProgressText.text = `清 ${getClearedProgressLabel()}`;
     timerText.text = `用时 ${formatRunTime(runStats.time)}`;

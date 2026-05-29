@@ -17,6 +17,7 @@ const STAFF_BULLET_LONG = 24;
 const STAFF_BULLET_SHORT = 8;
 const BULLET_SPEED = 9000;
 const SHOT_COOLDOWN = 0.75;
+const SHOT_BLOCKED_CUE_COOLDOWN = 0.32;
 const BULLET_STEP = 6;
 const BULLET_LIFETIME = 4;
 const PLAYER_MAX_HEALTH = 3;
@@ -3316,6 +3317,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   let ended = false;
   let paused = false;
   let shotTimer = 0;
+  let shotBlockedCueTimer = 0;
   let entrySafeTimer = ENTRY_SAFE_TIME;
   let invincibleTimer = 0;
   let feedbackTimer = 0;
@@ -3628,7 +3630,14 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
 
   function shoot(dirX, dirY) {
-    if (!gameStarted || ended || shotTimer > 0) return;
+    if (!gameStarted || ended) return;
+    if (shotTimer > 0) {
+      if (shotBlockedCueTimer <= 0) {
+        addRoomCue("蓄力中", player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), [255, 214, 128], 0.45);
+        shotBlockedCueTimer = SHOT_BLOCKED_CUE_COOLDOWN;
+      }
+      return;
+    }
     shotTimer = SHOT_COOLDOWN;
     playTone(520, 0.035, 0.018, "square");
     const bulletX = player.pos.x + PLAYER_SIZE / 2 - BULLET_SIZE / 2;
@@ -3803,6 +3812,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     if (paused) return;
     if (!gameStarted) return;
     shotTimer = Math.max(0, shotTimer - dt());
+    shotBlockedCueTimer = Math.max(0, shotBlockedCueTimer - dt());
     entrySafeTimer = Math.max(0, entrySafeTimer - dt());
     invincibleTimer = Math.max(0, invincibleTimer - dt());
     feedbackTimer = Math.max(0, feedbackTimer - dt());

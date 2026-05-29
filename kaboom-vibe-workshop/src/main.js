@@ -4157,8 +4157,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
             runStats.defeats += 1;
             playTone(760, 0.055, 0.024, "triangle");
             destroy(enemy);
-            feedbackText.text = enemy.maxHp > 1 ? "精英妖怪已击破" : "妖怪已击破";
-            feedbackTimer = 0.45;
+            if (enemiesLeft > 0) {
+              feedbackText.text = enemy.maxHp > 1 ? `精英已破，妖怪还剩 ${enemiesLeft}` : `妖怪已击破，还剩 ${enemiesLeft}`;
+              feedbackTimer = 0.55;
+            }
             updateStatusText();
             openDoorIfReady();
           }

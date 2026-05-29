@@ -4160,6 +4160,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
             if (enemiesLeft > 0) {
               feedbackText.text = enemy.maxHp > 1 ? `精英已破，妖怪还剩 ${enemiesLeft}` : `妖怪已击破，还剩 ${enemiesLeft}`;
               feedbackTimer = 0.55;
+              addRoomCue(`还剩 ${enemiesLeft}`, enemyCenterX, Math.max(58, enemyCenterY - 20), room.introColor, 0.65);
             }
             updateStatusText();
             openDoorIfReady();

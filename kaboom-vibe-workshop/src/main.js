@@ -2197,6 +2197,14 @@ function getObjectiveTitle(room, enemiesLeft, doorsOpened, isBossAmbushActive = 
   return "当前目标：等待开门";
 }
 
+function getSealedDoorHintText(room, enemiesLeft, isBossAmbushActive = false) {
+  if (enemiesLeft <= 0) return "封印正在解除";
+  if (room.type === "final") {
+    return isBossAmbushActive ? `封印未解：护法还剩 ${enemiesLeft}` : "封印未解：黄眉还未击破";
+  }
+  return `封印未解：妖怪还剩 ${enemiesLeft}`;
+}
+
 function getDoorLabelPosition(exit) {
   const centerX = exit.x + DOOR_SIZE / 2;
   const centerY = exit.y + DOOR_SIZE / 2;
@@ -3931,7 +3939,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         return Math.hypot(playerCenterX - doorCenterX, playerCenterY - doorCenterY) <= SEALED_DOOR_HINT_DISTANCE;
       });
       if (nearSealedDoor) {
-        feedbackText.text = "先清掉妖怪";
+        feedbackText.text = getSealedDoorHintText(room, enemiesLeft, room.type === "final" && ambushTriggered);
         feedbackTimer = 0.75;
         sealedDoorHintTimer = SEALED_DOOR_HINT_COOLDOWN;
       }

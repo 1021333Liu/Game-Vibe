@@ -3382,7 +3382,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
           : 0.34;
     });
     if (entrySafeTimer > 0) {
-      attackReadyText.text = `安全 ${Math.ceil(entrySafeTimer * 10) / 10}s`;
+      attackReadyText.text = shotTimer <= 0 ? "安全 攻OK" : `安全 攻${Math.ceil(shotTimer * 10) / 10}s`;
       attackReadyText.color = [255, 232, 126];
       attackReadyText.opacity = 0.72 + Math.sin(runStats.time * 8) * 0.1;
       return;

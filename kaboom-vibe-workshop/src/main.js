@@ -50,6 +50,7 @@ const FLAME_ACTIVE_TIME = 0.72;
 const FLAME_REST_TIME = 2.15;
 const BONE_AFTERIMAGE_LIFETIME = 0.9;
 const PLAYER_GUARD_RING_PADDING = 7;
+const ENEMY_CORNER_TURN_ANGLE = 0.65;
 const BEST_TIME_KEY = "game-vibe-best-time";
 const TEMPLATE_WIDTH = 480;
 const TEMPLATE_HEIGHT = 320;
@@ -2413,6 +2414,13 @@ function limitVelocity(velocity, maxSpeed) {
   velocity.y = (velocity.y / speed) * maxSpeed;
 }
 
+function rotateVelocity(velocity, angle) {
+  const nextX = velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle);
+  const nextY = velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle);
+  velocity.x = nextX;
+  velocity.y = nextY;
+}
+
 function moveOnAxis(body, dx, dy, bodySize) {
   return moveByAmount(body, dx * dt(), dy * dt(), bodySize);
 }
@@ -4041,6 +4049,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
       }
       if (hitY || enemy.body.pos.y <= 0 || enemy.body.pos.y + enemySize >= height()) {
         enemy.velocity.y *= -1;
+      }
+      if (hitX && hitY) {
+        rotateVelocity(enemy.velocity, ENEMY_CORNER_TURN_ANGLE);
       }
       if (enemy.trailTimer <= 0) {
         addEnemyMotionCue(enemy, room);

@@ -3938,7 +3938,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
         const doorCenterY = exit.y + DOOR_SIZE / 2;
         return Math.hypot(playerCenterX - doorCenterX, playerCenterY - doorCenterY) <= SEALED_DOOR_HINT_DISTANCE;
       });
-      if (nearSealedDoor) {
+      if (nearSealedDoor && feedbackTimer <= 0) {
         feedbackText.text = getSealedDoorHintText(room, enemiesLeft, room.type === "final" && ambushTriggered);
         feedbackTimer = 0.75;
         sealedDoorHintTimer = SEALED_DOOR_HINT_COOLDOWN;

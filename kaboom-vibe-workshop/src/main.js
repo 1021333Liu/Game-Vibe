@@ -3239,8 +3239,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const lowHealthText = add([
     text("危险：生命仅剩 1", { size: 11 }),
-    pos(HUD_OBJECTIVE_PANEL.x + HUD_OBJECTIVE_PANEL.w - HUD_MARGIN, HUD_OBJECTIVE_PANEL.y + 26),
-    anchor("topright"),
+    pos(HUD_FEEDBACK_PANEL.x + HUD_MARGIN, HUD_FEEDBACK_PANEL.y + 7),
     color(255, 150, 140),
     opacity(0),
     z(HUD_TEXT_Z),

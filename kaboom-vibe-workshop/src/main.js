@@ -3843,6 +3843,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     enemyText.text = `妖 ${enemiesLeft}`;
     enemyText.color = doorsOpened ? [156, 244, 176] : enemiesLeft === 1 ? [255, 214, 128] : [255, 170, 150];
     doorText.text = `门 ${compactDoorStatus}`;
+    doorText.color = doorsOpened ? [156, 244, 176] : [255, 204, 132];
     clearProgressText.text = `清 ${getClearedProgressLabel()}`;
     timerText.text = `用时 ${formatRunTime(runStats.time)}`;
     updateAttackReadyText();

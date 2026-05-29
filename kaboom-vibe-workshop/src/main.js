@@ -3633,7 +3633,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     if (!gameStarted || ended) return;
     if (shotTimer > 0) {
       if (shotBlockedCueTimer <= 0) {
-        addRoomCue("蓄力中", player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), [255, 214, 128], 0.45);
+        if (invincibleTimer <= 0) {
+          addRoomCue("蓄力中", player.pos.x + PLAYER_SIZE / 2, Math.max(56, player.pos.y - 12), [255, 214, 128], 0.45);
+        }
         shotBlockedCueTimer = SHOT_BLOCKED_CUE_COOLDOWN;
       }
       return;

@@ -3837,7 +3837,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     objectiveAccent.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
     objectiveAccent.opacity = doorsOpened ? 0.95 : 0.82;
     compactStatusText.text = isLowHealth ? `危 ${getHealthLabel(runHealth)}` : `HP ${getHealthLabel(runHealth)}`;
-    compactStatusText.color = isLowHealth ? [255, 158, 142] : room.statusColor;
+    compactStatusText.color = isLowHealth ? [255, 158, 142] : runHealth >= PLAYER_MAX_HEALTH ? [170, 238, 190] : [255, 214, 128];
     healthChip.color = isLowHealth ? [120, 22, 34] : [80, 26, 32];
     healthChip.opacity = isLowHealth ? 0.48 : 0.34;
     enemyText.text = `妖 ${enemiesLeft}`;

@@ -3845,6 +3845,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     doorText.text = `门 ${compactDoorStatus}`;
     doorText.color = doorsOpened ? [156, 244, 176] : [255, 204, 132];
     clearProgressText.text = `清 ${getClearedProgressLabel()}`;
+    clearProgressText.color = doorsOpened ? [156, 244, 176] : [214, 210, 198];
     timerText.text = `用时 ${formatRunTime(runStats.time)}`;
     updateAttackReadyText();
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);

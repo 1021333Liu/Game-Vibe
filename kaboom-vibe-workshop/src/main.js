@@ -45,6 +45,7 @@ const ENEMY_BIND_SPARK_INTERVAL = 0.18;
 const SEALED_DOOR_HINT_DISTANCE = 42;
 const SEALED_DOOR_HINT_COOLDOWN = 0.9;
 const SEALED_DOOR_FADE_TIME = 0.55;
+const REMAINING_ENEMY_CUE_COOLDOWN = 0.28;
 const FLAME_WARNING_TIME = 1.05;
 const FLAME_ACTIVE_TIME = 0.72;
 const FLAME_REST_TIME = 2.15;
@@ -3320,6 +3321,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   let feedbackTimer = 0;
   let sealedDoorHintTimer = 0;
   let sealedDoorFadeTimer = 0;
+  let remainingCueTimer = 0;
   let lowHealthPulseTimer = 0;
   let roomIntroTimer = ROOM_INTRO_DURATION;
   let cloneHairShotSide = 1;
@@ -3806,6 +3808,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     feedbackTimer = Math.max(0, feedbackTimer - dt());
     sealedDoorHintTimer = Math.max(0, sealedDoorHintTimer - dt());
     sealedDoorFadeTimer = Math.max(0, sealedDoorFadeTimer - dt());
+    remainingCueTimer = Math.max(0, remainingCueTimer - dt());
     lowHealthPulseTimer += dt();
     roomIntroTimer = Math.max(0, roomIntroTimer - dt());
     runStats.time += dt();
@@ -4160,7 +4163,10 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
             if (enemiesLeft > 0) {
               feedbackText.text = enemy.maxHp > 1 ? `精英已破，妖怪还剩 ${enemiesLeft}` : `妖怪已击破，还剩 ${enemiesLeft}`;
               feedbackTimer = 0.55;
-              addRoomCue(`还剩 ${enemiesLeft}`, enemyCenterX, Math.max(58, enemyCenterY - 20), room.introColor, 0.65);
+              if (remainingCueTimer <= 0) {
+                addRoomCue(`还剩 ${enemiesLeft}`, enemyCenterX, Math.max(58, enemyCenterY - 20), room.introColor, 0.65);
+                remainingCueTimer = REMAINING_ENEMY_CUE_COOLDOWN;
+              }
             }
             updateStatusText();
             openDoorIfReady();

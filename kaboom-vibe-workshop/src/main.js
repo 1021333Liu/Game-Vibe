@@ -3372,11 +3372,14 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
 
   function updatePauseOverlay() {
+    const compactPauseRoom = getShortText(room.name, 8);
+    const compactPauseItem = getShortText(getCompactRunItemName(), 6);
+    const compactPauseRoute = getShortText(getCompactRunRouteSummary(), 22);
     pauseOverlay.opacity = paused ? 0.62 : 0;
     pauseTitle.opacity = paused ? 1 : 0;
     pauseHelp.opacity = paused ? 1 : 0;
     pauseStatus.opacity = paused ? 1 : 0;
-    pauseStatus.text = `房间 ${room.name} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / ${getBossAmbushLabel()} / ${getEliteAffixLabel()} / ${getRunItemSummary()}\n${getRunRouteSummary()}`;
+    pauseStatus.text = `房间 ${compactPauseRoom} / 生命 ${getHealthLabel(runHealth)} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / 道具 ${compactPauseItem} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}\n${compactPauseRoute}`;
   }
 
   updateMuteText();

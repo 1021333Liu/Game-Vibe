@@ -3829,7 +3829,8 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     if (isLowHealth) {
       const pulse = (Math.sin(lowHealthPulseTimer * LOW_HEALTH_PULSE_SPEED) + 1) / 2;
       lowHealthOverlay.opacity = 0.04 + pulse * 0.035;
-      lowHealthText.opacity = 0.62 + pulse * 0.38;
+      const feedbackIsActive = feedbackText.text !== "" && feedbackText.text !== "入场安全";
+      lowHealthText.opacity = feedbackIsActive ? 0.38 + pulse * 0.18 : 0.62 + pulse * 0.38;
     } else {
       lowHealthOverlay.opacity = 0;
       lowHealthText.opacity = 0;

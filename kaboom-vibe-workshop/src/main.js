@@ -3345,7 +3345,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     const attackTag = itemInfo ? `${getItemEffectLabel(itemInfo)}` : "";
     const attackPrefix = attackTag ? `攻:${attackTag}` : "攻";
     const readyRatio = 1 - Math.min(1, shotTimer / SHOT_COOLDOWN);
-    const filledTicks = shotTimer <= 0 ? ATTACK_CHARGE_TICKS : Math.floor(readyRatio * ATTACK_CHARGE_TICKS);
+    const filledTicks = shotTimer <= 0
+      ? ATTACK_CHARGE_TICKS
+      : Math.max(1, Math.min(ATTACK_CHARGE_TICKS - 1, Math.ceil(readyRatio * ATTACK_CHARGE_TICKS)));
     attackChargeTicks.forEach((tick, index) => {
       const isFilled = index < filledTicks;
       tick.color = shotTimer <= 0

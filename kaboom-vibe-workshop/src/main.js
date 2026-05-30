@@ -857,6 +857,7 @@ const ROOM_TEMPLATES = [
     trialNo: 76,
     trialName: "狮驼岭妖军",
     name: "狮驼岭前哨",
+    pauseName: "狮驼前哨",
     lore: "狮吼压岭，妖军列阵",
     clearLore: "狮吼渐远，大岭在前",
     clearNote: "札记：过狮驼岭，先稳阵脚。",
@@ -896,6 +897,7 @@ const ROOM_TEMPLATES = [
     trialNo: 81,
     trialName: "小雷音黄眉",
     name: "小雷音寺前庭",
+    pauseName: "小雷音前庭",
     lore: "假佛金光，终点在前",
     clearLore: "黄眉金钹已破，雷音幻境散去",
     enemySprite: "taoistDemon",
@@ -3415,7 +3417,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
 
   function updatePauseOverlay() {
-    const compactPauseRoom = getShortText(room.name, 7);
+    const compactPauseRoom = getShortText(room.pauseName ?? room.name, 7);
     const compactPauseItem = getShortText(getCompactRunItemName(), 6);
     const compactPauseRoute = getShortText(getCompactRunRouteSummary(), 22);
     const compactPauseDoor = doorsOpened ? "门开" : `门封 妖${enemiesLeft}`;

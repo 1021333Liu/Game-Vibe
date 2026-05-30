@@ -3323,7 +3323,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
 
   const pauseStatus = add([
     text("", { size: 11 }),
-    pos(width() / 2, 220),
+    pos(width() / 2, 214),
     anchor("center"),
     color(255, 235, 190),
     opacity(0),

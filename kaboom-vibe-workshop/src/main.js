@@ -3423,7 +3423,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     pauseTitle.opacity = paused ? 1 : 0;
     pauseHelp.opacity = paused ? 1 : 0;
     pauseStatus.opacity = paused ? 1 : 0;
-    pauseStatus.text = `房间 ${compactPauseRoom} / 生命 ${getHealthLabel(runHealth)} / ${compactPauseDoor} / 清房 ${getClearedProgressLabel()}\n用时 ${formatRunTime(runStats.time)} / 道具 ${compactPauseItem} / ${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()}\n${compactPauseRoute}`;
+    pauseStatus.text = `房间 ${compactPauseRoom} / 生命 ${getHealthLabel(runHealth)} / ${compactPauseDoor}\n清房 ${getClearedProgressLabel()} / 用时 ${formatRunTime(runStats.time)} / 道具 ${compactPauseItem}\n${getCompactBossAmbushLabel()} / ${getCompactEliteAffixLabel()} / ${compactPauseRoute}`;
   }
 
   updateMuteText();

@@ -3415,7 +3415,7 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
   }
 
   function updatePauseOverlay() {
-    const compactPauseRoom = getShortText(room.name, 8);
+    const compactPauseRoom = getShortText(room.name, 7);
     const compactPauseItem = getShortText(getCompactRunItemName(), 6);
     const compactPauseRoute = getShortText(getCompactRunRouteSummary(), 22);
     const compactPauseDoor = doorsOpened ? "门开" : `门封 妖${enemiesLeft}`;

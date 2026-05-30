@@ -76,6 +76,15 @@ const ATTACK_CHARGE_TICKS = 6;
 const PICKUP_MAGNET_DISTANCE = 34;
 const WIDESCREEN_PRESSURE_ENEMY_SIZE = ENEMY_SIZE;
 const ROUTE_ELITE_AFFIX_AMBUSH_SIZE = ELITE_SIZE - 4;
+const HUD_STATE_COLORS = {
+  good: [156, 244, 176],
+  fullHealth: [170, 238, 190],
+  caution: [255, 214, 128],
+  blocked: [255, 204, 132],
+  danger: [255, 158, 142],
+  threat: [255, 170, 150],
+  neutral: [214, 210, 198],
+};
 
 const RUN_ITEM_INFO = {
   cloneHair: {
@@ -3837,15 +3846,15 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     objectiveAccent.color = doorsOpened ? [156, 244, 176] : [255, 232, 168];
     objectiveAccent.opacity = doorsOpened ? 0.95 : 0.82;
     compactStatusText.text = isLowHealth ? `危 ${getHealthLabel(runHealth)}` : `HP ${getHealthLabel(runHealth)}`;
-    compactStatusText.color = isLowHealth ? [255, 158, 142] : runHealth >= PLAYER_MAX_HEALTH ? [170, 238, 190] : [255, 214, 128];
+    compactStatusText.color = isLowHealth ? HUD_STATE_COLORS.danger : runHealth >= PLAYER_MAX_HEALTH ? HUD_STATE_COLORS.fullHealth : HUD_STATE_COLORS.caution;
     healthChip.color = isLowHealth ? [120, 22, 34] : [80, 26, 32];
     healthChip.opacity = isLowHealth ? 0.48 : 0.34;
     enemyText.text = `妖 ${enemiesLeft}`;
-    enemyText.color = doorsOpened ? [156, 244, 176] : enemiesLeft === 1 ? [255, 214, 128] : [255, 170, 150];
+    enemyText.color = doorsOpened ? HUD_STATE_COLORS.good : enemiesLeft === 1 ? HUD_STATE_COLORS.caution : HUD_STATE_COLORS.threat;
     doorText.text = `门 ${compactDoorStatus}`;
-    doorText.color = doorsOpened ? [156, 244, 176] : [255, 204, 132];
+    doorText.color = doorsOpened ? HUD_STATE_COLORS.good : HUD_STATE_COLORS.blocked;
     clearProgressText.text = `清 ${getClearedProgressLabel()}`;
-    clearProgressText.color = doorsOpened ? [156, 244, 176] : [214, 210, 198];
+    clearProgressText.color = doorsOpened ? HUD_STATE_COLORS.good : HUD_STATE_COLORS.neutral;
     timerText.text = `用时 ${formatRunTime(runStats.time)}`;
     updateAttackReadyText();
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);

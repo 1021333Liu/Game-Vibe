@@ -3090,9 +3090,9 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     z(HUD_Z),
   ]);
   const healthChip = addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 24, 92, 18, [80, 26, 32], room.wallOutline);
-  addHudChip(HUD_LEFT_PANEL.x + 106, HUD_LEFT_PANEL.y + 24, 54, 18, [28, 48, 72], room.wallOutline);
-  addHudChip(HUD_LEFT_PANEL.x + 166, HUD_LEFT_PANEL.y + 24, 54, 18, [42, 72, 48], room.wallOutline);
-  addHudChip(HUD_LEFT_PANEL.x + 226, HUD_LEFT_PANEL.y + 24, 66, 18, [72, 58, 28], room.wallOutline);
+  const enemyChip = addHudChip(HUD_LEFT_PANEL.x + 106, HUD_LEFT_PANEL.y + 24, 54, 18, [28, 48, 72], room.wallOutline);
+  const doorChip = addHudChip(HUD_LEFT_PANEL.x + 166, HUD_LEFT_PANEL.y + 24, 54, 18, [42, 72, 48], room.wallOutline);
+  const clearProgressChip = addHudChip(HUD_LEFT_PANEL.x + 226, HUD_LEFT_PANEL.y + 24, 66, 18, [72, 58, 28], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 298, HUD_LEFT_PANEL.y + 24, 104, 18, [54, 48, 78], room.wallOutline);
   addHudChip(HUD_LEFT_PANEL.x + 8, HUD_LEFT_PANEL.y + 50, 394, 18, [42, 50, 52], room.wallOutline);
 
@@ -3851,10 +3851,13 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     healthChip.opacity = isLowHealth ? 0.48 : 0.34;
     enemyText.text = `妖 ${enemiesLeft}`;
     enemyText.color = doorsOpened ? HUD_STATE_COLORS.good : enemiesLeft === 1 ? HUD_STATE_COLORS.caution : HUD_STATE_COLORS.threat;
+    enemyChip.color = doorsOpened ? [40, 72, 48] : enemiesLeft === 1 ? [74, 58, 28] : [76, 44, 44];
     doorText.text = `门 ${compactDoorStatus}`;
     doorText.color = doorsOpened ? HUD_STATE_COLORS.good : HUD_STATE_COLORS.blocked;
+    doorChip.color = doorsOpened ? [42, 72, 48] : [72, 58, 28];
     clearProgressText.text = `清 ${getClearedProgressLabel()}`;
     clearProgressText.color = doorsOpened ? HUD_STATE_COLORS.good : HUD_STATE_COLORS.neutral;
+    clearProgressChip.color = doorsOpened ? [42, 72, 48] : [54, 48, 78];
     timerText.text = `用时 ${formatRunTime(runStats.time)}`;
     updateAttackReadyText();
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);

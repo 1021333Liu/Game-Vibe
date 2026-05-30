@@ -79,10 +79,10 @@ const ROUTE_ELITE_AFFIX_AMBUSH_SIZE = ELITE_SIZE - 4;
 const HUD_STATE_COLORS = {
   good: [156, 244, 176],
   fullHealth: [170, 238, 190],
-  caution: [255, 214, 128],
-  blocked: [255, 204, 132],
+  caution: [245, 206, 122],
+  blocked: [238, 190, 118],
   danger: [255, 158, 142],
-  threat: [255, 170, 150],
+  threat: [238, 152, 138],
   neutral: [214, 210, 198],
 };
 

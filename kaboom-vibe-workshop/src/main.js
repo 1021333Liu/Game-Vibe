@@ -85,6 +85,13 @@ const HUD_STATE_COLORS = {
   threat: [238, 152, 138],
   neutral: [214, 210, 198],
 };
+const HUD_STATE_CHIP_COLORS = {
+  good: [42, 72, 48],
+  caution: [74, 58, 28],
+  blocked: [72, 58, 28],
+  threat: [76, 44, 44],
+  neutral: [54, 48, 78],
+};
 
 const RUN_ITEM_INFO = {
   cloneHair: {
@@ -3851,13 +3858,13 @@ scene("game", (roomId = START_ROOM_ID, shouldResetRun = false, fromDirection = n
     healthChip.opacity = isLowHealth ? 0.48 : 0.34;
     enemyText.text = `妖 ${enemiesLeft}`;
     enemyText.color = doorsOpened ? HUD_STATE_COLORS.good : enemiesLeft === 1 ? HUD_STATE_COLORS.caution : HUD_STATE_COLORS.threat;
-    enemyChip.color = doorsOpened ? [40, 72, 48] : enemiesLeft === 1 ? [74, 58, 28] : [76, 44, 44];
+    enemyChip.color = doorsOpened ? HUD_STATE_CHIP_COLORS.good : enemiesLeft === 1 ? HUD_STATE_CHIP_COLORS.caution : HUD_STATE_CHIP_COLORS.threat;
     doorText.text = `门 ${compactDoorStatus}`;
     doorText.color = doorsOpened ? HUD_STATE_COLORS.good : HUD_STATE_COLORS.blocked;
-    doorChip.color = doorsOpened ? [42, 72, 48] : [72, 58, 28];
+    doorChip.color = doorsOpened ? HUD_STATE_CHIP_COLORS.good : HUD_STATE_CHIP_COLORS.blocked;
     clearProgressText.text = `清 ${getClearedProgressLabel()}`;
     clearProgressText.color = doorsOpened ? HUD_STATE_COLORS.good : HUD_STATE_COLORS.neutral;
-    clearProgressChip.color = doorsOpened ? [42, 72, 48] : [54, 48, 78];
+    clearProgressChip.color = doorsOpened ? HUD_STATE_CHIP_COLORS.good : HUD_STATE_CHIP_COLORS.neutral;
     timerText.text = `用时 ${formatRunTime(runStats.time)}`;
     updateAttackReadyText();
     const introAlpha = Math.min(1, roomIntroTimer / ROOM_INTRO_FADE_TIME);
